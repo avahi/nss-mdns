@@ -58,6 +58,11 @@
 #define _nss_mdns_gethostbyaddr_r  _nss_mdns_minimal_gethostbyaddr_r
 #endif
 
+// Define prototypes for nss function we're going to export (fixes GCC warnings)
+enum nss_status _nss_mdns_gethostbyname2_r(const char*, int, struct hostent*, char*, size_t, int*, int*);
+enum nss_status _nss_mdns_gethostbyname_r (const char*, struct hostent*, char*, size_t, int*, int*);
+enum nss_status _nss_mdns_gethostbyaddr_r (const void*, int, int, struct hostent*, char *, size_t, int *, int *);
+
 /* Maximum number of entries to return */
 #define MAX_ENTRIES 16
 
