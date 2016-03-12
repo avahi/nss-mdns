@@ -172,10 +172,39 @@ static int verify_name_allowed(const char *name) {
     return ends_with(name, ".local") || ends_with(name, ".local."); 
 }
 
+static int do_avahi_resolve_name(int af, const char* name, void* userdata, int* avahi_works) {
+    query_address_result_t address_result;
+    int r;
+    int found = 0;
+    
+    if (af == AF_INET || af == AF_UNSPEC) {
+        if ((r = avahi_resolve_name(AF_INET, name, &address_result)) < 0) {
+            /* Lookup failed */
+            *avahi_works = 0;
+        } else if (r == 0) {
+            /* Lookup succeeded */
+            address_callback(&address_result, userdata);
+            found = 1;
+        }
+    }
+    
+    if (af == AF_INET6 || af == AF_UNSPEC) {
+        if ((r = avahi_resolve_name(AF_INET6, name, &address_result)) < 0) {
+            /* Lookup failed */
+            *avahi_works = 0;
+        } else if (r == 0) {
+            /* Lookup succeeded */
+            address_callback(&address_result, userdata);
+            found = 1;
+        }
+    }
+    
+    return found;
+}
+
 static enum nss_status gethostbyname_impl(
         const char *name, int af,
         struct userdata *u,
-        size_t *address_length,
         int *errnop,
         int *h_errnop
     ) {
@@ -183,23 +212,27 @@ static enum nss_status gethostbyname_impl(
     enum nss_status status = NSS_STATUS_UNAVAIL;
 
     int avahi_works = 1;
-    query_address_result_t address_result;
 
 /*     DEBUG_TRAP; */
 
-    if (af == AF_UNSPEC)
-#ifdef NSS_IPV6_ONLY
-        af = AF_INET6;
-#else
+#ifdef NSS_IPV4_ONLY
+    if (af == AF_UNSPEC) {
         af = AF_INET;
+    }
 #endif
 
+#ifdef NSS_IPV6_ONLY
+    if (af == AF_UNSPEC) {
+        af = AF_INET6;
+    }
+#endif
+    
 #ifdef NSS_IPV4_ONLY
     if (af != AF_INET) 
 #elif NSS_IPV6_ONLY
     if (af != AF_INET6)
 #else        
-    if (af != AF_INET && af != AF_INET6)
+    if (af != AF_INET && af != AF_INET6 && af != AF_UNSPEC)
 #endif        
     {    
         *errnop = EINVAL;
@@ -207,22 +240,15 @@ static enum nss_status gethostbyname_impl(
 
         return status;
     }
-
-    *address_length = (af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t));
     
     u->count = 0;
     u->data_len = 0;
 
 
     if (avahi_works && verify_name_allowed(name)) {
-        int r;
-
-        if ((r = avahi_resolve_name(af, name, &address_result)) < 0)
-            avahi_works = 0;
-        else if (r == 0) {
-            address_callback(&address_result, u);
-        } else
+        if(!do_avahi_resolve_name(af, name, u, &avahi_works)) {
             status = NSS_STATUS_NOTFOUND;
+        }
     }
 
     if (u->count == 0) {
@@ -243,17 +269,15 @@ enum nss_status _nss_mdns_gethostbyname4_r(
     ) {
     
     int i;
-    size_t address_length, idx;
+    size_t idx;
     char *buffer_name;
     struct gaih_addrtuple *tuple_prev;
-
-    int af = AF_INET6; //TODO: Support AF_UNSPEC dual-stack IP
     
     struct userdata u;
 
     // Since populating the buffer works differently in `gethostbyname[23]?` than in
     // `gethostbyname4`, we delegate the actual information gathering to a subroutine.
-    enum nss_status status = gethostbyname_impl(name, af, &u, &address_length, errnop, h_errnop);
+    enum nss_status status = gethostbyname_impl(name, AF_UNSPEC, &u, errnop, h_errnop);
     if(status != NSS_STATUS_SUCCESS) {
         return status;
     }
@@ -280,19 +304,26 @@ enum nss_status _nss_mdns_gethostbyname4_r(
     for (i = 0; i < u.count; i++) {
         struct gaih_addrtuple *tuple = (struct gaih_addrtuple*) (buffer+idx);
         
+        size_t address_length = sizeof(ipv4_address_t);
+        if(u.data.result[i].af == AF_INET6) {
+            address_length = sizeof(ipv6_address_t);
+        }
+        
         // Will be overwritten by next address assignment (if there is one)
         tuple->next = NULL;
         
         // Assign the (always same) name
         tuple->name = buffer_name;
         
-        //TODO: Support IPv4/IPv6 dual-stack
-        tuple->family = af;
+        // Assign actual address family of address
+        tuple->family = u.data.result[i].af;
         
         // Copy address
         memcpy(&(tuple->addr), &(u.data.result[i].address), address_length);
-        if(address_length < 16) {
-            memset((&(tuple->addr) + address_length - 16), 0, (16 - address_length));
+        if(address_length < sizeof(ipv6_address_t)) {
+            memset((&(tuple->addr) + address_length - sizeof(ipv6_address_t)), 0,
+                (sizeof(ipv6_address_t) - address_length)
+            );
         }
         
         // Assign interface scope id
@@ -305,6 +336,7 @@ enum nss_status _nss_mdns_gethostbyname4_r(
             tuple_prev->next = tuple;
         }
         
+        idx += sizeof(*tuple);
         ALIGN(idx);
         
         tuple_prev = tuple;
@@ -327,8 +359,14 @@ enum nss_status _nss_mdns_gethostbyname3_r(
     size_t address_length, idx, astart;
 
     struct userdata u;
-    
-    enum nss_status status = gethostbyname_impl(name, af, &u, &address_length, errnop, h_errnop);
+
+    // The interfaces for gethostbyname3_r and below do not actually support returning results
+    // for more than one address family
+    if(af == AF_UNSPEC) {
+        af = AF_INET;
+    }
+
+    enum nss_status status = gethostbyname_impl(name, af, &u, errnop, h_errnop);
     if(status != NSS_STATUS_SUCCESS) {
         return status;
     }
@@ -341,6 +379,8 @@ enum nss_status _nss_mdns_gethostbyname3_r(
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_TRYAGAIN;
     }
+    
+    address_length = (af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t));
     
     /* Alias names */
     *((char**) buffer) = NULL;
