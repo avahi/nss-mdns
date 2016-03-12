@@ -90,6 +90,8 @@ int avahi_resolve_name(int af, const char* name, query_address_result_t* result)
         ret = 1;
         goto finish;
     }
+    
+    result->af = af;
 
     p = ln+1;
     p += strspn(p, WHITESPACE);

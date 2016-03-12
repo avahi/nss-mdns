@@ -34,6 +34,7 @@ typedef struct {
 } ipv6_address_t;
 
 typedef struct {
+    int af;
     union {
         ipv4_address_t ipv4;
         ipv6_address_t ipv6;
