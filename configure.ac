@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([nss-mdns],[0.10],[mzaffzqaf (at) 0pointer (dot) de])
-AC_CONFIG_SRCDIR([src/query.c])
+AC_CONFIG_SRCDIR([src/nss.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign 1.9 -Wall])
 
@@ -98,44 +98,6 @@ if test "x$GCC" = "xyes" ; then
    $CC -c conftest.c -std=c99 -Wno-unused-parameter $CFLAGS > /dev/null 2> /dev/null && CFLAGS="$CFLAGS -std=c99 -Wno-unused-parameter"
    rm -f conftest.o
 fi
-
-### Enable avahi support?
-
-AC_ARG_ENABLE(avahi,
-        AC_HELP_STRING([--enable-avahi],[Enable lookups with Avahi (default=yes)]),
-        [case "${enableval}" in
-                yes) ENABLE_AVAHI=yes ;;
-                no)  ENABLE_AVAHI=no ;;
-                *) AC_MSG_ERROR(bad value ${enableval} for --enable-avahi) ;;
-        esac],
-        [ENABLE_AVAHI=yes]) dnl Default value
-
-AM_CONDITIONAL([ENABLE_AVAHI], [test "x$ENABLE_AVAHI" = "xyes"])
-
-if test "x$ENABLE_AVAHI" = "xyes" ; then
-   AC_DEFINE(ENABLE_AVAHI, [1], [Try to make use of a running avahi mDNS server before resolving on our own behalf])
-fi
-
-### Enable legacy unicast mDNS support?
-
-AC_ARG_ENABLE(legacy,
-        AC_HELP_STRING([--enable-legacy],[Enable legacy unicast mDNS lookups when Avahi isn't available (default=no)]),
-        [case "${enableval}" in
-                yes) ENABLE_LEGACY=yes ;;
-                no)  ENABLE_LEGACY=no ;;
-                *) AC_MSG_ERROR(bad value ${enableval} for --enable-legacy) ;;
-        esac],
-        [ENABLE_LEGACY=no]) dnl Default value
-
-if test "x$ENABLE_AVAHI" = "xno" -a "x$ENABLE_LEGACY" = "xno"; then
-	AC_MSG_ERROR(Can't disable legacy unicast mDNS lookups if Avahi support is disabled)
-fi
-
-if test "x$ENABLE_LEGACY" = "xyes" ; then
-   AC_DEFINE(ENABLE_LEGACY, [1], [Enable legacy unicast mDNS lookups when Avahi isn't available])
-fi
-
-AM_CONDITIONAL([ENABLE_LEGACY], [test "x$ENABLE_LEGACY" = "xyes"])
 
 ### Honour search domains from /etc/resolv.conf?
 

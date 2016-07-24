@@ -51,18 +51,8 @@ lib_LTLIBRARIES += \
 	libnss_mdns6_minimal.la
 endif
 
-noinst_PROGRAMS = nss-test
-sources = util.c util.h
-
-if ENABLE_AVAHI
-sources += avahi.c avahi.h
-noinst_PROGRAMS += avahi-test
-endif
-
-if ENABLE_LEGACY
-sources += query.c query.h dns.c dns.h
-noinst_PROGRAMS += mdns-test
-endif
+noinst_PROGRAMS = nss-test avahi-test
+sources = util.c util.h avahi.c avahi.h
 
 # GNU Libc
 libnss_mdns_la_SOURCES= $(sources) nss.c
@@ -118,12 +108,6 @@ avahi_test_SOURCES = \
 	avahi.c avahi.h \
 	util.c util.h \
 	avahi-test.c
-
-mdns_test_SOURCES = \
-	query.c query.h \
-	dns.c dns.h \
-	util.c util.h \
-	mdns-test.c
 
 nss_test_SOURCES = \
 	nss-test.c
