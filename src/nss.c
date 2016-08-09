@@ -69,7 +69,7 @@
 
 #define ALIGN(idx) do { \
   if (idx % sizeof(void*)) \
-    idx += (sizeof(void*) - idx % sizeof(void*)); /* Align on 32 bit boundary */ \
+    idx += (sizeof(void*) - idx % sizeof(void*)); /* Align on word boundary */ \
 } while(0)
 
 struct userdata {
@@ -514,7 +514,7 @@ enum nss_status _nss_mdns_gethostbyname2_r(
     result->h_length = address_length;
     
     /* Check if there's enough space for the addresses */
-    if (buflen < idx+u.data_len+sizeof(char*)*(u.count+1)) {
+    if (buflen < idx+u.data_len+sizeof(char*)*(u.count+1)+sizeof(void*)) {
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
         status = NSS_STATUS_TRYAGAIN;
@@ -525,9 +525,10 @@ enum nss_status _nss_mdns_gethostbyname2_r(
     astart = idx;
     l = u.count*address_length;
     memcpy(buffer+astart, &u.data, l);
-    /* address_length is a multiple of 32bits, so idx is still aligned
-     * correctly */
     idx += l;
+    /* realign, whilst the address is a multiple of 32bits, we
+     * frequently lose alignment for 64bit systems */
+    ALIGN(idx);
 
     /* Address array address_lenght is always a multiple of 32bits */
     for (i = 0; i < u.count; i++)
