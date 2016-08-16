@@ -4,9 +4,6 @@
 *.lo
 Makefile
 Makefile.in
-/README
-/doc/README
-/doc/README.html
 /aclocal.m4
 /autom4te.cache
 /compile

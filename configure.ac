@@ -99,32 +99,6 @@ if test "x$GCC" = "xyes" ; then
    rm -f conftest.o
 fi
 
-# LYNX documentation generation
-AC_ARG_ENABLE(lynx,
-        AS_HELP_STRING(--disable-lynx,Turn off lynx usage for documentation generation),
-[case "${enableval}" in
-  yes) lynx=yes ;;
-  no)  lynx=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --disable-lynx) ;;
-esac],[lynx=yes])
-
-if test x$lynx = xyes ; then
-   AC_CHECK_PROG(have_lynx, lynx, yes, no)
-
-   if test x$have_lynx = xno ; then
-     lynx=no
-     AC_CHECK_PROG(have_links, links, yes, no)
-     if test x$have_links = xno ; then
-       AC_MSG_WARN([*** neither lynx nor links found, plain text README will not be built ***])
-     else
-       links=yes
-     fi
-   fi
-fi
-
-AM_CONDITIONAL([USE_LYNX], [test "x$lynx" = xyes])
-AM_CONDITIONAL([USE_LINKS], [test "x$links" = xyes])
-
 ### Enable avahi support?
 
 AC_ARG_ENABLE(avahi,
@@ -179,5 +153,5 @@ if test "x$HONOUR_SEARCH_DOMAINS" = "xyes" ; then
 fi
 
 
-AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile doc/README.html ])
+AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
