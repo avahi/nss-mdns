@@ -17,21 +17,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA.
 
-EXTRA_DIST=bootstrap.sh README LICENSE
-SUBDIRS=src doc
+EXTRA_DIST=bootstrap.sh README.md LICENSE
+SUBDIRS=src
 
-MAINTAINERCLEANFILES=README
-noinst_DATA = README
-
-README:
-	rm -f README
-	$(MAKE) -C doc README
-	cd $(srcdir) && ln -s doc/README README
-
-homepage: all dist
-	test -d $$HOME/homepage/private
-	mkdir -p $$HOME/homepage/private/projects/nss-mdns
-	cp nss-mdns-@PACKAGE_VERSION@.tar.gz doc/README.html doc/style.css $$HOME/homepage/private/projects/nss-mdns
-	ln -sf README.html $$HOME/homepage/private/projects/nss-mdns/index.html
-
-.PHONY: homepage
+noinst_DATA = README.md
