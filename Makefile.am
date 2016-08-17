@@ -17,7 +17,5 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA.
 
-EXTRA_DIST=bootstrap.sh README.md LICENSE
+EXTRA_DIST=bootstrap.sh README.md ACKNOWLEDGEMENTS.md NEWS.md LICENSE
 SUBDIRS=src
-
-noinst_DATA = README.md
