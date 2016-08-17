@@ -33,32 +33,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "nss-mdns.h"
 #include "query.h"
 
 #ifdef ENABLE_AVAHI
 #include "avahi.h"
-#endif
-
-#if defined(NSS_IPV4_ONLY) && ! defined(MDNS_MINIMAL)
-#define _nss_mdns_gethostbyname2_r _nss_mdns4_gethostbyname2_r
-#define _nss_mdns_gethostbyname_r  _nss_mdns4_gethostbyname_r
-#define _nss_mdns_gethostbyaddr_r  _nss_mdns4_gethostbyaddr_r
-#elif defined(NSS_IPV4_ONLY) && defined(MDNS_MINIMAL)
-#define _nss_mdns_gethostbyname2_r _nss_mdns4_minimal_gethostbyname2_r
-#define _nss_mdns_gethostbyname_r  _nss_mdns4_minimal_gethostbyname_r
-#define _nss_mdns_gethostbyaddr_r  _nss_mdns4_minimal_gethostbyaddr_r
-#elif defined(NSS_IPV6_ONLY) && ! defined(MDNS_MINIMAL)
-#define _nss_mdns_gethostbyname2_r _nss_mdns6_gethostbyname2_r
-#define _nss_mdns_gethostbyname_r  _nss_mdns6_gethostbyname_r
-#define _nss_mdns_gethostbyaddr_r  _nss_mdns6_gethostbyaddr_r
-#elif defined(NSS_IPV6_ONLY) && defined(MDNS_MINIMAL)
-#define _nss_mdns_gethostbyname2_r _nss_mdns6_minimal_gethostbyname2_r
-#define _nss_mdns_gethostbyname_r  _nss_mdns6_minimal_gethostbyname_r
-#define _nss_mdns_gethostbyaddr_r  _nss_mdns6_minimal_gethostbyaddr_r
-#elif defined(MDNS_MINIMAL)
-#define _nss_mdns_gethostbyname2_r _nss_mdns_minimal_gethostbyname2_r
-#define _nss_mdns_gethostbyname_r  _nss_mdns_minimal_gethostbyname_r
-#define _nss_mdns_gethostbyaddr_r  _nss_mdns_minimal_gethostbyaddr_r
 #endif
 
 /* Maximum number of entries to return */

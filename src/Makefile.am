@@ -65,7 +65,7 @@ noinst_PROGRAMS += mdns-test
 endif
 
 # GNU Libc
-libnss_mdns_la_SOURCES= $(sources) nss.c
+libnss_mdns_la_SOURCES= $(sources) nss.c nss-mdns.h
 libnss_mdns_la_CFLAGS=$(AM_CFLAGS) 
 libnss_mdns_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.2 -Wl,-version-script=$(srcdir)/map-file
 
