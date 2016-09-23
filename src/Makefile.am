@@ -51,7 +51,7 @@ lib_LTLIBRARIES += \
 	libnss_mdns6_minimal.la
 endif
 
-noinst_PROGRAMS = nss-test avahi-test
+check_PROGRAMS = nss-test avahi-test
 sources = util.c util.h avahi.c avahi.h
 
 # GNU Libc
