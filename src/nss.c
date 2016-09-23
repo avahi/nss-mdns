@@ -33,11 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "query.h"
-
-#ifdef ENABLE_AVAHI
 #include "avahi.h"
-#endif
 
 #if defined(NSS_IPV4_ONLY) && ! defined(MDNS_MINIMAL)
 #define _nss_mdns_gethostbyname2_r _nss_mdns4_gethostbyname2_r
@@ -71,6 +67,14 @@
   if (idx % sizeof(void*)) \
     idx += (sizeof(void*) - idx % sizeof(void*)); /* Align on word boundary */ \
 } while(0)
+
+typedef struct {
+    uint32_t address;
+} ipv4_address_t;
+
+typedef struct {
+    uint8_t address[16];
+} ipv6_address_t;
 
 struct userdata {
     int count;
@@ -300,16 +304,8 @@ enum nss_status _nss_mdns_gethostbyname2_r(
     size_t address_length, l, idx, astart;
     void (*ipv4_func)(const ipv4_address_t *ipv4, void *userdata);
     void (*ipv6_func)(const ipv6_address_t *ipv6, void *userdata);
-    int name_allowed;
-
-#ifdef ENABLE_AVAHI
     int avahi_works = 1;
     void * data[32];
-#endif
-
-#ifdef ENABLE_LEGACY
-    int fd = -1;
-#endif
 
 /*     DEBUG_TRAP; */
 
@@ -361,11 +357,7 @@ enum nss_status _nss_mdns_gethostbyname2_r(
     ipv6_func = af == AF_INET6 ? ipv6_callback : NULL;
 #endif
 
-    name_allowed = verify_name_allowed(name);
-    
-#ifdef ENABLE_AVAHI
-
-    if (avahi_works && name_allowed) {
+    if (avahi_works && verify_name_allowed(name)) {
         int r;
 
         if ((r = avahi_resolve_name(af, name, data)) < 0)
@@ -427,70 +419,6 @@ enum nss_status _nss_mdns_gethostbyname2_r(
 	}
     }
 #endif /* HONOUR_SEARCH_DOMAINS */
-#endif /* ENABLE_AVAHI */
-
-#if defined(ENABLE_LEGACY) && defined(ENABLE_AVAHI)
-    if (u.count == 0 && !avahi_works) 
-#endif
-
-#if defined(ENABLE_LEGACY)
-    {
-        if ((fd = mdns_open_socket()) < 0) {
-            *errnop = errno;
-            *h_errnop = NO_RECOVERY;
-            goto finish;
-        }
-
-        if (name_allowed) {
-            /* Ignore return value */
-            mdns_query_name(fd, name, ipv4_func, ipv6_func, &u);
-
-            if (!u.count)
-                status = NSS_STATUS_NOTFOUND;
-        }
-
-#ifdef HONOUR_SEARCH_DOMAINS
-        if (u.count == 0 && !ends_with(name, ".")) {
-            char **domains;
-            
-            /* Try the search domains if the user did not use a traling '.' */
-            
-            if ((domains = get_search_domains())) {
-                char **p;
-                
-                for (p = domains; *p; p++) {
-                    int fullnamesize = 0;
-                    char *fullname = NULL;
-                    
-                    fullnamesize = strlen(name) + strlen(*p) + 2;
-                    if (!(fullname = malloc(fullnamesize)))
-                        break;
-                    
-                    snprintf(fullname, fullnamesize, "%s.%s", name, *p);
-                    
-                    if (verify_name_allowed(fullname)) {
-                        
-                        /* Ignore return value */
-                        mdns_query_name(fd, fullname, ipv4_func, ipv6_func, &u);
-                        
-                        if (u.count > 0) {
-                            /* We found something, so let's quit */
-                            free(fullname);
-                            break;
-                        } else
-                            status = NSS_STATUS_NOTFOUND;
-
-                    }
-                    
-                    free(fullname);
-                }
-                
-                free_domains(domains);
-	    }
-        }
-#endif /* HONOUR_SEARCH_DOMAINS */
-    }
-#endif /* ENABLE_LEGACY */
 
     if (u.count == 0) {
         *errnop = ETIMEDOUT;
@@ -539,11 +467,6 @@ enum nss_status _nss_mdns_gethostbyname2_r(
     status = NSS_STATUS_SUCCESS;
     
 finish:
-#ifdef ENABLE_LEGACY
-    if (fd >= 0)
-        close(fd);
-#endif
-
     return status;
 }
 
@@ -579,14 +502,7 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     enum nss_status status = NSS_STATUS_UNAVAIL;
     int r;
     size_t address_length, idx, astart;
-    
-#ifdef ENABLE_AVAHI
     char t[256];
-#endif
-#ifdef ENABLE_LEGACY
-    int fd = -1;
-#endif
-
     *errnop = EINVAL;
     *h_errnop = NO_RECOVERY;
 
@@ -636,7 +552,6 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     }
 #endif
     
-#ifdef ENABLE_AVAHI
     /* Lookup using Avahi */
     if ((r = avahi_resolve_address(af, addr, t, sizeof(t))) == 0) {
         name_callback(t, &u);
@@ -646,43 +561,6 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
         status = NSS_STATUS_NOTFOUND;
         goto finish;
     } 
-#endif
-
-#if defined(ENABLE_AVAHI) && defined(ENABLE_LEGACY)
-    else
-#endif
-    
-#ifdef ENABLE_LEGACY
-     /* Lookup using legacy mDNS queries */   
-     {
-        if ((fd = mdns_open_socket()) < 0) {
-            *errnop = errno;
-            *h_errnop = NO_RECOVERY;
-            goto finish;
-        }
-
-	r = -1;
-
-#if ! defined(NSS_IPV6_ONLY) && ! defined(NSS_IPV4_ONLY)
-        if (af == AF_INET)
-#endif
-#ifndef NSS_IPV6_ONLY
-            r = mdns_query_ipv4(fd, (const ipv4_address_t*) addr, name_callback, &u);
-#endif
-#if ! defined(NSS_IPV6_ONLY) && ! defined(NSS_IPV4_ONLY)
-        else
-#endif
-#ifndef NSS_IPV4_ONLY
-            r = mdns_query_ipv6(fd, (const ipv6_address_t*) addr, name_callback, &u);
-#endif
-        if (r < 0) {
-            *errnop = ETIMEDOUT;
-            *h_errnop = HOST_NOT_FOUND;
-            status = NSS_STATUS_NOTFOUND;
-            goto finish;
-        }
-    }
-#endif /* ENABLE_LEGACY */
 
     if (u.count == 0) {
         *errnop = ETIMEDOUT;
@@ -735,11 +613,5 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     status = NSS_STATUS_SUCCESS;
     
 finish:
-#ifdef ENABLE_LEGACY
-    if (fd >= 0)
-        close(fd);
-#endif
-
     return status;
 }
-
