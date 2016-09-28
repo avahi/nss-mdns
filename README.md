@@ -45,22 +45,14 @@ mDNS. I recommend [Avahi](http://avahi.org/).
 4.0), has no dependencies besides the `glibc` and requires only
 minimal configuration.
 
-By default `nss-mdns` tries to contact a running
+`nss-mdns` tries to contact a running
 [avahi-daemon](http://avahi.org/) for resolving host names and
-addresses and making use of its superior record cacheing. Optionally
-`nss-mdns` can be compiled with a mini mDNS stack that can be used to
-resolve host names without a local Avahi installation. Both Avahi
-support and this mini mDNS stack are optional, however at least one of
-them needs to be enabled. If both are enabled a connection to Avahi is
-tried first, and if that fails the mini mDNS stack is used.
+addresses and making use of its superior record cacheing. If
+Avahi is not available at lookup time, the lookups will fail.
 
 ## Current Status
 
 It works!
-
-If the mini MDNS stack is used, `nss-mdns` supports resolving IPv6
-addresses but does so via IPv4 multicasts only. If Avahi is used for
-resolving IPv6 is supported properly.
 
 ## Documentation
 
@@ -179,10 +171,8 @@ file.
 Currently, `nss-mdns` is tested on Linux only. A fairly modern `glibc`
 installation with development headers (2.0 or newer) is required. Not
 suprisingly `nss-mdns` requires a kernel compiled with IPv4
-multicasting support enabled. [Avahi](http://avahi.org/) is
-recommended for its superior cacheing capabilities and for security
-reasons. Unless you compile `nss-mdns` with `--enable-legacy` Avahi is
-a hard dependency when `nss-mdns` is used, however not a build-time
+multicasting support enabled. [Avahi](http://avahi.org/) is a hard
+dependency when `nss-mdns` is used, however it is not a build-time
 requirement.
 
 `nss-mdns` was developed and tested on Debian GNU/Linux
