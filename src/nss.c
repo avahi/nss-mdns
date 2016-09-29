@@ -60,9 +60,6 @@
 /* Maximum number of entries to return */
 #define MAX_ENTRIES 16
 
-/* The resolv.conf page states that they only support 6 domains */
-#define MAX_SEARCH_DOMAINS 6
-
 #define ALIGN(idx) do { \
   if (idx % sizeof(void*)) \
     idx += (sizeof(void*) - idx % sizeof(void*)); /* Align on word boundary */ \
@@ -181,114 +178,6 @@ static int verify_name_allowed(const char *name) {
     return ends_with(name, ".local") || ends_with(name, ".local."); 
 }
 
-#ifdef HONOUR_SEARCH_DOMAINS
-
-static char **alloc_domains(unsigned ndomains) {
-    char **domains;
-
-    if (!(domains = malloc(sizeof(char*) * ndomains)))
-        return NULL;
-
-    /* initialize them all to 0 */
-    memset(domains, 0, sizeof(char*) * ndomains);
-    return domains;
-}
-
-static void free_domains(char **domains) {
-    char **p;
-
-    if (!domains)
-        return;
-
-    for(p = domains; *p; p++) 
-        free(*p);
-
-    free(domains);
-}
-
-static char** parse_domains(const char *domains_in) {
-    /* leave room for the NULL terminator */
-    char **domains_out;
-    const char *start = domains_in;
-    unsigned domain = 0;
-
-    if (!(domains_out = alloc_domains(MAX_SEARCH_DOMAINS+1)))
-        return NULL;
-
-    while (domain < MAX_SEARCH_DOMAINS) {
-        const char *end;
-        char *tmp;
-        size_t domain_len;
-        
-        end = start + strcspn(start, " \t\r\n");
-        domain_len = (end - start);
-
-        if (!(tmp = malloc(domain_len + 1)))
-            break;
-        
-        memcpy(tmp, start, domain_len);
-        tmp[domain_len] = '\0';
-
-        domains_out[domain++] = tmp;
-
-        end += strspn(end," \t\r\n");
-
-        if (!*end)
-            break;
-        
-        start = end;
-    }
-
-    return domains_out;
-}
-
-static char** get_search_domains(void) {
-    FILE *f = 0;
-    char **domains = NULL;
-
-    /* according to the resolv.conf man page (in Linux) the LOCALDOMAIN
-       environment variable should override the settings in the resolv.conf file */
-    char *line = getenv("LOCALDOMAIN");
-    if (line && *line != 0)
-        return parse_domains(line);
-    
-    if (!(f = fopen(RESOLV_CONF_FILE, "r")))
-        return NULL;
-
-    while (!feof(f)) {
-        char *start = NULL;
-        char ln[512];
-	  
-        if (!fgets(ln, sizeof(ln), f))
-            break;
-
-        start = ln + strspn(ln, " \t\r\n");
-    
-        if (strncmp(start, "search", 6) && strncmp(start, "domain", 6))
-            continue;
-        
-        if (start[6] != ' ' && start[6] != '\t')
-            continue;
-
-        /* scan to the end of the keyword ('search' or 'domain' currently) */
-        start += strcspn(start, " \t\r\n");
-
-        /* find the begining of the first domain in the list */
-        start += strspn(start, " \t\r\n");
-
-        /* the resolv.conf manpage also states that 'search' and 'domain' are mutually exclusive
-           and that the last one wins. */
-        free_domains(domains);
-        domains = parse_domains(start);
-    }
-
-    fclose(f);
-
-    return domains;
-}
-
-#endif
-
 enum nss_status _nss_mdns_gethostbyname2_r(
     const char *name,
     int af,
@@ -304,7 +193,6 @@ enum nss_status _nss_mdns_gethostbyname2_r(
     size_t address_length, l, idx, astart;
     void (*ipv4_func)(const ipv4_address_t *ipv4, void *userdata);
     void (*ipv6_func)(const ipv6_address_t *ipv6, void *userdata);
-    int avahi_works = 1;
     void * data[32];
 
 /*     DEBUG_TRAP; */
@@ -357,68 +245,16 @@ enum nss_status _nss_mdns_gethostbyname2_r(
     ipv6_func = af == AF_INET6 ? ipv6_callback : NULL;
 #endif
 
-    if (avahi_works && verify_name_allowed(name)) {
-        int r;
-
-        if ((r = avahi_resolve_name(af, name, data)) < 0)
-            avahi_works = 0;
-        else if (r == 0) {
+    if (verify_name_allowed(name)) {
+        int r = avahi_resolve_name(af, name, data);
+        if (r == 0) {
             if (af == AF_INET && ipv4_func)
                 ipv4_func((ipv4_address_t*) data, &u);
             if (af == AF_INET6 && ipv6_func)
                 ipv6_func((ipv6_address_t*)data, &u);
-        } else
+        } else if (r > 0)
             status = NSS_STATUS_NOTFOUND;
     }
-
-#ifdef HONOUR_SEARCH_DOMAINS
-    if (u.count == 0 && avahi_works && !ends_with(name, ".")) {
-        char **domains;
-
-        if ((domains = get_search_domains())) {
-            char **p;
-            
-            /* Try to concatenate host names */
-	    for (p = domains; *p; p++) {
-                int fullnamesize;
-                char *fullname;
-                
-	        fullnamesize = strlen(name) + strlen(*p) + 2;
-
-                if (!(fullname = malloc(fullnamesize)))
-                    break;
-                
-		snprintf(fullname, fullnamesize, "%s.%s", name, *p);
-
-                if (verify_name_allowed(fullname)) {
-                    int r;
-
-                    r = avahi_resolve_name(af, fullname, data);
-                    free(fullname);
-                    
-                    if (r < 0) {
-                        /* Lookup failed */
-                        avahi_works = 0;
-                        break;
-                    } else if (r == 0) {
-                        /* Lookup succeeded */
-                        if (af == AF_INET && ipv4_func)
-                            ipv4_func((ipv4_address_t*) data, &u);
-                        if (af == AF_INET6 && ipv6_func)
-                            ipv6_func((ipv6_address_t*)data, &u);
-                        break;
-                    } else
-                        /* Lookup suceeded, but nothing found */
-                        status = NSS_STATUS_NOTFOUND;
-                    
-		} else
-                    free(fullname);
-	    }
-            
-	    free_domains(domains);
-	}
-    }
-#endif /* HONOUR_SEARCH_DOMAINS */
 
     if (u.count == 0) {
         *errnop = ETIMEDOUT;
