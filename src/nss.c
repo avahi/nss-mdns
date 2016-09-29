@@ -36,81 +36,72 @@
 #include "avahi.h"
 
 #if defined(NSS_IPV4_ONLY) && ! defined(MDNS_MINIMAL)
+#define _nss_mdns_gethostbyname4_r _nss_mdns4_gethostbyname4_r
+#define _nss_mdns_gethostbyname3_r _nss_mdns4_gethostbyname3_r
 #define _nss_mdns_gethostbyname2_r _nss_mdns4_gethostbyname2_r
 #define _nss_mdns_gethostbyname_r  _nss_mdns4_gethostbyname_r
 #define _nss_mdns_gethostbyaddr_r  _nss_mdns4_gethostbyaddr_r
 #elif defined(NSS_IPV4_ONLY) && defined(MDNS_MINIMAL)
+#define _nss_mdns_gethostbyname4_r _nss_mdns4_minimal_gethostbyname4_r
+#define _nss_mdns_gethostbyname3_r _nss_mdns4_minimal_gethostbyname3_r
 #define _nss_mdns_gethostbyname2_r _nss_mdns4_minimal_gethostbyname2_r
 #define _nss_mdns_gethostbyname_r  _nss_mdns4_minimal_gethostbyname_r
 #define _nss_mdns_gethostbyaddr_r  _nss_mdns4_minimal_gethostbyaddr_r
 #elif defined(NSS_IPV6_ONLY) && ! defined(MDNS_MINIMAL)
+#define _nss_mdns_gethostbyname4_r _nss_mdns6_gethostbyname4_r
+#define _nss_mdns_gethostbyname3_r _nss_mdns6_gethostbyname3_r
 #define _nss_mdns_gethostbyname2_r _nss_mdns6_gethostbyname2_r
 #define _nss_mdns_gethostbyname_r  _nss_mdns6_gethostbyname_r
 #define _nss_mdns_gethostbyaddr_r  _nss_mdns6_gethostbyaddr_r
 #elif defined(NSS_IPV6_ONLY) && defined(MDNS_MINIMAL)
+#define _nss_mdns_gethostbyname4_r _nss_mdns6_minimal_gethostbyname4_r
+#define _nss_mdns_gethostbyname3_r _nss_mdns6_minimal_gethostbyname3_r
 #define _nss_mdns_gethostbyname2_r _nss_mdns6_minimal_gethostbyname2_r
 #define _nss_mdns_gethostbyname_r  _nss_mdns6_minimal_gethostbyname_r
 #define _nss_mdns_gethostbyaddr_r  _nss_mdns6_minimal_gethostbyaddr_r
 #elif defined(MDNS_MINIMAL)
+#define _nss_mdns_gethostbyname4_r _nss_mdns_minimal_gethostbyname4_r
+#define _nss_mdns_gethostbyname3_r _nss_mdns_minimal_gethostbyname3_r
 #define _nss_mdns_gethostbyname2_r _nss_mdns_minimal_gethostbyname2_r
 #define _nss_mdns_gethostbyname_r  _nss_mdns_minimal_gethostbyname_r
 #define _nss_mdns_gethostbyaddr_r  _nss_mdns_minimal_gethostbyaddr_r
 #endif
 
+// Define prototypes for nss function we're going to export (fixes GCC warnings)
+enum nss_status _nss_mdns_gethostbyname4_r(const char*, struct gaih_addrtuple**, char*, size_t, int*, int*, int32_t*);
+enum nss_status _nss_mdns_gethostbyname3_r(const char*, int, struct hostent*, char*, size_t, int*, int*, int32_t*, char**);
+enum nss_status _nss_mdns_gethostbyname2_r(const char*, int, struct hostent*, char*, size_t, int*, int*);
+enum nss_status _nss_mdns_gethostbyname_r (const char*, struct hostent*, char*, size_t, int*, int*);
+enum nss_status _nss_mdns_gethostbyaddr_r (const void*, int, int, struct hostent*, char *, size_t, int *, int *);
+
 /* Maximum number of entries to return */
 #define MAX_ENTRIES 16
-
-/* The resolv.conf page states that they only support 6 domains */
-#define MAX_SEARCH_DOMAINS 6
 
 #define ALIGN(idx) do { \
   if (idx % sizeof(void*)) \
     idx += (sizeof(void*) - idx % sizeof(void*)); /* Align on word boundary */ \
 } while(0)
 
-typedef struct {
-    uint32_t address;
-} ipv4_address_t;
-
-typedef struct {
-    uint8_t address[16];
-} ipv6_address_t;
-
 struct userdata {
     int count;
     int data_len; /* only valid when doing reverse lookup */
     union  {
-        ipv4_address_t ipv4[MAX_ENTRIES];
-        ipv6_address_t ipv6[MAX_ENTRIES];
+        query_address_result_t result[MAX_ENTRIES];
         char *name[MAX_ENTRIES];
     } data;
 };
 
-#ifndef NSS_IPV6_ONLY
-static void ipv4_callback(const ipv4_address_t *ipv4, void *userdata) {
-    struct userdata *u = userdata;
-    assert(ipv4 && userdata);
+static void address_callback(const query_address_result_t *result, void *userdata) {
+    struct userdata *u = (struct userdata*) userdata;
+    assert(result && u);
 
     if (u->count >= MAX_ENTRIES)
         return;
 
-    u->data.ipv4[u->count++] = *ipv4;
-    u->data_len += sizeof(ipv4_address_t);
+    memcpy(&(u->data.result[u->count]), result, sizeof(*result));
+    u->data_len += sizeof(*result);
+    u->count++;
 }
-#endif
-
-#ifndef NSS_IPV4_ONLY
-static void ipv6_callback(const ipv6_address_t *ipv6, void *userdata) {
-    struct userdata *u = userdata;
-    assert(ipv6 && userdata);
-
-    if (u->count >= MAX_ENTRIES)
-        return;
-
-    u->data.ipv6[u->count++] = *ipv6;
-    u->data_len += sizeof(ipv6_address_t);
-}
-#endif
 
 static void name_callback(const char*name, void *userdata) {
     struct userdata *u = userdata;
@@ -181,250 +172,215 @@ static int verify_name_allowed(const char *name) {
     return ends_with(name, ".local") || ends_with(name, ".local."); 
 }
 
-#ifdef HONOUR_SEARCH_DOMAINS
-
-static char **alloc_domains(unsigned ndomains) {
-    char **domains;
-
-    if (!(domains = malloc(sizeof(char*) * ndomains)))
-        return NULL;
-
-    /* initialize them all to 0 */
-    memset(domains, 0, sizeof(char*) * ndomains);
-    return domains;
-}
-
-static void free_domains(char **domains) {
-    char **p;
-
-    if (!domains)
-        return;
-
-    for(p = domains; *p; p++) 
-        free(*p);
-
-    free(domains);
-}
-
-static char** parse_domains(const char *domains_in) {
-    /* leave room for the NULL terminator */
-    char **domains_out;
-    const char *start = domains_in;
-    unsigned domain = 0;
-
-    if (!(domains_out = alloc_domains(MAX_SEARCH_DOMAINS+1)))
-        return NULL;
-
-    while (domain < MAX_SEARCH_DOMAINS) {
-        const char *end;
-        char *tmp;
-        size_t domain_len;
-        
-        end = start + strcspn(start, " \t\r\n");
-        domain_len = (end - start);
-
-        if (!(tmp = malloc(domain_len + 1)))
-            break;
-        
-        memcpy(tmp, start, domain_len);
-        tmp[domain_len] = '\0';
-
-        domains_out[domain++] = tmp;
-
-        end += strspn(end," \t\r\n");
-
-        if (!*end)
-            break;
-        
-        start = end;
-    }
-
-    return domains_out;
-}
-
-static char** get_search_domains(void) {
-    FILE *f = 0;
-    char **domains = NULL;
-
-    /* according to the resolv.conf man page (in Linux) the LOCALDOMAIN
-       environment variable should override the settings in the resolv.conf file */
-    char *line = getenv("LOCALDOMAIN");
-    if (line && *line != 0)
-        return parse_domains(line);
+static int do_avahi_resolve_name(int af, const char* name, void* userdata, int* avahi_works) {
+    query_address_result_t address_result;
+    int r;
+    int found = 0;
     
-    if (!(f = fopen(RESOLV_CONF_FILE, "r")))
-        return NULL;
-
-    while (!feof(f)) {
-        char *start = NULL;
-        char ln[512];
-	  
-        if (!fgets(ln, sizeof(ln), f))
-            break;
-
-        start = ln + strspn(ln, " \t\r\n");
-    
-        if (strncmp(start, "search", 6) && strncmp(start, "domain", 6))
-            continue;
-        
-        if (start[6] != ' ' && start[6] != '\t')
-            continue;
-
-        /* scan to the end of the keyword ('search' or 'domain' currently) */
-        start += strcspn(start, " \t\r\n");
-
-        /* find the begining of the first domain in the list */
-        start += strspn(start, " \t\r\n");
-
-        /* the resolv.conf manpage also states that 'search' and 'domain' are mutually exclusive
-           and that the last one wins. */
-        free_domains(domains);
-        domains = parse_domains(start);
+    if (af == AF_INET || af == AF_UNSPEC) {
+        if ((r = avahi_resolve_name(AF_INET, name, &address_result)) < 0) {
+            /* Lookup failed */
+            *avahi_works = 0;
+        } else if (r == 0) {
+            /* Lookup succeeded */
+            address_callback(&address_result, userdata);
+            found = 1;
+        }
     }
-
-    fclose(f);
-
-    return domains;
+    
+    if (af == AF_INET6 || af == AF_UNSPEC) {
+        if ((r = avahi_resolve_name(AF_INET6, name, &address_result)) < 0) {
+            /* Lookup failed */
+            *avahi_works = 0;
+        } else if (r == 0) {
+            /* Lookup succeeded */
+            address_callback(&address_result, userdata);
+            found = 1;
+        }
+    }
+    
+    return found;
 }
 
-#endif
-
-enum nss_status _nss_mdns_gethostbyname2_r(
-    const char *name,
-    int af,
-    struct hostent * result,
-    char *buffer,
-    size_t buflen,
-    int *errnop,
-    int *h_errnop) {
-
-    struct userdata u;
+static enum nss_status gethostbyname_impl(
+        const char *name, int af,
+        struct userdata *u,
+        int *errnop,
+        int *h_errnop
+    ) {
+    
     enum nss_status status = NSS_STATUS_UNAVAIL;
-    int i;
-    size_t address_length, l, idx, astart;
-    void (*ipv4_func)(const ipv4_address_t *ipv4, void *userdata);
-    void (*ipv6_func)(const ipv6_address_t *ipv6, void *userdata);
+
     int avahi_works = 1;
-    void * data[32];
 
 /*     DEBUG_TRAP; */
 
-    if (af == AF_UNSPEC)
-#ifdef NSS_IPV6_ONLY
-        af = AF_INET6;
-#else
+#ifdef NSS_IPV4_ONLY
+    if (af == AF_UNSPEC) {
         af = AF_INET;
+    }
 #endif
 
+#ifdef NSS_IPV6_ONLY
+    if (af == AF_UNSPEC) {
+        af = AF_INET6;
+    }
+#endif
+    
 #ifdef NSS_IPV4_ONLY
     if (af != AF_INET) 
 #elif NSS_IPV6_ONLY
     if (af != AF_INET6)
 #else        
-    if (af != AF_INET && af != AF_INET6)
+    if (af != AF_INET && af != AF_INET6 && af != AF_UNSPEC)
 #endif        
     {    
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
 
-        goto finish;
+        return status;
+    }
+    
+    u->count = 0;
+    u->data_len = 0;
+
+
+    if (avahi_works && verify_name_allowed(name)) {
+        if(!do_avahi_resolve_name(af, name, u, &avahi_works)) {
+            status = NSS_STATUS_NOTFOUND;
+        }
     }
 
-    address_length = af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t);
+    if (u->count == 0) {
+        *errnop = ETIMEDOUT;
+        *h_errnop = HOST_NOT_FOUND;
+        return status;
+    }
+
+    return NSS_STATUS_SUCCESS;
+}
+
+enum nss_status _nss_mdns_gethostbyname4_r(
+        const char *name,
+        struct gaih_addrtuple **pat,
+        char *buffer, size_t buflen,
+        int *errnop, int *h_errnop,
+        int32_t *ttlp
+    ) {
+    
+    int i;
+    size_t idx;
+    char *buffer_name;
+    struct gaih_addrtuple *tuple_prev;
+    
+    struct userdata u;
+
+    // Since populating the buffer works differently in `gethostbyname[23]?` than in
+    // `gethostbyname4`, we delegate the actual information gathering to a subroutine.
+    enum nss_status status = gethostbyname_impl(name, AF_UNSPEC, &u, errnop, h_errnop);
+    if(status != NSS_STATUS_SUCCESS) {
+        return status;
+    }
+    
+    /* Check if there's enough space for the addresses */
+    // strlen(name)+1                        - Host name string
+    // sizeof(struct gaih_addrtuple)*u.count - All address result structures
+    // 3*(1+u.count)                         - Theoretical alignment byte maximum
+    if (buflen < (strlen(name)+1 + sizeof(struct gaih_addrtuple)*u.count + 3*(1+u.count))) {
+        *errnop = ERANGE;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_TRYAGAIN;
+    }
+    
+    idx = 0;
+    
+    // Copy name to buffer (referenced in every result address tuple)
+    buffer_name = buffer + idx;
+    strcpy(buffer_name, name); 
+    idx += strlen(buffer_name) + 1;
+    ALIGN(idx);
+
+    tuple_prev = NULL;
+    for (i = 0; i < u.count; i++) {
+        struct gaih_addrtuple *tuple = (struct gaih_addrtuple*) (buffer+idx);
+        
+        size_t address_length = sizeof(ipv4_address_t);
+        if(u.data.result[i].af == AF_INET6) {
+            address_length = sizeof(ipv6_address_t);
+        }
+        
+        // Will be overwritten by next address assignment (if there is one)
+        tuple->next = NULL;
+        
+        // Assign the (always same) name
+        tuple->name = buffer_name;
+        
+        // Assign actual address family of address
+        tuple->family = u.data.result[i].af;
+        
+        // Copy address
+        memcpy(&(tuple->addr), &(u.data.result[i].address), address_length);
+        if(address_length < sizeof(ipv6_address_t)) {
+            memset((&(tuple->addr) + address_length - sizeof(ipv6_address_t)), 0,
+                (sizeof(ipv6_address_t) - address_length)
+            );
+        }
+        
+        // Assign interface scope id
+        tuple->scopeid = u.data.result[i].scopeid;
+        
+        // Link in previous address tuple
+        if(tuple_prev == NULL) {
+            *pat = tuple;
+        } else {
+            tuple_prev->next = tuple;
+        }
+        
+        idx += sizeof(*tuple);
+        ALIGN(idx);
+        
+        tuple_prev = tuple;
+    }
+
+    return NSS_STATUS_SUCCESS;
+}
+
+enum nss_status _nss_mdns_gethostbyname3_r(
+        const char *name,
+        int af,
+        struct hostent *result,
+        char *buffer, size_t buflen,
+        int *errnop, int *h_errnop,
+        int32_t *ttlp,
+        char **canonp
+    ) {
+
+    int i;
+    size_t address_length, idx, astart;
+
+    struct userdata u;
+
+    // The interfaces for gethostbyname3_r and below do not actually support returning results
+    // for more than one address family
+    if(af == AF_UNSPEC) {
+        af = AF_INET;
+    }
+
+    enum nss_status status = gethostbyname_impl(name, af, &u, errnop, h_errnop);
+    if(status != NSS_STATUS_SUCCESS) {
+        return status;
+    }
+    
     if (buflen <
-        sizeof(char*)+    /* alias names */
-        strlen(name)+1)  {   /* official name */
+        sizeof(char*)+    // alias names
+        strlen(name)+1)  {   // official name
         
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
-        status = NSS_STATUS_TRYAGAIN;
-        
-        goto finish;
+        return NSS_STATUS_TRYAGAIN;
     }
     
-    u.count = 0;
-    u.data_len = 0;
-
-#ifdef NSS_IPV6_ONLY
-    ipv4_func = NULL;
-#else
-    ipv4_func = af == AF_INET ? ipv4_callback : NULL;
-#endif    
-
-#ifdef NSS_IPV4_ONLY
-    ipv6_func = NULL;
-#else
-    ipv6_func = af == AF_INET6 ? ipv6_callback : NULL;
-#endif
-
-    if (avahi_works && verify_name_allowed(name)) {
-        int r;
-
-        if ((r = avahi_resolve_name(af, name, data)) < 0)
-            avahi_works = 0;
-        else if (r == 0) {
-            if (af == AF_INET && ipv4_func)
-                ipv4_func((ipv4_address_t*) data, &u);
-            if (af == AF_INET6 && ipv6_func)
-                ipv6_func((ipv6_address_t*)data, &u);
-        } else
-            status = NSS_STATUS_NOTFOUND;
-    }
-
-#ifdef HONOUR_SEARCH_DOMAINS
-    if (u.count == 0 && avahi_works && !ends_with(name, ".")) {
-        char **domains;
-
-        if ((domains = get_search_domains())) {
-            char **p;
-            
-            /* Try to concatenate host names */
-	    for (p = domains; *p; p++) {
-                int fullnamesize;
-                char *fullname;
-                
-	        fullnamesize = strlen(name) + strlen(*p) + 2;
-
-                if (!(fullname = malloc(fullnamesize)))
-                    break;
-                
-		snprintf(fullname, fullnamesize, "%s.%s", name, *p);
-
-                if (verify_name_allowed(fullname)) {
-                    int r;
-
-                    r = avahi_resolve_name(af, fullname, data);
-                    free(fullname);
-                    
-                    if (r < 0) {
-                        /* Lookup failed */
-                        avahi_works = 0;
-                        break;
-                    } else if (r == 0) {
-                        /* Lookup succeeded */
-                        if (af == AF_INET && ipv4_func)
-                            ipv4_func((ipv4_address_t*) data, &u);
-                        if (af == AF_INET6 && ipv6_func)
-                            ipv6_func((ipv6_address_t*)data, &u);
-                        break;
-                    } else
-                        /* Lookup suceeded, but nothing found */
-                        status = NSS_STATUS_NOTFOUND;
-                    
-		} else
-                    free(fullname);
-	    }
-            
-	    free_domains(domains);
-	}
-    }
-#endif /* HONOUR_SEARCH_DOMAINS */
-
-    if (u.count == 0) {
-        *errnop = ETIMEDOUT;
-        *h_errnop = HOST_NOT_FOUND;
-        goto finish;
-    }
+    address_length = (af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t));
     
     /* Alias names */
     *((char**) buffer) = NULL;
@@ -445,29 +401,45 @@ enum nss_status _nss_mdns_gethostbyname2_r(
     if (buflen < idx+u.data_len+sizeof(char*)*(u.count+1)+sizeof(void*)) {
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
-        status = NSS_STATUS_TRYAGAIN;
-        goto finish;
+        return NSS_STATUS_TRYAGAIN;
     }
 
     /* Addresses */
     astart = idx;
-    l = u.count*address_length;
-    memcpy(buffer+astart, &u.data, l);
-    idx += l;
+    for(i = 0; i < u.count; i++) {
+        memcpy(buffer+idx, &u.data.result[i].address, address_length);
+        idx += address_length;
+    }
+    
     /* realign, whilst the address is a multiple of 32bits, we
      * frequently lose alignment for 64bit systems */
     ALIGN(idx);
 
-    /* Address array address_lenght is always a multiple of 32bits */
-    for (i = 0; i < u.count; i++)
-        ((char**) (buffer+idx))[i] = buffer+astart+address_length*i;
+    /* Address array address_length is always a multiple of 32bits */
+    for (i = 0; i < u.count; i++) {
+        ((char**) (buffer+idx))[i] = buffer + astart + address_length*i;
+    }
     ((char**) (buffer+idx))[i] = NULL;
     result->h_addr_list = (char**) (buffer+idx);
 
-    status = NSS_STATUS_SUCCESS;
-    
-finish:
-    return status;
+    return NSS_STATUS_SUCCESS;
+}
+
+enum nss_status _nss_mdns_gethostbyname2_r(
+        const char *name,
+        int af,
+        struct hostent *result,
+        char *buffer, size_t buflen,
+        int *errnop, int *h_errnop
+    ) {
+
+    return _nss_mdns_gethostbyname3_r(
+        name,
+        af,
+        result,
+        buffer, buflen,
+        errnop, h_errnop,
+        NULL, NULL);
 }
 
 enum nss_status _nss_mdns_gethostbyname_r (

@@ -26,6 +26,7 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
 #include <sys/un.h>
@@ -67,7 +68,7 @@ fail:
     return NULL;
 }
 
-int avahi_resolve_name(int af, const char* name, void* data) {
+int avahi_resolve_name(int af, const char* name, query_address_result_t* result) {
     FILE *f = NULL;
     char *p;
     int ret = -1;
@@ -89,11 +90,14 @@ int avahi_resolve_name(int af, const char* name, void* data) {
         ret = 1;
         goto finish;
     }
+    
+    result->af = af;
 
     p = ln+1;
     p += strspn(p, WHITESPACE);
 
-    /* Skip interface */
+    /* Store interface number */
+    result->scopeid = (uint32_t) strtol(p, NULL, 0);
     p += strcspn(p, WHITESPACE);
     p += strspn(p, WHITESPACE);
 
@@ -108,7 +112,7 @@ int avahi_resolve_name(int af, const char* name, void* data) {
     /* Cut off end of line */
     *(p + strcspn(p, "\n\r\t ")) = 0;
 
-    if (inet_pton(af, p, data) <= 0)
+    if (inet_pton(af, p, &(result->address)) <= 0)
         goto finish;
 
     ret = 0;
