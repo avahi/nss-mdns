@@ -32,6 +32,8 @@ ac_default_prefix="/"
 
 AC_GNU_SOURCE
 
+PKG_CHECK_MODULES([CHECK], [check])
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
@@ -99,5 +101,5 @@ if test "x$GCC" = "xyes" ; then
    rm -f conftest.o
 fi
 
-AC_CONFIG_FILES([Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile tests/Makefile])
 AC_OUTPUT
