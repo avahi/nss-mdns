@@ -2,6 +2,10 @@
 *.o
 *.la
 *.lo
+*.log
+*.trs
+.deps
+.libs
 Makefile
 Makefile.in
 /aclocal.m4
@@ -14,8 +18,8 @@ Makefile.in
 /libtool
 /ltmain.sh
 /missing
-/src/.deps
-/src/.libs
 /src/avahi-test
 /src/nss-test
 /stamp-h1
+/test-driver
+/tests/check_util

@@ -18,4 +18,4 @@
 # USA.
 
 EXTRA_DIST=bootstrap.sh README.md ACKNOWLEDGEMENTS.md NEWS.md LICENSE
-SUBDIRS=src
+SUBDIRS=src tests
