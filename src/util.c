@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 #include <fcntl.h>
 
 #include "util.h"
@@ -53,4 +54,51 @@ int ends_with(const char *name, const char* suffix) {
         return 0;
 
     return strcasecmp(name+ln-ls, suffix) == 0;
+}
+
+int verify_name_allowed(const char *name) {
+#ifndef MDNS_MINIMAL
+    FILE *f;
+#endif
+
+    assert(name);
+
+#ifndef MDNS_MINIMAL
+    if ((f = fopen(MDNS_ALLOW_FILE, "r"))) {
+        int valid = 0;
+
+
+        while (!feof(f)) {
+            char ln[128], ln2[128], *t;
+
+            if (!fgets(ln, sizeof(ln), f))
+                break;
+
+            ln[strcspn(ln, "#\t\n\r ")] = 0;
+
+            if (ln[0] == 0)
+                continue;
+
+            if (strcmp(ln, "*") == 0) {
+                valid = 1;
+                break;
+            }
+
+            if (ln[0] != '.')
+                snprintf(t = ln2, sizeof(ln2), ".%s", ln);
+            else
+                t = ln;
+
+            if (ends_with(name, t)) {
+                valid = 1;
+                break;
+            }
+        }
+
+        fclose(f);
+        return valid;
+    }
+#endif
+
+    return ends_with(name, ".local") || ends_with(name, ".local.");
 }

@@ -28,5 +28,6 @@
 
 int set_cloexec(int fd);
 int ends_with(const char *name, const char *suffix);
+int verify_name_allowed(const char *name);
 
 #endif
