@@ -83,6 +83,7 @@ AC_HEADER_TIME
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_FUNC_SELECT_ARGTYPES
+AC_SEARCH_LIBS([__res_nquery], [resolv])
 AC_CHECK_FUNCS([gethostbyaddr gethostbyname gettimeofday inet_ntoa memset select socket strcspn strdup strerror strncasecmp strcasecmp strspn])
 
 # FreeBSD has a slightly different NSS interface
