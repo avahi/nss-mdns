@@ -21,12 +21,12 @@
 # USA.
 
 AC_PREREQ(2.57)
-AC_INIT([nss-mdns],[0.10],[mzaffzqaf (at) 0pointer (dot) de])
+AC_INIT([nss-mdns],[0.10],[https://github.com/lathiat/nss-mdns/issues])
 AC_CONFIG_SRCDIR([src/nss.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign 1.9 -Wall])
 
-AC_SUBST(PACKAGE_URL, [http://0pointer.de/lennart/projects/nss-mdns/])
+AC_SUBST(PACKAGE_URL, [https://github.com/lathiat/nss-mdns])
 
 ac_default_prefix="/"
 
