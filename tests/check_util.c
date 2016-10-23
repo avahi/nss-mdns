@@ -209,6 +209,21 @@ START_TEST(test_verify_name_allowed_com_and_local) {
 }
 END_TEST
 
+// Tests ends_with.
+START_TEST(test_ends_with) {
+    ck_assert(ends_with("", ""));
+    ck_assert(!ends_with("", " "));
+    ck_assert(!ends_with("", "z"));
+    ck_assert(ends_with("z", ""));
+    ck_assert(ends_with("z", "z"));
+    ck_assert(!ends_with("z", "zz"));
+    ck_assert(ends_with("example.local", ".local"));
+    ck_assert(ends_with("example.local.", ".local."));
+    ck_assert(!ends_with("example.local.", ".local"));
+    ck_assert(!ends_with("example.local.", ".local"));
+}
+END_TEST
+
 // Boilerplate from https://libcheck.github.io/check/doc/check_html/check_3.html
 static Suite *util_suite(void) {
     Suite *s;
@@ -224,6 +239,7 @@ static Suite *util_suite(void) {
     tcase_add_test(tc_core, test_verify_name_allowed_too_long);
     tcase_add_test(tc_core, test_verify_name_allowed_too_long2);
     tcase_add_test(tc_core, test_verify_name_allowed_com_and_local);
+    tcase_add_test(tc_core, test_ends_with);
     suite_add_tcase(s, tc_core);
 
     return s;
