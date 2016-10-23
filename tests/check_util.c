@@ -17,7 +17,7 @@
   USA.
 ***/
 
-#define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE
 
 #include <check.h>
 #include <stdlib.h>
@@ -26,17 +26,29 @@
 
 // Tests that verify_name_allowed works in MINIMAL mode, or with no config file.
 // Only names with TLD "local" are allowed.
+// Only 2-label names are allowed.
+// SOA check is required.
 START_TEST(test_verify_name_allowed_minimal) {
-    ck_assert(verify_name_allowed("example.local", NULL));
-    ck_assert(verify_name_allowed("example.local.", NULL));
-    ck_assert(verify_name_allowed("com.example.local", NULL));
-    ck_assert(verify_name_allowed("com.example.local.", NULL));
-    ck_assert(!verify_name_allowed("example.com", NULL));
-    ck_assert(!verify_name_allowed("example.com.", NULL));
-    ck_assert(!verify_name_allowed("example.local.com", NULL));
-    ck_assert(!verify_name_allowed("example.local.com.", NULL));
-    ck_assert(!verify_name_allowed("", NULL));
-    ck_assert(!verify_name_allowed(".", NULL));
+    ck_assert_int_eq(verify_name_allowed("example.local", NULL),
+                     VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA);
+    ck_assert_int_eq(verify_name_allowed("example.local.", NULL),
+                     VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA);
+    ck_assert_int_eq(verify_name_allowed("com.example.local", NULL),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed("com.example.local.", NULL),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed("example.com", NULL),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed("example.com.", NULL),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed("example.local.com", NULL),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed("example.local.com.", NULL),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed("", NULL),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed(".", NULL),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
 }
 END_TEST
 
@@ -55,60 +67,115 @@ static int verify_name_allowed_from_string(const char *name,
 START_TEST(test_verify_name_allowed_empty) {
     const char allow_file[] = "";
 
-    ck_assert(!verify_name_allowed_from_string("example.local", allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.local.", allow_file));
-    ck_assert(!verify_name_allowed_from_string("com.example.local", allow_file));
-    ck_assert(!verify_name_allowed_from_string("com.example.local.",
-                                               allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.com", allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.com.", allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.local.com",
-                                               allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.local.com.",
-                                               allow_file));
-    ck_assert(!verify_name_allowed_from_string("", allow_file));
-    ck_assert(!verify_name_allowed_from_string(".", allow_file));
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("com.example.local", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("com.example.local.", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.com", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.com.", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.com", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.com.", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string(".", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
 }
 END_TEST
 
 // Tests verify_name_allowed with the standard config.
+// .local is unconditionally permitted, without SOA check.
+// Multi-label names are allowed.
 START_TEST(test_verify_name_allowed_default) {
     const char allow_file[] =
         "# /etc/mdns.allow\n"
         ".local.\n"
         ".local\n";
 
-    ck_assert(verify_name_allowed_from_string("example.local", allow_file));
-    ck_assert(verify_name_allowed_from_string("example.local.", allow_file));
-    ck_assert(verify_name_allowed_from_string("com.example.local", allow_file));
-    ck_assert(verify_name_allowed_from_string("com.example.local.", allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.com", allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.com.", allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.local.com",
-                                               allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.local.com.",
-                                               allow_file));
-    ck_assert(!verify_name_allowed_from_string("", allow_file));
-    ck_assert(!verify_name_allowed_from_string(".", allow_file));
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("com.example.local", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("com.example.local.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.com", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.com.", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.com", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.com.", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string(".", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
 }
 END_TEST
 
 // Tests verify_name_allowed with wildcard.
+// Everything is permitted, with no SOA check.
+// Multi-label names are allowed.
 START_TEST(test_verify_name_allowed_wildcard) {
     const char allow_file[] = "*\n";
 
-    ck_assert(verify_name_allowed_from_string("example.local", allow_file));
-    ck_assert(verify_name_allowed_from_string("example.local.", allow_file));
-    ck_assert(verify_name_allowed_from_string("com.example.local", allow_file));
-    ck_assert(verify_name_allowed_from_string("com.example.local.", allow_file));
-    ck_assert(verify_name_allowed_from_string("example.com", allow_file));
-    ck_assert(verify_name_allowed_from_string("example.com.", allow_file));
-    ck_assert(verify_name_allowed_from_string("example.local.com",
-                                              allow_file));
-    ck_assert(verify_name_allowed_from_string("example.local.com.",
-                                              allow_file));
-    ck_assert(verify_name_allowed_from_string("", allow_file));
-    ck_assert(verify_name_allowed_from_string(".", allow_file));
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("com.example.local", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("com.example.local.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.com", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.com.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.com", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.com.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string(".", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
 }
 END_TEST
 
@@ -123,18 +190,32 @@ START_TEST(test_verify_name_allowed_too_long) {
         "\n"
         ".local\n";
 
-    ck_assert(verify_name_allowed_from_string("example.local", allow_file));
-    ck_assert(verify_name_allowed_from_string("example.local.", allow_file));
-    ck_assert(verify_name_allowed_from_string("com.example.local", allow_file));
-    ck_assert(verify_name_allowed_from_string("com.example.local.", allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.com", allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.com.", allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.local.com",
-                                               allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.local.com.",
-                                               allow_file));
-    ck_assert(!verify_name_allowed_from_string("", allow_file));
-    ck_assert(!verify_name_allowed_from_string(".", allow_file));
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("com.example.local", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("com.example.local.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("example.com", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("example.com.", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.com", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.com.", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string(".", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
 }
 END_TEST
 
@@ -152,36 +233,52 @@ START_TEST(test_verify_name_allowed_too_long2) {
         ".local\n";
 
     // The input is truncated at 127 bytes, so we allow this string.
-    ck_assert(verify_name_allowed_from_string(
+    ck_assert_int_eq(verify_name_allowed_from_string(
         "example"
         ".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
         "aaaaaaaaaaaaaaaaaaaaaaaaaaa",                       // 27 characters
-        allow_file));
+        allow_file),
+                     VERIFY_NAME_RESULT_ALLOWED);
 
     // Even though this exactly matches the item in the allow file,
     // it is too long.
-    ck_assert(!verify_name_allowed_from_string(
+    ck_assert_int_eq(verify_name_allowed_from_string(
         "example"
         ".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // 50 characters
-        allow_file));
+        allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
 
-    ck_assert(verify_name_allowed_from_string("example.local", allow_file));
-    ck_assert(verify_name_allowed_from_string("example.local.", allow_file));
-    ck_assert(verify_name_allowed_from_string("com.example.local", allow_file));
-    ck_assert(verify_name_allowed_from_string("com.example.local.", allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.com", allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.com.", allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.local.com",
-                                               allow_file));
-    ck_assert(!verify_name_allowed_from_string("example.local.com.",
-                                               allow_file));
-    ck_assert(!verify_name_allowed_from_string("", allow_file));
-    ck_assert(!verify_name_allowed_from_string(".", allow_file));
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("com.example.local", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("com.example.local.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("example.com", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("example.com.", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.com", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.com.", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string(".", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
 }
 END_TEST
 
@@ -194,18 +291,38 @@ START_TEST(test_verify_name_allowed_com_and_local) {
         ".local.\n"
         ".local\n";
 
-    ck_assert(verify_name_allowed_from_string("example.local", allow_file));
-    ck_assert(verify_name_allowed_from_string("example.local.", allow_file));
-    ck_assert(verify_name_allowed_from_string("com.example.local", allow_file));
-    ck_assert(verify_name_allowed_from_string("com.example.local.", allow_file));
-    ck_assert(verify_name_allowed_from_string("example.com", allow_file));
-    ck_assert(verify_name_allowed_from_string("example.com.", allow_file));
-    ck_assert(verify_name_allowed_from_string("example.local.com",
-                                              allow_file));
-    ck_assert(verify_name_allowed_from_string("example.local.com.",
-                                              allow_file));
-    ck_assert(!verify_name_allowed_from_string("", allow_file));
-    ck_assert(!verify_name_allowed_from_string(".", allow_file));
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("com.example.local", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("com.example.local.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.com", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.com.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.com", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.local.com.", allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("example.net", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("example.net.", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string(".", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
 }
 END_TEST
 
@@ -221,6 +338,20 @@ START_TEST(test_ends_with) {
     ck_assert(ends_with("example.local.", ".local."));
     ck_assert(!ends_with("example.local.", ".local"));
     ck_assert(!ends_with("example.local.", ".local"));
+}
+END_TEST
+
+// Tests label_count.
+START_TEST(test_label_count) {
+  ck_assert_int_eq(label_count(""), 1);
+  ck_assert_int_eq(label_count("."), 1);
+  ck_assert_int_eq(label_count("local"), 1);
+  ck_assert_int_eq(label_count("local."), 1);
+  ck_assert_int_eq(label_count("foo.local"), 2);
+  ck_assert_int_eq(label_count("foo.local."), 2);
+  ck_assert_int_eq(label_count("bar.foo.local."), 3);
+  ck_assert_int_eq(label_count("bar.foo.local."), 3);
+  ck_assert_int_eq(label_count("my-foo.local"), 2);
 }
 END_TEST
 
@@ -240,6 +371,7 @@ static Suite *util_suite(void) {
     tcase_add_test(tc_core, test_verify_name_allowed_too_long2);
     tcase_add_test(tc_core, test_verify_name_allowed_com_and_local);
     tcase_add_test(tc_core, test_ends_with);
+    tcase_add_test(tc_core, test_label_count);
     suite_add_tcase(s, tc_core);
 
     return s;
