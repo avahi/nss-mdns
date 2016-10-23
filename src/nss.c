@@ -120,17 +120,6 @@ static void name_callback(const char*name, void *userdata) {
     u->data_len += strlen(name)+1;
 }
 
-static int ends_with(const char *name, const char* suffix) {
-    size_t ln, ls;
-    assert(name);
-    assert(suffix);
-
-    if ((ls = strlen(suffix)) > (ln = strlen(name)))
-        return 0;
-
-    return strcasecmp(name+ln-ls, suffix) == 0;
-}
-
 static int verify_name_allowed(const char *name) {
 #ifndef MDNS_MINIMAL
     FILE *f;

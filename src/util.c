@@ -34,7 +34,7 @@
 int set_cloexec(int fd) {
     int n;
     assert(fd >= 0);
-    
+
     if ((n = fcntl(fd, F_GETFD)) < 0)
         return -1;
 
@@ -42,4 +42,15 @@ int set_cloexec(int fd) {
         return 0;
 
     return fcntl(fd, F_SETFD, n|FD_CLOEXEC);
+}
+
+int ends_with(const char *name, const char* suffix) {
+    size_t ln, ls;
+    assert(name);
+    assert(suffix);
+
+    if ((ls = strlen(suffix)) > (ln = strlen(name)))
+        return 0;
+
+    return strcasecmp(name+ln-ls, suffix) == 0;
 }

@@ -27,6 +27,6 @@
 #include <inttypes.h>
 
 int set_cloexec(int fd);
-
+int ends_with(const char *name, const char *suffix);
 
 #endif
