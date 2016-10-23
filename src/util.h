@@ -25,9 +25,10 @@
 #include <sys/time.h>
 #include <time.h>
 #include <inttypes.h>
+#include <stdio.h>
 
 int set_cloexec(int fd);
 int ends_with(const char *name, const char *suffix);
-int verify_name_allowed(const char *name);
+int verify_name_allowed(const char *name, FILE *mdns_allow_file);
 
 #endif

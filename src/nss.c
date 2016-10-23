@@ -30,6 +30,7 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <nss.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "avahi.h"
@@ -128,6 +129,8 @@ enum nss_status _nss_mdns_gethostbyname2_r(
     int *errnop,
     int *h_errnop) {
 
+    FILE *mdns_allow_file = NULL;
+    int name_allowed;
     struct userdata u;
     enum nss_status status = NSS_STATUS_UNAVAIL;
     int i;
@@ -186,7 +189,15 @@ enum nss_status _nss_mdns_gethostbyname2_r(
     ipv6_func = af == AF_INET6 ? ipv6_callback : NULL;
 #endif
 
-    if (verify_name_allowed(name)) {
+#ifndef MDNS_MINIMAL
+    mdns_allow_file = fopen(MDNS_ALLOW_FILE, "r");
+#endif
+    name_allowed = verify_name_allowed(name, mdns_allow_file);
+#ifndef MDNS_MINIMAL
+    if (mdns_allow_file)
+        fclose(mdns_allow_file);
+#endif
+    if (name_allowed) {
         int r = avahi_resolve_name(af, name, data);
         if (r == 0) {
             if (af == AF_INET && ipv4_func)
