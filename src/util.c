@@ -56,22 +56,16 @@ int ends_with(const char *name, const char* suffix) {
     return strcasecmp(name+ln-ls, suffix) == 0;
 }
 
-int verify_name_allowed(const char *name) {
-#ifndef MDNS_MINIMAL
-    FILE *f;
-#endif
-
+int verify_name_allowed(const char *name, FILE *mdns_allow_file) {
     assert(name);
 
-#ifndef MDNS_MINIMAL
-    if ((f = fopen(MDNS_ALLOW_FILE, "r"))) {
+    if (mdns_allow_file) {
         int valid = 0;
 
-
-        while (!feof(f)) {
+        while (!feof(mdns_allow_file)) {
             char ln[128], ln2[128], *t;
 
-            if (!fgets(ln, sizeof(ln), f))
+            if (!fgets(ln, sizeof(ln), mdns_allow_file))
                 break;
 
             ln[strcspn(ln, "#\t\n\r ")] = 0;
@@ -94,11 +88,8 @@ int verify_name_allowed(const char *name) {
                 break;
             }
         }
-
-        fclose(f);
         return valid;
+    } else {
+        return ends_with(name, ".local") || ends_with(name, ".local.");
     }
-#endif
-
-    return ends_with(name, ".local") || ends_with(name, ".local.");
 }
