@@ -26,9 +26,38 @@
 #include <time.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <resolv.h>
 
 int set_cloexec(int fd);
 int ends_with(const char *name, const char *suffix);
-int verify_name_allowed(const char *name, FILE *mdns_allow_file);
+
+// Returns true if we should try to resolve the name with mDNS.
+//
+// If mdns_allow_file is NULL, then this implements the "local" SOA
+// check and two-label name checks similarly to the algorithm
+// described at https://support.apple.com/en-us/HT201275. This means
+// that if a unicast DNS server claims authority on "local", or if the
+// user tries to resolve a >2-label name, we will not do mDNS resolution.
+//
+// The two heuristics described above are disabled if mdns_allow_file
+// is not NULL.
+int verify_name_allowed_with_soa(const char *name, FILE *mdns_allow_file);
+
+enum verify_name_result {
+    VERIFY_NAME_RESULT_NOT_ALLOWED,
+    VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA,
+    VERIFY_NAME_RESULT_ALLOWED
+};
+
+// Tells us if the name is not allowed unconditionally, allowed only
+// if local_soa() returns false, or unconditionally allowed.
+enum verify_name_result verify_name_allowed(const char *name,
+                                            FILE *mdns_allow_file);
+
+// Returns true if a DNS server claims authority over "local".
+int local_soa(void);
+
+// Returns the number of labels in a name.
+int label_count(const char *name);
 
 #endif
