@@ -34,6 +34,7 @@
 #include <stdlib.h>
 
 #include "avahi.h"
+#include "util.h"
 
 #if defined(NSS_IPV4_ONLY) && ! defined(MDNS_MINIMAL)
 #define _nss_mdns_gethostbyname2_r _nss_mdns4_gethostbyname2_r
@@ -192,7 +193,7 @@ enum nss_status _nss_mdns_gethostbyname2_r(
 #ifndef MDNS_MINIMAL
     mdns_allow_file = fopen(MDNS_ALLOW_FILE, "r");
 #endif
-    name_allowed = verify_name_allowed(name, mdns_allow_file);
+    name_allowed = verify_name_allowed_with_soa(name, mdns_allow_file);
 #ifndef MDNS_MINIMAL
     if (mdns_allow_file)
         fclose(mdns_allow_file);

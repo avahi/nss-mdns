@@ -126,14 +126,17 @@ an mDNS responder. (Don't try to use the tools `host` or
 If you run a firewall, don't forget to allow UDP traffic to the the
 mDNS multicast address `224.0.0.251` on port 5353.
 
-**Please note:** The line above makes `nss-mdns`
-authoritative for the `.local` domain. If you have a unicast
-DNS domain with the same name you will no longer be able to resolve
-hosts from it. mDNS and a unicast DNS domain named `.local` are
-inherently incompatible. Please contact your local admistrator and ask
-him to move to a different domain name since `.local` is to be
-used exclusively for Zeroconf technology. [Further
-information](http://avahi.org/wiki/AvahiAndUnicastDotLocal).
+**Please note:** The line above makes `nss-mdns` authoritative for the
+`.local` domain, unless your unicast DNS server responds to `SOA`
+queries for the top level `local` name, or if the request has more
+than two labels. (`X.local` might be resolved with `nss-mdns` but
+`X.Y.local` will not be.) `nss-mdns` will check `SOA` before every
+request to resolve `.local` names, meaning that neither `nss-mdns` nor
+`Avahi` need to be disabled to allow `.local` queries to be served
+from unicast DNS. (These two checks are only enabled in minimal mode
+or if there is no `/etc/mdns.allow` file. Any domain, with any number
+of labels, (including `.local`) will still be served authoritatively
+from `nss-mdns` if specified in `/etc/mdns.allow`.)
 
 Starting with version 0.5, `nss-mdns` has a simple
 configuration file `/etc/mdns.allow` for enabling name lookups
@@ -149,7 +152,7 @@ only (similar to `nss-mdns` mode of operation of versions &lt;= 0.4):
 ```
 
 If the configuration file is absent or unreadable
-`nss-mdns` behaves as if a configuration file with the following
+`nss-mdns` behaves mostly as if a configuration file with the following
 contents is read:
 
 ```
@@ -158,8 +161,11 @@ contents is read:
 .local
 ```
 
-i.e. only hostnames ending with `.local` are resolved via
-mDNS.
+i.e. only hostnames ending with `.local` are resolved via mDNS. Note
+that this is not exactly the same as having no such file, since we will
+always be authoritative for the entries in the file. (The heuristics
+of checking for SOA and requiring two-label names do not apply if the
+configuration file is used.)
 
 If the configuration file is existent but empty, mDNS name lookups are
 disabled completely. Please note that usually mDNS is not used for

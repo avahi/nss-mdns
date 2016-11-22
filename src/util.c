@@ -56,7 +56,19 @@ int ends_with(const char *name, const char* suffix) {
     return strcasecmp(name+ln-ls, suffix) == 0;
 }
 
-int verify_name_allowed(const char *name, FILE *mdns_allow_file) {
+int verify_name_allowed_with_soa(const char *name, FILE *mdns_allow_file) {
+    switch (verify_name_allowed(name, mdns_allow_file)) {
+        case VERIFY_NAME_RESULT_NOT_ALLOWED:
+            return 0;
+        case VERIFY_NAME_RESULT_ALLOWED:
+            return 1;
+        case VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA:
+            return !local_soa();
+    }
+}
+
+enum verify_name_result verify_name_allowed(const char *name,
+                                            FILE *mdns_allow_file) {
     assert(name);
 
     if (mdns_allow_file) {
@@ -88,8 +100,45 @@ int verify_name_allowed(const char *name, FILE *mdns_allow_file) {
                 break;
             }
         }
-        return valid;
+        if (valid)
+            return VERIFY_NAME_RESULT_ALLOWED;
+        else
+            return VERIFY_NAME_RESULT_NOT_ALLOWED;
     } else {
-        return ends_with(name, ".local") || ends_with(name, ".local.");
+        if ((ends_with(name, ".local") || ends_with(name, ".local.")) &&
+            (label_count(name) == 2))
+            return VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA;
+        else
+            return VERIFY_NAME_RESULT_NOT_ALLOWED;
     }
+}
+
+int local_soa(void) {
+    struct __res_state state;
+    int result;
+    unsigned char answer[NS_MAXMSG];
+
+    result = res_ninit(&state);
+    if (result == -1)
+        return 0;
+    result = res_nquery(&state, "local", ns_c_in, ns_t_soa,
+                        answer, sizeof answer);
+    res_nclose(&state);
+    return result > 0;
+}
+
+int label_count(const char *name) {
+    // Start with single label.
+    int count = 1;
+    size_t i, len;
+    assert(name);
+
+    len = strlen(name);
+    // Count all dots not in the last place.
+    for (i = 0; i < len; i++) {
+        if ((name[i] == '.') && (i != (len-1)))
+            count++;
+    }
+
+    return count;
 }
