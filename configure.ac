@@ -32,7 +32,13 @@ ac_default_prefix="/"
 
 AC_GNU_SOURCE
 
-PKG_CHECK_MODULES([CHECK], [check])
+PKG_CHECK_MODULES([CHECK], [check], [have_check=yes], [have_check=no])
+AM_CONDITIONAL([HAVE_CHECK], [test "x$have_check" = "xyes"])
+
+if test "x$have_check" = "xno" ; then
+    AC_MSG_WARN([$CHECK_PKG_ERRORS])
+    AC_MSG_WARN([Unit tests will be disabled])
+fi
 
 # Checks for programs.
 AC_PROG_CC
