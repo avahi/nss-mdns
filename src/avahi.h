@@ -25,7 +25,24 @@
 #include <inttypes.h>
 #include <sys/types.h>
 
-int avahi_resolve_name(int af, const char* name, void* data);
+typedef struct {
+    uint32_t address;
+} ipv4_address_t;
+
+typedef struct {
+    uint8_t address[16];
+} ipv6_address_t;
+
+typedef struct {
+    int af;
+    union {
+        ipv4_address_t ipv4;
+        ipv6_address_t ipv6;
+    } address;
+    uint32_t scopeid;
+} query_address_result_t;
+
+int avahi_resolve_name(int af, const char* name, query_address_result_t* result);
 
 int avahi_resolve_address(int af, const void *data, char* name, size_t name_len);
 
