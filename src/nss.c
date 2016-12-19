@@ -157,7 +157,6 @@ static enum nss_status gethostbyname_impl(
     int avahi_works = 1;
     int name_allowed;
     FILE *mdns_allow_file = NULL;
-    query_address_result_t address_result;
 
 /*     DEBUG_TRAP; */
 
