@@ -64,6 +64,8 @@ int verify_name_allowed_with_soa(const char *name, FILE *mdns_allow_file) {
             return 1;
         case VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA:
             return !local_soa();
+        default:
+            return 0;
     }
 }
 
