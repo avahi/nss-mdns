@@ -271,12 +271,8 @@ enum nss_status _nss_mdns_gethostbyname4_r(
         tuple->family = u.data.result[i].af;
 
         // Copy address
+        memset(&(tuple->addr), 0, sizeof(tuple->addr));
         memcpy(&(tuple->addr), &(u.data.result[i].address), address_length);
-        if(address_length < sizeof(ipv6_address_t)) {
-            memset((&(tuple->addr) + address_length - sizeof(ipv6_address_t)), 0,
-                (sizeof(ipv6_address_t) - address_length)
-            );
-        }
 
         // Assign interface scope id
         tuple->scopeid = u.data.result[i].scopeid;
