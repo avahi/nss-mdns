@@ -1,5 +1,21 @@
 # News
 
+## Mon Jan 22 2018:
+
+Version 0.11 released. The first release in some time! Highlights:
+
+* Moved to new GitHub location, docs migrated to markdown
+* The long-deprecated `LEGACY` mode is removed
+* The long-deprecated `HONOUR_SEARCH_DOMAINS` option is removed
+* Unit tests are now included, with `make check`
+* nss-mdns now implements [standard
+  heuristics](https://support.apple.com/en-us/HT201275) for
+  detecting `.local` unicast resolution and will automatically
+  disable resolution when a local server responds to `.local` requests
+* `_nss_mdns_gethostbyname3_r` and `_nss_mdns_gethostbyname4_r`
+  are now implemented
+* Full dual-stack IPv4/IPv6 support is implemented
+
 ## Sat May 12 2007:
 
 [Version 0.10](http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-0.10.tar.gz)
