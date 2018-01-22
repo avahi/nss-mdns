@@ -25,6 +25,7 @@ AC_INIT([nss-mdns],[0.10],[https://github.com/lathiat/nss-mdns/issues])
 AC_CONFIG_SRCDIR([src/nss.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign 1.9 -Wall])
+AC_CONFIG_MACRO_DIRS([m4])
 
 AC_SUBST(PACKAGE_URL, [https://github.com/lathiat/nss-mdns])
 
@@ -41,6 +42,7 @@ if test "x$have_check" = "xno" ; then
 fi
 
 # Checks for programs.
+AM_PROG_AR
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
@@ -48,7 +50,7 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
 test_gcc_flag() {
-    AC_LANG_CONFTEST([int main() {}])
+    AC_LANG_CONFTEST([AC_LANG_SOURCE([int main() {}])])
     $CC -c conftest.c $CFLAGS $@ > /dev/null 2> /dev/null
     ret=$?
     rm -f conftest.o
@@ -103,7 +105,7 @@ AM_CONDITIONAL([FREEBSD_NSS], [test "x$freebsd" = "xyes"])
 if test "x$GCC" = "xyes" ; then
    CFLAGS="$CFLAGS -pipe -W -Wall -pedantic"
 
-   AC_LANG_CONFTEST([int main() {}])
+   AC_LANG_CONFTEST([AC_LANG_SOURCE([int main() {}])])
    $CC -c conftest.c -std=c99 -Wno-unused-parameter $CFLAGS > /dev/null 2> /dev/null && CFLAGS="$CFLAGS -std=c99 -Wno-unused-parameter"
    rm -f conftest.o
 fi
