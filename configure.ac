@@ -21,7 +21,7 @@
 # USA.
 
 AC_PREREQ(2.57)
-AC_INIT([nss-mdns],[0.10],[https://github.com/lathiat/nss-mdns/issues])
+AC_INIT([nss-mdns],[0.11],[https://github.com/lathiat/nss-mdns/issues])
 AC_CONFIG_SRCDIR([src/nss.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign 1.9 -Wall])
