@@ -75,12 +75,6 @@ enum nss_status _nss_mdns_gethostbyaddr_r(const void*, int, int, struct hostent*
 /* Maximum number of entries to return */
 #define MAX_ENTRIES 16
 
-#define ALIGN(idx)                                                                     \
-    do {                                                                               \
-        if (idx % sizeof(void*))                                                       \
-            idx += (sizeof(void*) - idx % sizeof(void*)); /* Align on word boundary */ \
-    } while (0)
-
 struct userdata {
     int count;
     int data_len; /* only valid when doing reverse lookup */

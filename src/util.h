@@ -25,6 +25,13 @@
 #include <stdio.h>
 #include <resolv.h>
 
+// Increments idx to align on machine word boundary.
+#define ALIGN(idx)                                        \
+    do {                                                  \
+        if (idx % sizeof(void*))                          \
+            idx += (sizeof(void*) - idx % sizeof(void*)); \
+    } while (0)
+
 int set_cloexec(int fd);
 int ends_with(const char* name, const char* suffix);
 
