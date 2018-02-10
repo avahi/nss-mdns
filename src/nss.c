@@ -275,10 +275,25 @@ enum nss_status _nss_mdns_gethostbyname4_r(
         // Assign interface scope id
         tuple->scopeid = u.data.result[i].scopeid;
 
-        // Link in previous address tuple
-        if(tuple_prev == NULL) {
+        if (tuple_prev == NULL) {
+            // This is the first tuple.
+
+            // If the caller has provided a valid initial location in *pat,
+            // then put a copy of the first result there as well. Without this,
+            // nscd will segfault because it assumes that the buffer is only
+            // used as an overflow.
+            // See https://lists.freedesktop.org/archives/systemd-devel/2013-February/008606.html
+            //
+            // Unfortunately, it is probably not worth redoing all the buffer
+            // allocation code above to remove this small duplication.
+            if (*pat) {
+                **pat = *tuple;
+            }
+
+            // Return the start of the list in *pat.
             *pat = tuple;
         } else {
+            // Link the new tuple into the previous tuple.
             tuple_prev->next = tuple;
         }
 
