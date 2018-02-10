@@ -26,6 +26,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <netdb.h>
 
 #include "util.h"
 
@@ -140,4 +141,82 @@ int label_count(const char* name) {
     }
 
     return count;
+}
+
+enum nss_status convert_userdata_to_addrtuple(userdata_t* u,
+                                              const char* name,
+                                              struct gaih_addrtuple** pat,
+                                              char* buffer, size_t buflen,
+                                              int* errnop, int* h_errnop) {
+
+    /* Check if there's enough space for the addresses */
+    // strlen(name)+1                         - Host name string
+    // sizeof(struct gaih_addrtuple)*u->count - All address result structures
+    // 3*(1+u->count)                         - Theoretical alignment byte maximum
+    if (buflen < (strlen(name) + 1 + sizeof(struct gaih_addrtuple) * u->count + 3 * (1 + u->count))) {
+        *errnop = ERANGE;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_TRYAGAIN;
+    }
+
+    size_t idx = 0;
+
+    // Copy name to buffer (referenced in every result address tuple)
+    char* buffer_name = buffer + idx;
+    strcpy(buffer_name, name);
+    idx += strlen(buffer_name) + 1;
+    ALIGN(idx);
+
+    struct gaih_addrtuple* tuple_prev = NULL;
+    for (int i = 0; i < u->count; i++) {
+        struct gaih_addrtuple* tuple;
+        if (tuple_prev == NULL && *pat) {
+            // The caller has provided a valid initial location in *pat,
+            // so use that as the first result. Without this, nscd will
+            // segfault because it assumes that the buffer is only used as
+            // an overflow.
+            // See
+            // https://lists.freedesktop.org/archives/systemd-devel/2013-February/008606.html
+            tuple = *pat;
+        } else {
+            // Allocate a new tuple from the buffer.
+            tuple = (struct gaih_addrtuple*)(buffer + idx);
+            idx += sizeof(*tuple);
+            ALIGN(idx);
+        }
+
+        size_t address_length = sizeof(ipv4_address_t);
+        if (u->data.result[i].af == AF_INET6) {
+            address_length = sizeof(ipv6_address_t);
+        }
+
+        // Will be overwritten by next address assignment (if there is one)
+        tuple->next = NULL;
+
+        // Assign the (always same) name
+        tuple->name = buffer_name;
+
+        // Assign actual address family of address
+        tuple->family = u->data.result[i].af;
+
+        // Copy address
+        memset(&(tuple->addr), 0, sizeof(tuple->addr));
+        memcpy(&(tuple->addr), &(u->data.result[i].address), address_length);
+
+        // Assign interface scope id
+        tuple->scopeid = u->data.result[i].scopeid;
+
+        if (tuple_prev == NULL) {
+            // This is the first tuple.
+            // Return the start of the list in *pat.
+            *pat = tuple;
+        } else {
+            // Link the new tuple into the previous tuple.
+            tuple_prev->next = tuple;
+        }
+
+        tuple_prev = tuple;
+    }
+
+    return NSS_STATUS_SUCCESS;
 }

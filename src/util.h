@@ -22,8 +22,11 @@
 #include <sys/time.h>
 #include <time.h>
 #include <inttypes.h>
+#include <nss.h>
 #include <stdio.h>
 #include <resolv.h>
+
+#include "avahi.h"
 
 // Increments idx to align on machine word boundary.
 #define ALIGN(idx)                                        \
@@ -63,5 +66,12 @@ int local_soa(void);
 
 // Returns the number of labels in a name.
 int label_count(const char* name);
+
+// Converts from the callback struct into the gaih_addrtuple format.
+enum nss_status convert_userdata_to_addrtuple(userdata_t* u,
+                                              const char* name,
+                                              struct gaih_addrtuple** pat,
+                                              char* buffer, size_t buflen,
+                                              int* errnop, int* h_errnop);
 
 #endif
