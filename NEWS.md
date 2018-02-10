@@ -1,5 +1,13 @@
 # News
 
+## Sat Feb 10 2018:
+
+Version 0.12 released. Highlights:
+
+* Fix segfault when using nscd
+* Remove untested, unmaintained BSD support (please help out if you
+  would like BSD support to return!)
+
 ## Mon Jan 22 2018:
 
 Version 0.11 released. The first release in some time! Highlights:
