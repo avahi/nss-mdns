@@ -158,8 +158,6 @@ static enum nss_status gethostbyname_impl(
     int name_allowed;
     FILE *mdns_allow_file = NULL;
 
-/*     DEBUG_TRAP; */
-
 #ifdef NSS_IPV4_ONLY
     if (af == AF_UNSPEC) {
         af = AF_INET;
