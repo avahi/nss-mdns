@@ -72,20 +72,8 @@ enum nss_status _nss_mdns_gethostbyname2_r(const char*, int, struct hostent*, ch
 enum nss_status _nss_mdns_gethostbyname_r(const char*, struct hostent*, char*, size_t, int*, int*);
 enum nss_status _nss_mdns_gethostbyaddr_r(const void*, int, int, struct hostent*, char*, size_t, int*, int*);
 
-/* Maximum number of entries to return */
-#define MAX_ENTRIES 16
-
-struct userdata {
-    int count;
-    int data_len; /* only valid when doing reverse lookup */
-    union {
-        query_address_result_t result[MAX_ENTRIES];
-        char* name[MAX_ENTRIES];
-    } data;
-};
-
 static void address_callback(const query_address_result_t* result, void* userdata) {
-    struct userdata* u = (struct userdata*)userdata;
+    userdata_t* u = userdata;
     assert(result && u);
 
     if (u->count >= MAX_ENTRIES)
@@ -97,7 +85,7 @@ static void address_callback(const query_address_result_t* result, void* userdat
 }
 
 static void name_callback(const char* name, void* userdata) {
-    struct userdata* u = userdata;
+    userdata_t* u = userdata;
     assert(name && userdata);
 
     if (u->count >= MAX_ENTRIES)
@@ -139,7 +127,7 @@ static int do_avahi_resolve_name(int af, const char* name, void* userdata, int* 
 
 static enum nss_status gethostbyname_impl(
     const char* name, int af,
-    struct userdata* u,
+    userdata_t* u,
     int* errnop,
     int* h_errnop) {
 
@@ -213,7 +201,7 @@ enum nss_status _nss_mdns_gethostbyname4_r(
     size_t idx;
     char* buffer_name;
     struct gaih_addrtuple* tuple_prev;
-    struct userdata u;
+    userdata_t u;
 
     // Since populating the buffer works differently in `gethostbyname[23]?` than in
     // `gethostbyname4`, we delegate the actual information gathering to a subroutine.
@@ -306,7 +294,7 @@ enum nss_status _nss_mdns_gethostbyname3_r(
     int i;
     size_t address_length, idx, astart;
 
-    struct userdata u;
+    userdata_t u;
     enum nss_status status;
 
     // The interfaces for gethostbyname3_r and below do not actually support returning results
@@ -422,7 +410,7 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     int* errnop,
     int* h_errnop) {
 
-    struct userdata u;
+    userdata_t u;
     enum nss_status status = NSS_STATUS_UNAVAIL;
     int r;
     size_t address_length, idx, astart;

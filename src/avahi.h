@@ -22,6 +22,9 @@
 #include <inttypes.h>
 #include <sys/types.h>
 
+// Maximum number of entries to return.
+#define MAX_ENTRIES 16
+
 typedef struct {
     uint32_t address;
 } ipv4_address_t;
@@ -38,6 +41,15 @@ typedef struct {
     } address;
     uint32_t scopeid;
 } query_address_result_t;
+
+typedef struct {
+    int count;
+    int data_len; /* only valid when doing reverse lookup */
+    union {
+        query_address_result_t result[MAX_ENTRIES];
+        char* name[MAX_ENTRIES];
+    } data;
+} userdata_t;
 
 int avahi_resolve_name(int af, const char* name, query_address_result_t* result);
 
