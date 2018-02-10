@@ -35,29 +35,29 @@
 
 #define WHITESPACE " \t"
 
-static FILE *open_socket(void) {
+static FILE* open_socket(void) {
     int fd = -1;
     struct sockaddr_un sa;
-    FILE *f = NULL;
+    FILE* f = NULL;
 
     if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
         goto fail;
 
     set_cloexec(fd);
-    
+
     memset(&sa, 0, sizeof(sa));
     sa.sun_family = AF_UNIX;
-    strncpy(sa.sun_path, AVAHI_SOCKET, sizeof(sa.sun_path)-1);
-    sa.sun_path[sizeof(sa.sun_path)-1] = 0;
+    strncpy(sa.sun_path, AVAHI_SOCKET, sizeof(sa.sun_path) - 1);
+    sa.sun_path[sizeof(sa.sun_path) - 1] = 0;
 
-    if (connect(fd, (struct sockaddr*) &sa, sizeof(sa)) < 0)
+    if (connect(fd, (struct sockaddr*)&sa, sizeof(sa)) < 0)
         goto fail;
 
     if (!(f = fdopen(fd, "r+")))
         goto fail;
 
     return f;
-    
+
 fail:
     if (fd >= 0)
         close(fd);
@@ -66,14 +66,14 @@ fail:
 }
 
 int avahi_resolve_name(int af, const char* name, query_address_result_t* result) {
-    FILE *f = NULL;
-    char *p;
+    FILE* f = NULL;
+    char* p;
     int ret = -1;
     char ln[256];
 
     if (af != AF_INET && af != AF_INET6)
         goto finish;
-    
+
     if (!(f = open_socket()))
         goto finish;
 
@@ -87,14 +87,14 @@ int avahi_resolve_name(int af, const char* name, query_address_result_t* result)
         ret = 1;
         goto finish;
     }
-    
+
     result->af = af;
 
-    p = ln+1;
+    p = ln + 1;
     p += strspn(p, WHITESPACE);
 
     /* Store interface number */
-    result->scopeid = (uint32_t) strtol(p, NULL, 0);
+    result->scopeid = (uint32_t)strtol(p, NULL, 0);
     p += strcspn(p, WHITESPACE);
     p += strspn(p, WHITESPACE);
 
@@ -113,7 +113,7 @@ int avahi_resolve_name(int af, const char* name, query_address_result_t* result)
         goto finish;
 
     ret = 0;
-    
+
 finish:
 
     if (f)
@@ -122,20 +122,20 @@ finish:
     return ret;
 }
 
-int avahi_resolve_address(int af, const void *data, char* name, size_t name_len) {
-    FILE *f = NULL;
-    char *p;
+int avahi_resolve_address(int af, const void* data, char* name, size_t name_len) {
+    FILE* f = NULL;
+    char* p;
     int ret = -1;
     char a[256], ln[256];
 
     if (af != AF_INET && af != AF_INET6)
         goto finish;
-    
+
     if (!(f = open_socket()))
         goto finish;
 
     fprintf(f, "RESOLVE-ADDRESS %s\n", inet_ntop(af, data, a, sizeof(a)));
-    
+
     if (!(fgets(ln, sizeof(ln), f)))
         goto finish;
 
@@ -144,7 +144,7 @@ int avahi_resolve_address(int af, const void *data, char* name, size_t name_len)
         goto finish;
     }
 
-    p = ln+1;
+    p = ln + 1;
     p += strspn(p, WHITESPACE);
 
     /* Skip interface */
@@ -154,15 +154,15 @@ int avahi_resolve_address(int af, const void *data, char* name, size_t name_len)
     /* Skip protocol */
     p += strcspn(p, WHITESPACE);
     p += strspn(p, WHITESPACE);
-    
+
     /* Cut off end of line */
     *(p + strcspn(p, "\n\r\t ")) = 0;
 
-    strncpy(name, p, name_len-1);
-    name[name_len-1] = 0;
+    strncpy(name, p, name_len - 1);
+    name[name_len - 1] = 0;
 
     ret = 0;
-     
+
 finish:
 
     if (f)

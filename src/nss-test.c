@@ -26,13 +26,13 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-int main(int argc, char *argv[]) {
-    struct hostent *he;
-    in_addr_t **a;
-    const char *arg= argc > 1 ? argv[1] : "cocaine.local";
+int main(int argc, char* argv[]) {
+    struct hostent* he;
+    in_addr_t** a;
+    const char* arg = argc > 1 ? argv[1] : "cocaine.local";
     uint8_t t[256];
-    
-    if (inet_pton(AF_INET, arg, &t) > 0) 
+
+    if (inet_pton(AF_INET, arg, &t) > 0)
         he = gethostbyaddr(t, 4, AF_INET);
     else if (inet_pton(AF_INET6, arg, &t) > 0)
         he = gethostbyaddr(t, 16, AF_INET6);
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     if (!he->h_aliases || !he->h_aliases[0])
         fprintf(stderr, "no aliases\n");
     else {
-        char **h;
+        char** h;
         fprintf(stderr, "aliases:");
         for (h = he->h_aliases; *h; h++)
             fprintf(stderr, " %s", *h);
@@ -60,11 +60,11 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "addr length: %i\n", he->h_length);
 
     fprintf(stderr, "addresses:");
-    for (a = (in_addr_t**) he->h_addr_list; *a;  a++) {
+    for (a = (in_addr_t**)he->h_addr_list; *a; a++) {
         char txt[256];
         fprintf(stderr, " %s", inet_ntop(he->h_addrtype, *a, txt, sizeof(txt)));
     }
     fprintf(stderr, "\n");
-    
+
     return 0;
 }

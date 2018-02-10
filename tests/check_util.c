@@ -51,11 +51,10 @@ START_TEST(test_verify_name_allowed_minimal) {
 }
 END_TEST
 
-
 // Calls verify_name_allowed by first creating a memfile to read from.
-static int verify_name_allowed_from_string(const char *name,
-                                           const char *file_contents) {
-    FILE *f = fmemopen((void *) file_contents, strlen(file_contents), "r");
+static int verify_name_allowed_from_string(const char* name,
+                                           const char* file_contents) {
+    FILE* f = fmemopen((void*)file_contents, strlen(file_contents), "r");
     int result = verify_name_allowed(name, f);
     fclose(f);
     return result;
@@ -233,23 +232,23 @@ START_TEST(test_verify_name_allowed_too_long2) {
 
     // The input is truncated at 127 bytes, so we allow this string.
     ck_assert_int_eq(verify_name_allowed_from_string(
-        "example"
-        ".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaa",                       // 27 characters
-        allow_file),
+                         "example"
+                         ".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
+                         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
+                         "aaaaaaaaaaaaaaaaaaaaaaaaaaa",                       // 27 characters
+                         allow_file),
                      VERIFY_NAME_RESULT_ALLOWED);
 
     // Even though this exactly matches the item in the allow file,
     // it is too long.
     ck_assert_int_eq(verify_name_allowed_from_string(
-        "example"
-        ".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // 50 characters
-        allow_file),
+                         "example"
+                         ".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  // 50 characters
+                         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  // 50 characters
+                         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  // 50 characters
+                         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  // 50 characters
+                         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // 50 characters
+                         allow_file),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
 
     ck_assert_int_eq(
@@ -342,23 +341,23 @@ END_TEST
 
 // Tests label_count.
 START_TEST(test_label_count) {
-  ck_assert_int_eq(label_count(""), 1);
-  ck_assert_int_eq(label_count("."), 1);
-  ck_assert_int_eq(label_count("local"), 1);
-  ck_assert_int_eq(label_count("local."), 1);
-  ck_assert_int_eq(label_count("foo.local"), 2);
-  ck_assert_int_eq(label_count("foo.local."), 2);
-  ck_assert_int_eq(label_count("bar.foo.local"), 3);
-  ck_assert_int_eq(label_count("bar.foo.local."), 3);
-  ck_assert_int_eq(label_count("my-foo.local"), 2);
-  ck_assert_int_eq(label_count("my-foo.local."), 2);
+    ck_assert_int_eq(label_count(""), 1);
+    ck_assert_int_eq(label_count("."), 1);
+    ck_assert_int_eq(label_count("local"), 1);
+    ck_assert_int_eq(label_count("local."), 1);
+    ck_assert_int_eq(label_count("foo.local"), 2);
+    ck_assert_int_eq(label_count("foo.local."), 2);
+    ck_assert_int_eq(label_count("bar.foo.local"), 3);
+    ck_assert_int_eq(label_count("bar.foo.local."), 3);
+    ck_assert_int_eq(label_count("my-foo.local"), 2);
+    ck_assert_int_eq(label_count("my-foo.local."), 2);
 }
 END_TEST
 
 // Boilerplate from https://libcheck.github.io/check/doc/check_html/check_3.html
-static Suite *util_suite(void) {
-    Suite *s;
-    TCase *tc_core;
+static Suite* util_suite(void) {
+    Suite* s;
+    TCase* tc_core;
 
     s = suite_create("util");
     tc_core = tcase_create("Core");
@@ -379,8 +378,8 @@ static Suite *util_suite(void) {
 
 int main(void) {
     int number_failed;
-    Suite *s;
-    SRunner *sr;
+    Suite* s;
+    SRunner* sr;
 
     s = util_suite();
     sr = srunner_create(s);

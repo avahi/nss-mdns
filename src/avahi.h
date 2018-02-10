@@ -41,6 +41,6 @@ typedef struct {
 
 int avahi_resolve_name(int af, const char* name, query_address_result_t* result);
 
-int avahi_resolve_address(int af, const void *data, char* name, size_t name_len);
+int avahi_resolve_address(int af, const void* data, char* name, size_t name_len);
 
 #endif
