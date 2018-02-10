@@ -1,4 +1,4 @@
-/***
+/*
   This file is part of nss-mdns.
 
   nss-mdns is free software; you can redistribute it and/or modify
@@ -14,7 +14,7 @@
   You should have received a copy of the GNU Lesser General Public
   License along with nss-mdns; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-***/
+*/
 
 /* Original author: Bruce M. Simpson <bms@FreeBSD.org> */
 
