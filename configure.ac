@@ -91,13 +91,6 @@ AC_FUNC_SELECT_ARGTYPES
 AC_SEARCH_LIBS([__res_nquery], [resolv])
 AC_CHECK_FUNCS([gethostbyaddr gethostbyname gettimeofday inet_ntoa memset select socket strcspn strdup strerror strncasecmp strcasecmp strspn])
 
-# FreeBSD has a slightly different NSS interface
-case ${host} in
-     *-freebsd*) freebsd="yes" ;;
-esac
-
-AM_CONDITIONAL([FREEBSD_NSS], [test "x$freebsd" = "xyes"])
-
 # If using GCC specify some additional parameters
 if test "x$GCC" = "xyes" ; then
    CFLAGS="$CFLAGS -pipe -W -Wall -pedantic"
