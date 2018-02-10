@@ -338,7 +338,6 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     int* h_errnop) {
 
     userdata_t u;
-    enum nss_status status = NSS_STATUS_UNAVAIL;
     int r;
     size_t address_length, idx, astart;
     char t[256];
@@ -362,8 +361,7 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     ) {
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
-
-        goto finish;
+        return NSS_STATUS_UNAVAIL;
     }
 
     /* Check for buffer space */
@@ -373,9 +371,7 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
 
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
-        status = NSS_STATUS_TRYAGAIN;
-
-        goto finish;
+        return NSS_STATUS_TRYAGAIN;
     }
 
 #ifdef MDNS_MINIMAL
@@ -386,8 +382,7 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
 
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
-
-        goto finish;
+        return NSS_STATUS_UNAVAIL;
     }
 #endif
 
@@ -397,14 +392,13 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     } else if (r > 0) {
         *errnop = ETIMEDOUT;
         *h_errnop = HOST_NOT_FOUND;
-        status = NSS_STATUS_NOTFOUND;
-        goto finish;
+        return NSS_STATUS_NOTFOUND;
     }
 
     if (u.count == 0) {
         *errnop = ETIMEDOUT;
         *h_errnop = NO_RECOVERY;
-        goto finish;
+        return NSS_STATUS_UNAVAIL;
     }
 
     /* Alias names, assuming buffer starts a nicely aligned offset */
@@ -424,8 +418,7 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
 
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
-        status = NSS_STATUS_TRYAGAIN;
-        goto finish;
+        return NSS_STATUS_TRYAGAIN;
     }
 
     /* Official name */
@@ -449,8 +442,5 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     ((char**)(buffer + idx))[1] = NULL;
     result->h_addr_list = (char**)(buffer + idx);
 
-    status = NSS_STATUS_SUCCESS;
-
-finish:
-    return status;
+    return NSS_STATUS_SUCCESS;
 }
