@@ -16,4 +16,6 @@
 # License along with nss-mdns; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
-autoreconf -i -f -v -m
+autoreconf -i -f -v
+./configure --sysconfdir=/etc --localstatedir=/var "$@"
+make clean
