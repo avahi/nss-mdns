@@ -24,14 +24,9 @@ AM_CFLAGS = \
 	-DRESOLV_CONF_FILE=\"$(sysconfdir)/resolv.conf\" \
 	-DAVAHI_SOCKET=\"$(localstatedir)/run/avahi-daemon/socket\"
 
-#AM_CFLAGS += -DNDEBUG=1 -Os
-
-# This cool debug trap works on i386/gcc only
-AM_CFLAGS+='-DDEBUG_TRAP=__asm__("int $$3")'
-
 AM_LDFLAGS=-avoid-version -module -export-dynamic
 
-lib_LTLIBRARIES = 
+lib_LTLIBRARIES =
 
 if FREEBSD_NSS
 lib_LTLIBRARIES += \
@@ -56,7 +51,7 @@ sources = util.c util.h avahi.c avahi.h
 
 # GNU Libc
 libnss_mdns_la_SOURCES= $(sources) nss.c
-libnss_mdns_la_CFLAGS=$(AM_CFLAGS) 
+libnss_mdns_la_CFLAGS=$(AM_CFLAGS)
 libnss_mdns_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.2 -Wl,-version-script=$(srcdir)/map-file
 
 libnss_mdns_minimal_la_SOURCES=$(libnss_mdns_la_SOURCES)
@@ -113,17 +108,17 @@ nss_test_SOURCES = \
 	nss-test.c
 
 install-exec-hook:
-	rm -f $(DESTDIR)$(libdir)/libnss_mdns.la 
-	rm -f $(DESTDIR)$(libdir)/libnss_mdns_minimal.la 
-	rm -f $(DESTDIR)$(libdir)/libnss_mdns4.la 
-	rm -f $(DESTDIR)$(libdir)/libnss_mdns4_minimal.la 
-	rm -f $(DESTDIR)$(libdir)/libnss_mdns6.la 
-	rm -f $(DESTDIR)$(libdir)/libnss_mdns6_minimal.la 
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns.la
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns_minimal.la
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns4.la
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns4_minimal.la
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns6.la
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns6_minimal.la
 
 uninstall-hook:
-	rm -f $(DESTDIR)$(libdir)/libnss_mdns.so.2 
-	rm -f $(DESTDIR)$(libdir)/libnss_mdns_minimal.so.2 
-	rm -f $(DESTDIR)$(libdir)/libnss_mdns4.so.2 
-	rm -f $(DESTDIR)$(libdir)/libnss_mdns4_minimal.so.2 
-	rm -f $(DESTDIR)$(libdir)/libnss_mdns6.so.2 
-	rm -f $(DESTDIR)$(libdir)/libnss_mdns6_minimal.so.2 
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns.so.2
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns_minimal.so.2
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns4.so.2
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns4_minimal.so.2
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns6.so.2
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns6_minimal.so.2
