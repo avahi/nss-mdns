@@ -249,8 +249,9 @@ void* buffer_alloc(buffer_t* buf, size_t size) {
     }
 
     // We have enough space. Set up the next aligned pointer and return
-    // the current one.
+    // the current one, zeroed.
     char* current = buf->next;
     buf->next = aligned_ptr(alloc_end);
+    memset(current, 0, size);
     return current;
 }

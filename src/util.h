@@ -83,7 +83,8 @@ typedef struct {
 // Sets up a buffer.
 void buffer_init(buffer_t* buf, char* buffer, size_t buflen);
 
-// Allocate an aligned chunk of memory of a given size from the buffer manager.
+// Allocate a zeroed, aligned chunk of memory of a given size from the buffer
+// manager.
 // If there is insufficient space, returns NULL.
 void* buffer_alloc(buffer_t* buf, size_t size);
 
