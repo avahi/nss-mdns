@@ -39,10 +39,10 @@ int set_cloexec(int fd) {
     if (n & FD_CLOEXEC)
         return 0;
 
-    return fcntl(fd, F_SETFD, n|FD_CLOEXEC);
+    return fcntl(fd, F_SETFD, n | FD_CLOEXEC);
 }
 
-int ends_with(const char *name, const char* suffix) {
+int ends_with(const char* name, const char* suffix) {
     size_t ln, ls;
     assert(name);
     assert(suffix);
@@ -50,24 +50,24 @@ int ends_with(const char *name, const char* suffix) {
     if ((ls = strlen(suffix)) > (ln = strlen(name)))
         return 0;
 
-    return strcasecmp(name+ln-ls, suffix) == 0;
+    return strcasecmp(name + ln - ls, suffix) == 0;
 }
 
-int verify_name_allowed_with_soa(const char *name, FILE *mdns_allow_file) {
+int verify_name_allowed_with_soa(const char* name, FILE* mdns_allow_file) {
     switch (verify_name_allowed(name, mdns_allow_file)) {
-        case VERIFY_NAME_RESULT_NOT_ALLOWED:
-            return 0;
-        case VERIFY_NAME_RESULT_ALLOWED:
-            return 1;
-        case VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA:
-            return !local_soa();
-        default:
-            return 0;
+    case VERIFY_NAME_RESULT_NOT_ALLOWED:
+        return 0;
+    case VERIFY_NAME_RESULT_ALLOWED:
+        return 1;
+    case VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA:
+        return !local_soa();
+    default:
+        return 0;
     }
 }
 
-enum verify_name_result verify_name_allowed(const char *name,
-                                            FILE *mdns_allow_file) {
+enum verify_name_result verify_name_allowed(const char* name,
+                                            FILE* mdns_allow_file) {
     assert(name);
 
     if (mdns_allow_file) {
@@ -126,7 +126,7 @@ int local_soa(void) {
     return result > 0;
 }
 
-int label_count(const char *name) {
+int label_count(const char* name) {
     // Start with single label.
     int count = 1;
     size_t i, len;
@@ -135,7 +135,7 @@ int label_count(const char *name) {
     len = strlen(name);
     // Count all dots not in the last place.
     for (i = 0; i < len; i++) {
-        if ((name[i] == '.') && (i != (len-1)))
+        if ((name[i] == '.') && (i != (len - 1)))
             count++;
     }
 

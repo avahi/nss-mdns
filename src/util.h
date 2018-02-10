@@ -26,7 +26,7 @@
 #include <resolv.h>
 
 int set_cloexec(int fd);
-int ends_with(const char *name, const char *suffix);
+int ends_with(const char* name, const char* suffix);
 
 // Returns true if we should try to resolve the name with mDNS.
 //
@@ -38,7 +38,7 @@ int ends_with(const char *name, const char *suffix);
 //
 // The two heuristics described above are disabled if mdns_allow_file
 // is not NULL.
-int verify_name_allowed_with_soa(const char *name, FILE *mdns_allow_file);
+int verify_name_allowed_with_soa(const char* name, FILE* mdns_allow_file);
 
 enum verify_name_result {
     VERIFY_NAME_RESULT_NOT_ALLOWED,
@@ -48,13 +48,13 @@ enum verify_name_result {
 
 // Tells us if the name is not allowed unconditionally, allowed only
 // if local_soa() returns false, or unconditionally allowed.
-enum verify_name_result verify_name_allowed(const char *name,
-                                            FILE *mdns_allow_file);
+enum verify_name_result verify_name_allowed(const char* name,
+                                            FILE* mdns_allow_file);
 
 // Returns true if a DNS server claims authority over "local".
 int local_soa(void);
 
 // Returns the number of labels in a name.
-int label_count(const char *name);
+int label_count(const char* name);
 
 #endif

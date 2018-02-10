@@ -22,7 +22,7 @@
 
 #include "avahi.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     query_address_result_t result;
     char t[256];
     int r;
