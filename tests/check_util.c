@@ -492,6 +492,19 @@ START_TEST(test_tiny_buffer_one_too_big_alloc_returns_null) {
 }
 END_TEST
 
+START_TEST(test_buffer_alloc_returns_zeroed_memory) {
+    char buffer[100];
+    memset(buffer, 0xFF, sizeof(buffer));
+
+    char zero[100];
+    memset(zero, 0, sizeof(zero));
+
+    buffer_t buf;
+    buffer_init(&buf, buffer, sizeof(buffer));
+    ck_assert_mem_eq(buffer_alloc(&buf, 50), zero, 50);
+}
+END_TEST
+
 // Boilerplate from https://libcheck.github.io/check/doc/check_html/check_3.html
 static Suite* util_suite(void) {
     Suite* s = suite_create("util");
@@ -529,6 +542,7 @@ static Suite* util_suite(void) {
     tcase_add_test(tc_buffer, test_tiny_unaligned_buffer_tiny_alloc_returns_null);
     tcase_add_test(tc_buffer, test_tiny_buffer_second_alloc_returns_null);
     tcase_add_test(tc_buffer, test_tiny_buffer_one_too_big_alloc_returns_null);
+    tcase_add_test(tc_buffer, test_buffer_alloc_returns_zeroed_memory);
     suite_add_tcase(s, tc_buffer);
 
     return s;
