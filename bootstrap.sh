@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id$
 
 # This file is part of nss-mdns.
 #
@@ -17,33 +16,4 @@
 # along with nss-mdns; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
 
-VERSION=1.9
-
-run_versioned() {
-    local P
-    type -p "$1-$2" &> /dev/null && P="$1-$2" || local P="$1"
-
-    shift 2
-    "$P" "$@"
-}
-
-if [ "x$1" = "xam" ] ; then
-    set -ex
-    run_versioned automake "$VERSION" -a -c --foreign
-    ./config.status
-else 
-    set -ex
-
-    rm -rf autom4te.cache
-    rm -f config.cache
-
-    run_versioned aclocal "$VERSION"
-    libtoolize -c --force
-    autoheader
-    run_versioned automake "$VERSION" -a -c --foreign
-    autoconf -Wall
-
-    CFLAGS="$CFLAGS -g -O0" ./configure --sysconfdir=/etc --localstatedir=/var "$@"
-
-    make clean
-fi
+autoreconf -i -f -v -m
