@@ -20,7 +20,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA.
 
-AC_PREREQ(2.57)
+AC_PREREQ([2.69])
 AC_INIT([nss-mdns],[0.11],[https://github.com/lathiat/nss-mdns/issues])
 AC_CONFIG_SRCDIR([src/nss.c])
 AC_CONFIG_HEADERS([config.h])
@@ -31,7 +31,7 @@ AC_SUBST(PACKAGE_URL, [https://github.com/lathiat/nss-mdns])
 
 ac_default_prefix="/"
 
-AC_GNU_SOURCE
+AC_USE_SYSTEM_EXTENSIONS
 
 PKG_CHECK_MODULES([CHECK], [check], [have_check=yes], [have_check=no])
 AM_CONDITIONAL([HAVE_CHECK], [test "x$have_check" = "xyes"])
@@ -77,7 +77,7 @@ fi
 
 # libtool stuff
 AC_DISABLE_STATIC
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Checks for header files.
 AC_HEADER_STDC
