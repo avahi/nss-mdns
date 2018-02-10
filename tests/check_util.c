@@ -354,24 +354,182 @@ START_TEST(test_label_count) {
 }
 END_TEST
 
+// Tests for buffer_t functions.
+
+START_TEST(test_buffer_alloc_too_large_returns_null) {
+    char buffer[100];
+    buffer_t buf;
+    buffer_init(&buf, buffer, sizeof(buffer));
+
+    ck_assert_ptr_null(buffer_alloc(&buf, 101));
+}
+END_TEST
+
+START_TEST(test_buffer_alloc_just_right_returns_nonnull) {
+    char buffer[100];
+    buffer_t buf;
+    buffer_init(&buf, buffer, sizeof(buffer));
+
+    ck_assert_ptr_nonnull(buffer_alloc(&buf, 100));
+}
+END_TEST
+
+START_TEST(test_unaligned_buffer_alloc_returns_aligned) {
+    char buffer[1000];
+    buffer_t buf;
+
+    for (size_t i = 0; i < 32; i++) {
+        buffer_init(&buf, buffer + i, sizeof(buffer) - i);
+        char* ptr = buffer_alloc(&buf, 10);
+        ck_assert_uint_eq((uintptr_t)ptr % sizeof(void*), 0);
+    }
+}
+END_TEST
+
+START_TEST(test_buffer_alloc_returns_aligned) {
+    char buffer[1000];
+    buffer_t buf;
+    buffer_init(&buf, buffer, sizeof(buffer));
+
+    for (size_t i = 0; i < 32; i++) {
+        char* ptr = buffer_alloc(&buf, i);
+        ck_assert_ptr_nonnull(ptr);
+        ck_assert_uint_eq((uintptr_t)ptr % sizeof(void*), 0);
+    }
+}
+END_TEST
+
+START_TEST(test_null_buffer_zero_alloc_returns_nonnull) {
+    buffer_t buf;
+    buffer_init(&buf, NULL, 0);
+
+    ck_assert_ptr_nonnull(buffer_alloc(&buf, 0));
+}
+END_TEST
+
+START_TEST(test_zero_buffer_zero_alloc_returns_nonnull) {
+    char buffer[1];
+    buffer_t buf;
+    buffer_init(&buf, buffer, 0);
+
+    ck_assert_ptr_nonnull(buffer_alloc(&buf, 0));
+}
+END_TEST
+
+START_TEST(test_nonzero_buffer_zero_alloc_returns_nonnull) {
+    char buffer[100];
+    buffer_t buf;
+    buffer_init(&buf, buffer, sizeof(buffer));
+
+    ck_assert_ptr_nonnull(buffer_alloc(&buf, 0));
+}
+END_TEST
+
+START_TEST(test_null_buffer_nonzero_alloc_returns_null) {
+    buffer_t buf;
+    buffer_init(&buf, NULL, 0);
+
+    ck_assert_ptr_null(buffer_alloc(&buf, 1));
+}
+END_TEST
+
+START_TEST(test_zero_buffer_nonzero_alloc_returns_null) {
+    char buffer[1];
+    buffer_t buf;
+    buffer_init(&buf, buffer, 0);
+
+    ck_assert_ptr_null(buffer_alloc(&buf, 1));
+}
+END_TEST
+
+START_TEST(test_buffer_tiny_alloc_returns_nonnull) {
+    char buffer[100];
+    buffer_t buf;
+    buffer_init(&buf, buffer, sizeof(buffer));
+
+    ck_assert_ptr_nonnull(buffer_alloc(&buf, 1));
+}
+END_TEST
+
+START_TEST(test_tiny_buffer_tiny_alloc_returns_nonnull) {
+    char* buffer = malloc(1); // Need to malloc to get pre-aligned buffer.
+    buffer_t buf;
+    buffer_init(&buf, buffer, 1);
+
+    ck_assert_ptr_nonnull(buffer_alloc(&buf, 1));
+    free(buffer);
+}
+END_TEST
+
+START_TEST(test_tiny_unaligned_buffer_tiny_alloc_returns_null) {
+    char* buffer = malloc(2); // Need to malloc to get pre-aligned buffer.
+    buffer_t buf;
+    buffer_init(&buf, buffer + 1, 1);
+
+    ck_assert_ptr_null(buffer_alloc(&buf, 1));
+    free(buffer);
+}
+END_TEST
+
+START_TEST(test_tiny_buffer_second_alloc_returns_null) {
+    char* buffer = malloc(2); // Need to malloc to get pre-aligned buffer.
+    buffer_t buf;
+    buffer_init(&buf, buffer, 2);
+
+    ck_assert_ptr_nonnull(buffer_alloc(&buf, 1));
+    ck_assert_ptr_null(buffer_alloc(&buf, 1)); // With alignment, out of room.
+    free(buffer);
+}
+END_TEST
+
+START_TEST(test_tiny_buffer_one_too_big_alloc_returns_null) {
+    char* buffer = malloc(1); // Need to malloc to get pre-aligned buffer.
+    buffer_t buf;
+    buffer_init(&buf, buffer, 1);
+
+    ck_assert_ptr_null(buffer_alloc(&buf, 2));
+    free(buffer);
+}
+END_TEST
+
 // Boilerplate from https://libcheck.github.io/check/doc/check_html/check_3.html
 static Suite* util_suite(void) {
-    Suite* s;
-    TCase* tc_core;
+    Suite* s = suite_create("util");
 
-    s = suite_create("util");
-    tc_core = tcase_create("Core");
+    TCase* tc_verify_name = tcase_create("verify_name");
+    tcase_add_test(tc_verify_name, test_verify_name_allowed_minimal);
+    tcase_add_test(tc_verify_name, test_verify_name_allowed_default);
+    tcase_add_test(tc_verify_name, test_verify_name_allowed_empty);
+    tcase_add_test(tc_verify_name, test_verify_name_allowed_wildcard);
+    tcase_add_test(tc_verify_name, test_verify_name_allowed_too_long);
+    tcase_add_test(tc_verify_name, test_verify_name_allowed_too_long2);
+    tcase_add_test(tc_verify_name, test_verify_name_allowed_com_and_local);
+    suite_add_tcase(s, tc_verify_name);
 
-    tcase_add_test(tc_core, test_verify_name_allowed_minimal);
-    tcase_add_test(tc_core, test_verify_name_allowed_default);
-    tcase_add_test(tc_core, test_verify_name_allowed_empty);
-    tcase_add_test(tc_core, test_verify_name_allowed_wildcard);
-    tcase_add_test(tc_core, test_verify_name_allowed_too_long);
-    tcase_add_test(tc_core, test_verify_name_allowed_too_long2);
-    tcase_add_test(tc_core, test_verify_name_allowed_com_and_local);
-    tcase_add_test(tc_core, test_ends_with);
-    tcase_add_test(tc_core, test_label_count);
-    suite_add_tcase(s, tc_core);
+    TCase* tc_ends_with = tcase_create("ends_with");
+    tcase_add_test(tc_ends_with, test_ends_with);
+    suite_add_tcase(s, tc_ends_with);
+
+    TCase* tc_label_count = tcase_create("label_count");
+    tcase_add_test(tc_label_count, test_label_count);
+    suite_add_tcase(s, tc_label_count);
+
+    TCase* tc_buffer = tcase_create("buffer");
+    tcase_add_test(tc_buffer, test_buffer_alloc_too_large_returns_null);
+    tcase_add_test(tc_buffer, test_buffer_alloc_just_right_returns_nonnull);
+    tcase_add_test(tc_buffer, test_unaligned_buffer_alloc_returns_aligned);
+    tcase_add_test(tc_buffer, test_buffer_alloc_returns_aligned);
+    tcase_add_test(tc_buffer, test_null_buffer_zero_alloc_returns_nonnull);
+    tcase_add_test(tc_buffer, test_zero_buffer_zero_alloc_returns_nonnull);
+    tcase_add_test(tc_buffer, test_nonzero_buffer_zero_alloc_returns_nonnull);
+    tcase_add_test(tc_buffer, test_null_buffer_nonzero_alloc_returns_null);
+    tcase_add_test(tc_buffer, test_zero_buffer_nonzero_alloc_returns_null);
+    tcase_add_test(tc_buffer, test_buffer_tiny_alloc_returns_nonnull);
+    tcase_add_test(tc_buffer, test_tiny_buffer_tiny_alloc_returns_nonnull);
+    tcase_add_test(tc_buffer, test_tiny_unaligned_buffer_tiny_alloc_returns_null);
+    tcase_add_test(tc_buffer, test_tiny_buffer_second_alloc_returns_null);
+    tcase_add_test(tc_buffer, test_tiny_buffer_one_too_big_alloc_returns_null);
+    suite_add_tcase(s, tc_buffer);
 
     return s;
 }

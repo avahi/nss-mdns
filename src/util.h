@@ -74,4 +74,17 @@ enum nss_status convert_userdata_to_addrtuple(userdata_t* u,
                                               char* buffer, size_t buflen,
                                               int* errnop, int* h_errnop);
 
+// Simple buffer allocator.
+typedef struct {
+    char* next;
+    char* end;
+} buffer_t;
+
+// Sets up a buffer.
+void buffer_init(buffer_t* buf, char* buffer, size_t buflen);
+
+// Allocate an aligned chunk of memory of a given size from the buffer manager.
+// If there is insufficient space, returns NULL.
+void* buffer_alloc(buffer_t* buf, size_t size);
+
 #endif

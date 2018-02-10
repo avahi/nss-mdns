@@ -220,3 +220,37 @@ enum nss_status convert_userdata_to_addrtuple(userdata_t* u,
 
     return NSS_STATUS_SUCCESS;
 }
+
+static char* aligned_ptr(char* p) {
+    uintptr_t ptr = (uintptr_t)p;
+    if (ptr % sizeof(void*)) {
+        p += sizeof(void*) - (ptr % sizeof(void*));
+    }
+    return p;
+}
+
+void buffer_init(buffer_t* buf, char* buffer, size_t buflen) {
+    // next always points to an aligned location.
+    buf->next = aligned_ptr(buffer);
+    // end is one past the buffer.
+    buf->end = buffer + buflen;
+}
+
+void* buffer_alloc(buffer_t* buf, size_t size) {
+    // Zero-length allocations always succeed with non-NULL.
+    if (size == 0) {
+        return buf; // Just a convenient non-NULL pointer.
+    }
+
+    char* alloc_end = buf->next + size;
+    if (alloc_end > buf->end) {
+        // No more memory in the buffer.
+        return NULL;
+    }
+
+    // We have enough space. Set up the next aligned pointer and return
+    // the current one.
+    char* current = buf->next;
+    buf->next = aligned_ptr(alloc_end);
+    return current;
+}
