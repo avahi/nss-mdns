@@ -1,8 +1,6 @@
 #ifndef fooavahihfoo
 #define fooavahihfoo
 
-/* $Id$ */
-
 /***
   This file is part of nss-mdns.
 
