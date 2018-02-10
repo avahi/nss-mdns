@@ -1,7 +1,7 @@
 #ifndef fooavahihfoo
 #define fooavahihfoo
 
-/***
+/*
   This file is part of nss-mdns.
 
   nss-mdns is free software; you can redistribute it and/or modify it
@@ -17,7 +17,7 @@
   You should have received a copy of the GNU Lesser General Public
   License along with nss-mdns; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-***/
+*/
 
 #include <inttypes.h>
 #include <sys/types.h>
