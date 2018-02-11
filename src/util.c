@@ -392,3 +392,25 @@ void* buffer_alloc(buffer_t* buf, size_t size) {
     memset(current, 0, size);
     return current;
 }
+
+void append_address_to_userdata(const query_address_result_t* result,
+                                userdata_t* u) {
+    assert(result && u);
+
+    if (u->count >= MAX_ENTRIES)
+        return;
+
+    memcpy(&(u->data.result[u->count]), result, sizeof(*result));
+    u->data_len += sizeof(*result);
+    u->count++;
+}
+
+void append_name_to_userdata(const char* name, userdata_t* u) {
+    assert(name && u);
+
+    if (u->count >= MAX_ENTRIES)
+        return;
+
+    u->data.name[u->count++] = strdup(name);
+    u->data_len += strlen(name) + 1;
+}

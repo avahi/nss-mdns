@@ -93,6 +93,13 @@ enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
                                               char* buffer, size_t buflen,
                                               int* errnop, int* h_errnop);
 
+// Appends a query_address_result to userdata.
+void append_address_to_userdata(const query_address_result_t* result,
+                                userdata_t* u);
+
+// Appends a name to userdata.
+void append_name_to_userdata(const char* name, userdata_t* u);
+
 // Simple buffer allocator.
 typedef struct {
     char* next;
