@@ -28,6 +28,7 @@
 #include <sys/socket.h>
 #include <nss.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 
 #include "avahi.h"
@@ -72,31 +73,24 @@ enum nss_status _nss_mdns_gethostbyname2_r(const char*, int, struct hostent*, ch
 enum nss_status _nss_mdns_gethostbyname_r(const char*, struct hostent*, char*, size_t, int*, int*);
 enum nss_status _nss_mdns_gethostbyaddr_r(const void*, int, int, struct hostent*, char*, size_t, int*, int*);
 
-static int do_avahi_resolve_name(int af, const char* name, userdata_t* userdata,
-                                 int* avahi_works) {
+static bool do_avahi_resolve_name(int af, const char* name,
+                                  userdata_t* userdata) {
     query_address_result_t address_result;
-    int r;
-    int found = 0;
+    bool found = false;
 
     if (af == AF_INET || af == AF_UNSPEC) {
-        if ((r = avahi_resolve_name(AF_INET, name, &address_result)) < 0) {
-            /* Lookup failed */
-            *avahi_works = 0;
-        } else if (r == 0) {
+        if (avahi_resolve_name(AF_INET, name, &address_result) == 0) {
             /* Lookup succeeded */
             append_address_to_userdata(&address_result, userdata);
-            found = 1;
+            found = true;
         }
     }
 
     if (af == AF_INET6 || af == AF_UNSPEC) {
-        if ((r = avahi_resolve_name(AF_INET6, name, &address_result)) < 0) {
-            /* Lookup failed */
-            *avahi_works = 0;
-        } else if (r == 0) {
+        if (avahi_resolve_name(AF_INET6, name, &address_result) == 0) {
             /* Lookup succeeded */
             append_address_to_userdata(&address_result, userdata);
-            found = 1;
+            found = true;
         }
     }
 
@@ -111,7 +105,6 @@ static enum nss_status gethostbyname_impl(
 
     enum nss_status status = NSS_STATUS_UNAVAIL;
 
-    int avahi_works = 1;
     int name_allowed;
     FILE* mdns_allow_file = NULL;
 
@@ -153,8 +146,8 @@ static enum nss_status gethostbyname_impl(
         fclose(mdns_allow_file);
 #endif
 
-    if (avahi_works && name_allowed) {
-        if (!do_avahi_resolve_name(af, name, u, &avahi_works)) {
+    if (name_allowed) {
+        if (!do_avahi_resolve_name(af, name, u)) {
             status = NSS_STATUS_NOTFOUND;
         }
     }
