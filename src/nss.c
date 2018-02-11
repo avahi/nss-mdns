@@ -327,6 +327,6 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
         return NSS_STATUS_NOTFOUND;
     }
 
-    return convert_userdata_for_addr_to_hostent(&u, addr, len, af, result,
+    return convert_userdata_for_addr_to_hostent(&u, addr, address_length, af, result,
                                                 buffer, buflen, errnop, h_errnop);
 }

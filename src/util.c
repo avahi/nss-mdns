@@ -154,8 +154,6 @@ enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
                                                      int* errnop, int* h_errnop) {
 
     size_t idx, astart;
-    size_t address_length =
-        af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t);
 
     if (u->count == 0) {
         *errnop = ETIMEDOUT;
@@ -165,8 +163,8 @@ enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
 
     /* Check for buffer space */
     if (buflen <
-        sizeof(char*) +       /* alias names */
-            address_length) { /* address */
+        sizeof(char*) + /* alias names */
+            len) {      /* address */
 
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
@@ -184,7 +182,7 @@ enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
     if (buflen <
         strlen(u->data.name[0]) + 1 + /* official names */
             sizeof(char*) +           /* alias names */
-            address_length +          /* address */
+            len +                     /* address */
             sizeof(void*) * 2 +       /* address list */
             sizeof(void*)) {          /* padding to get the alignment right */
 
@@ -199,12 +197,12 @@ enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
     idx += strlen(u->data.name[0]) + 1;
 
     result->h_addrtype = af;
-    result->h_length = address_length;
+    result->h_length = len;
 
     /* Address */
     astart = idx;
-    memcpy(buffer + astart, addr, address_length);
-    idx += address_length;
+    memcpy(buffer + astart, addr, len);
+    idx += len;
 
     /* Address array, idx might not be at pointer alignment anymore, so we need
      * to ensure it is */
