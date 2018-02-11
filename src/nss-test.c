@@ -53,12 +53,12 @@ static int gai(const char* node) {
         }
         switch (rp->ai_family) {
         case AF_INET:
-            inet_ntop(AF_INET, &((struct sockaddr_in*) rp->ai_addr)->sin_addr, str, sizeof(str));
+            inet_ntop(AF_INET, &((struct sockaddr_in*)rp->ai_addr)->sin_addr, str, sizeof(str));
             fprintf(stderr, "[%d] addr type: inet\n[%d] address: %s\n", i, i, str);
             break;
         case AF_INET6:
-            inet_ntop(AF_INET6, &((struct sockaddr_in6*) rp->ai_addr)->sin6_addr, str6, sizeof(str6));
-            int scope_id = ((struct sockaddr_in6*) rp->ai_addr)->sin6_scope_id;
+            inet_ntop(AF_INET6, &((struct sockaddr_in6*)rp->ai_addr)->sin6_addr, str6, sizeof(str6));
+            int scope_id = ((struct sockaddr_in6*)rp->ai_addr)->sin6_scope_id;
             if (scope_id) {
                 fprintf(stderr, "[%d] addr type: inet6\n[%d] address: %s%%%d\n", i, i, str6, scope_id);
             } else {
@@ -82,12 +82,10 @@ static int gethostbyX(const char* node) {
     if (inet_pton(AF_INET, node, &t) > 0) {
         fprintf(stderr, "* doing ipv4 lookup with gethostbyaddr...\n");
         he = gethostbyaddr(t, 4, AF_INET);
-    }
-    else if (inet_pton(AF_INET6, node, &t) > 0) {
+    } else if (inet_pton(AF_INET6, node, &t) > 0) {
         fprintf(stderr, "* doing ipv6 lookup with gethostbyaddr...\n");
         he = gethostbyaddr(t, 16, AF_INET6);
-    }
-    else {
+    } else {
         fprintf(stderr, "* doing name lookup with gethostbyname...\n");
         he = gethostbyname(node);
     }
