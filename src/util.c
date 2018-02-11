@@ -21,6 +21,7 @@
 #endif
 
 #include <sys/select.h>
+#include <sys/socket.h>
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
@@ -143,7 +144,146 @@ int label_count(const char* name) {
     return count;
 }
 
-enum nss_status convert_userdata_to_addrtuple(userdata_t* u,
+// Converts from the userdata struct into the hostent format, used by
+// gethostbyaddr_r.
+enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
+                                                     const void* addr, int len,
+                                                     int af,
+                                                     struct hostent* result,
+                                                     char* buffer, size_t buflen,
+                                                     int* errnop, int* h_errnop) {
+
+    size_t idx, astart;
+    size_t address_length =
+        af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t);
+
+    if (u->count == 0) {
+        *errnop = ETIMEDOUT;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_UNAVAIL;
+    }
+
+    /* Check for buffer space */
+    if (buflen <
+        sizeof(char*) +       /* alias names */
+            address_length) { /* address */
+
+        *errnop = ERANGE;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_TRYAGAIN;
+    }
+
+    /* Alias names, assuming buffer starts a nicely aligned offset */
+    *((char**)buffer) = NULL;
+    result->h_aliases = (char**)buffer;
+    idx = sizeof(char*);
+
+    assert(u->count > 0);
+    assert(u->data.name[0]);
+
+    if (buflen <
+        strlen(u->data.name[0]) + 1 + /* official names */
+            sizeof(char*) +          /* alias names */
+            address_length +         /* address */
+            sizeof(void*) * 2 +      /* address list */
+            sizeof(void*)) {         /* padding to get the alignment right */
+
+        *errnop = ERANGE;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_TRYAGAIN;
+    }
+
+    /* Official name */
+    strcpy(buffer + idx, u->data.name[0]);
+    result->h_name = buffer + idx;
+    idx += strlen(u->data.name[0]) + 1;
+
+    result->h_addrtype = af;
+    result->h_length = address_length;
+
+    /* Address */
+    astart = idx;
+    memcpy(buffer + astart, addr, address_length);
+    idx += address_length;
+
+    /* Address array, idx might not be at pointer alignment anymore, so we need
+     * to ensure it is */
+    ALIGN(idx);
+
+    ((char**)(buffer + idx))[0] = buffer + astart;
+    ((char**)(buffer + idx))[1] = NULL;
+    result->h_addr_list = (char**)(buffer + idx);
+
+    return NSS_STATUS_SUCCESS;
+}
+
+// Converts from the userdata struct into the hostent format, used by
+// gethostbyaddr3_r.
+enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
+                                                     const char* name, int af,
+                                                     struct hostent* result,
+                                                     char* buffer, size_t buflen,
+                                                     int* errnop, int* h_errnop) {
+
+    int i;
+    size_t address_length, idx, astart;
+
+    if (buflen <
+        sizeof(char*) +         // alias names
+            strlen(name) + 1) { // official name
+
+        *errnop = ERANGE;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_TRYAGAIN;
+    }
+
+    address_length = (af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t));
+
+    /* Alias names */
+    *((char**)buffer) = NULL;
+    result->h_aliases = (char**)buffer;
+    idx = sizeof(char*);
+
+    /* Official name */
+    strcpy(buffer + idx, name);
+    result->h_name = buffer + idx;
+    idx += strlen(name) + 1;
+
+    ALIGN(idx);
+
+    result->h_addrtype = af;
+    result->h_length = address_length;
+
+    /* Check if there's enough space for the addresses */
+    if (buflen < idx + u->data_len + sizeof(char*) * (u->count + 1) + sizeof(void*)) {
+        *errnop = ERANGE;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_TRYAGAIN;
+    }
+
+    /* Addresses */
+    astart = idx;
+    for (i = 0; i < u->count; i++) {
+        memcpy(buffer + idx, &u->data.result[i].address, address_length);
+        idx += address_length;
+    }
+
+    /* realign, whilst the address is a multiple of 32bits, we
+     * frequently lose alignment for 64bit systems */
+    ALIGN(idx);
+
+    /* Address array address_length is always a multiple of 32bits */
+    for (i = 0; i < u->count; i++) {
+        ((char**)(buffer + idx))[i] = buffer + astart + address_length * i;
+    }
+    ((char**)(buffer + idx))[i] = NULL;
+    result->h_addr_list = (char**)(buffer + idx);
+
+    return NSS_STATUS_SUCCESS;
+}
+
+
+enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
                                               const char* name,
                                               struct gaih_addrtuple** pat,
                                               char* buffer, size_t buflen,
