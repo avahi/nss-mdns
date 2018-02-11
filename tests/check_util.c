@@ -19,6 +19,8 @@
 #define _DEFAULT_SOURCE
 
 #include <check.h>
+#include <errno.h>
+#include <netdb.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "../src/util.h"
@@ -505,6 +507,164 @@ START_TEST(test_buffer_alloc_returns_zeroed_memory) {
 }
 END_TEST
 
+// Tests for convert_userdata_to_addrtuple.
+
+const static uint8_t ipv6_doc_prefix[16] = {0x0, 0x0, 0x0, 0x0,
+                                            0x0, 0x0, 0x0, 0x0,
+                                            0x0, 0x0, 0x0, 0x0,
+                                            0xb8, 0x0d, 0x01, 0x20}; // Documentation prefix
+const static uint32_t ipv4_test_addr = 0xc6336401;                   // 198.51.100.1 (TEST-NET-2)
+
+static query_address_result_t create_address_result(int offset) {
+    query_address_result_t result;
+
+    // Alternate between IPv4 and IPv6.
+    int af = offset % 2 ? AF_INET : AF_INET6;
+    result.af = af;
+
+    switch (af) {
+    case AF_INET:
+        result.address.ipv4.address = htonl(ipv4_test_addr + offset);
+        break;
+    case AF_INET6:
+        memcpy(result.address.ipv6.address, ipv6_doc_prefix, sizeof ipv6_doc_prefix);
+        result.address.ipv6.address[0] = offset;
+        result.scopeid = (offset / 2) % 3;
+        break;
+    }
+    return result;
+}
+
+static void validate_addrtuples(struct gaih_addrtuple* pat,
+                                const char* expected_name, int expected_count) {
+    int i = 0;
+    while (pat != NULL) {
+        ck_assert_str_eq(pat->name, expected_name);
+        int expected_af = i % 2 ? AF_INET : AF_INET6;
+        ck_assert_int_eq(pat->family, expected_af);
+
+        uint32_t expected_ipv4 = htonl(ipv4_test_addr + i);
+        uint8_t expected_ipv6[16];
+        memcpy(expected_ipv6, ipv6_doc_prefix, sizeof ipv6_doc_prefix);
+        expected_ipv6[0] = i;
+        switch (expected_af) {
+        case AF_INET:
+            ck_assert_mem_eq(pat->addr,
+                             &expected_ipv4,
+                             sizeof expected_ipv4);
+            break;
+        case AF_INET6:
+            ck_assert_mem_eq(pat->addr,
+                             expected_ipv6,
+                             sizeof expected_ipv6);
+            ck_assert_int_eq(pat->scopeid, (i / 2) % 3);
+            break;
+        }
+
+        i++;
+        pat = pat->next;
+    }
+    ck_assert_int_eq(i, expected_count);
+}
+
+static userdata_t create_address_userdata(int num_addresses) {
+    ck_assert_int_le(num_addresses, MAX_ENTRIES);
+
+    userdata_t u;
+    u.count = 0;
+    u.data_len = 0;
+    for (int i = 0; i < num_addresses; i++) {
+        query_address_result_t result = create_address_result(i);
+        u.count++;
+        u.data_len += sizeof(result);
+        u.data.result[i] = result;
+    }
+    return u;
+}
+
+static void poison(char* buf, size_t buflen) {
+    memset(buf, 0x55, buflen);
+}
+
+static void validate_poison(char* buf, size_t buflen, size_t full_buflen) {
+    size_t excess = full_buflen - buflen;
+    char poison[excess];
+    memset(poison, 0x55, sizeof(poison));
+    ck_assert_mem_eq(buf + buflen, poison, excess);
+}
+
+START_TEST(test_userdata_to_addrtuple_returns_tuples) {
+    userdata_t u = create_address_userdata(16);
+    struct gaih_addrtuple* pat = NULL;
+    char buffer[2048];
+    int errnop;
+    int h_errnop;
+    enum nss_status status = convert_userdata_to_addrtuple(&u, "example.local", &pat,
+                                                           buffer, sizeof(buffer),
+                                                           &errnop, &h_errnop);
+    ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
+    validate_addrtuples(pat, "example.local", 16);
+}
+END_TEST
+
+START_TEST(test_userdata_to_addrtuple_buffer_too_small_returns_erange) {
+    userdata_t u = create_address_userdata(8);
+    struct gaih_addrtuple* pat = NULL;
+    char buffer[10];
+    int errnop;
+    int h_errnop;
+    enum nss_status status = convert_userdata_to_addrtuple(&u, "example.local", &pat,
+                                                           buffer, 0,
+                                                           &errnop, &h_errnop);
+    ck_assert_int_eq(errnop, ERANGE);
+    ck_assert_int_eq(h_errnop, NO_RECOVERY);
+    ck_assert_int_eq(status, NSS_STATUS_TRYAGAIN);
+}
+END_TEST
+
+START_TEST(test_userdata_to_addrtuple_smallest_buffer_eventually_works) {
+    userdata_t u = create_address_userdata(16);
+    struct gaih_addrtuple* pat = NULL;
+    char buffer[2048];
+    int errnop;
+    int h_errnop;
+
+    enum nss_status status = 0;
+    size_t buflen;
+    for (buflen = 0; buflen < sizeof(buffer); buflen++) {
+        poison(buffer, sizeof(buffer));
+        status = convert_userdata_to_addrtuple(&u, "example.local", &pat,
+                                               buffer, buflen,
+                                               &errnop, &h_errnop);
+        validate_poison(buffer, buflen, sizeof(buffer));
+        if (errnop != ERANGE)
+            break;
+        if (h_errnop != NO_RECOVERY)
+            break;
+        if (status != NSS_STATUS_TRYAGAIN)
+            break;
+    }
+    ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
+}
+END_TEST
+
+START_TEST(test_userdata_to_addrtuple_nonnull_pat_is_used) {
+    userdata_t u = create_address_userdata(16);
+    struct gaih_addrtuple tuple;
+    struct gaih_addrtuple* pat = &tuple;
+    char buffer[2048];
+    int errnop;
+    int h_errnop;
+
+    memset(&tuple, 0, sizeof tuple);
+    enum nss_status status = convert_userdata_to_addrtuple(&u, "example.local", &pat,
+                                                           buffer, sizeof(buffer),
+                                                           &errnop, &h_errnop);
+    ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
+    validate_addrtuples(&tuple, "example.local", 16);
+}
+END_TEST
+
 // Boilerplate from https://libcheck.github.io/check/doc/check_html/check_3.html
 static Suite* util_suite(void) {
     Suite* s = suite_create("util");
@@ -544,6 +704,17 @@ static Suite* util_suite(void) {
     tcase_add_test(tc_buffer, test_tiny_buffer_one_too_big_alloc_returns_null);
     tcase_add_test(tc_buffer, test_buffer_alloc_returns_zeroed_memory);
     suite_add_tcase(s, tc_buffer);
+
+    TCase* tc_userdata_to_addrtuple = tcase_create("userdata_to_addrtuple");
+    tcase_add_test(tc_userdata_to_addrtuple,
+                   test_userdata_to_addrtuple_returns_tuples);
+    tcase_add_test(tc_userdata_to_addrtuple,
+                   test_userdata_to_addrtuple_buffer_too_small_returns_erange);
+    tcase_add_test(tc_userdata_to_addrtuple,
+                   test_userdata_to_addrtuple_smallest_buffer_eventually_works);
+    tcase_add_test(tc_userdata_to_addrtuple,
+                   test_userdata_to_addrtuple_nonnull_pat_is_used);
+    suite_add_tcase(s, tc_userdata_to_addrtuple);
 
     return s;
 }

@@ -22,6 +22,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <inttypes.h>
+#include <netdb.h>
 #include <nss.h>
 #include <stdio.h>
 #include <resolv.h>
