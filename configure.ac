@@ -33,7 +33,7 @@ AC_USE_SYSTEM_EXTENSIONS
 AM_SILENT_RULES([yes])
 
 # Conditionally enable unittests.
-PKG_CHECK_MODULES([CHECK], [check], [have_check=yes], [have_check=no])
+PKG_CHECK_MODULES([CHECK], [check >= 0.11], [have_check=yes], [have_check=no])
 AM_CONDITIONAL([HAVE_CHECK], [test "x$have_check" = "xyes"])
 
 if test "x$have_check" = "xno" ; then
