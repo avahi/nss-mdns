@@ -72,30 +72,8 @@ enum nss_status _nss_mdns_gethostbyname2_r(const char*, int, struct hostent*, ch
 enum nss_status _nss_mdns_gethostbyname_r(const char*, struct hostent*, char*, size_t, int*, int*);
 enum nss_status _nss_mdns_gethostbyaddr_r(const void*, int, int, struct hostent*, char*, size_t, int*, int*);
 
-static void address_callback(const query_address_result_t* result, void* userdata) {
-    userdata_t* u = userdata;
-    assert(result && u);
-
-    if (u->count >= MAX_ENTRIES)
-        return;
-
-    memcpy(&(u->data.result[u->count]), result, sizeof(*result));
-    u->data_len += sizeof(*result);
-    u->count++;
-}
-
-static void name_callback(const char* name, void* userdata) {
-    userdata_t* u = userdata;
-    assert(name && userdata);
-
-    if (u->count >= MAX_ENTRIES)
-        return;
-
-    u->data.name[u->count++] = strdup(name);
-    u->data_len += strlen(name) + 1;
-}
-
-static int do_avahi_resolve_name(int af, const char* name, void* userdata, int* avahi_works) {
+static int do_avahi_resolve_name(int af, const char* name, userdata_t* userdata,
+                                 int* avahi_works) {
     query_address_result_t address_result;
     int r;
     int found = 0;
@@ -106,7 +84,7 @@ static int do_avahi_resolve_name(int af, const char* name, void* userdata, int* 
             *avahi_works = 0;
         } else if (r == 0) {
             /* Lookup succeeded */
-            address_callback(&address_result, userdata);
+            append_address_to_userdata(&address_result, userdata);
             found = 1;
         }
     }
@@ -117,7 +95,7 @@ static int do_avahi_resolve_name(int af, const char* name, void* userdata, int* 
             *avahi_works = 0;
         } else if (r == 0) {
             /* Lookup succeeded */
-            address_callback(&address_result, userdata);
+            append_address_to_userdata(&address_result, userdata);
             found = 1;
         }
     }
@@ -320,7 +298,7 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
 
     /* Lookup using Avahi */
     if ((r = avahi_resolve_address(af, addr, t, sizeof(t))) == 0) {
-        name_callback(t, &u);
+        append_name_to_userdata(t, &u);
     } else if (r > 0) {
         *errnop = ETIMEDOUT;
         *h_errnop = HOST_NOT_FOUND;
