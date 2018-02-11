@@ -183,10 +183,10 @@ enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
 
     if (buflen <
         strlen(u->data.name[0]) + 1 + /* official names */
-            sizeof(char*) +          /* alias names */
-            address_length +         /* address */
-            sizeof(void*) * 2 +      /* address list */
-            sizeof(void*)) {         /* padding to get the alignment right */
+            sizeof(char*) +           /* alias names */
+            address_length +          /* address */
+            sizeof(void*) * 2 +       /* address list */
+            sizeof(void*)) {          /* padding to get the alignment right */
 
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
@@ -281,7 +281,6 @@ enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
 
     return NSS_STATUS_SUCCESS;
 }
-
 
 enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
                                               const char* name,

@@ -308,7 +308,6 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     }
 
 #ifdef MDNS_MINIMAL
-
     /* Only query for 169.254.0.0/16 IPv4 in minimal mode */
     if ((af == AF_INET && ((ntohl(*(const uint32_t*)addr) & 0xFFFF0000UL) != 0xA9FE0000UL)) ||
         (af == AF_INET6 && !(((const uint8_t*)addr)[0] == 0xFE && (((const uint8_t*)addr)[1] >> 6) == 2))) {
