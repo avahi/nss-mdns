@@ -67,8 +67,26 @@ int local_soa(void);
 // Returns the number of labels in a name.
 int label_count(const char* name);
 
-// Converts from the callback struct into the gaih_addrtuple format.
-enum nss_status convert_userdata_to_addrtuple(userdata_t* u,
+// Converts from the userdata struct into the hostent format, used by
+// gethostbyaddr_r.
+enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
+                                                     const void* addr, int len,
+                                                     int af,
+                                                     struct hostent* result,
+                                                     char* buffer, size_t buflen,
+                                                     int* errnop, int* h_errnop);
+
+// Converts from the userdata struct into the hostent format, used by
+// gethostbyaddr3_r.
+enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
+                                                     const char* name, int af,
+                                                     struct hostent* result,
+                                                     char* buffer, size_t buflen,
+                                                     int* errnop, int* h_errnop);
+
+// Converts from the userdata struct into the gaih_addrtuple format, used by
+// gethostbyaddr4_r.
+enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
                                               const char* name,
                                               struct gaih_addrtuple** pat,
                                               char* buffer, size_t buflen,

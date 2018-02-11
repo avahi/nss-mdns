@@ -199,14 +199,12 @@ enum nss_status _nss_mdns_gethostbyname4_r(
 
     userdata_t u;
 
-    // Since populating the buffer works differently in `gethostbyname[23]?` than in
-    // `gethostbyname4`, we delegate the actual information gathering to a subroutine.
     enum nss_status status = gethostbyname_impl(name, AF_UNSPEC, &u, errnop, h_errnop);
     if (status != NSS_STATUS_SUCCESS) {
         return status;
     }
-
-    return convert_userdata_to_addrtuple(&u, name, pat, buffer, buflen, errnop, h_errnop);
+    return convert_userdata_to_addrtuple(&u, name, pat, buffer, buflen,
+                                         errnop, h_errnop);
 }
 
 enum nss_status _nss_mdns_gethostbyname3_r(
@@ -218,11 +216,7 @@ enum nss_status _nss_mdns_gethostbyname3_r(
     int32_t* ttlp,
     char** canonp) {
 
-    int i;
-    size_t address_length, idx, astart;
-
     userdata_t u;
-    enum nss_status status;
 
     // The interfaces for gethostbyname3_r and below do not actually support returning results
     // for more than one address family
@@ -234,63 +228,12 @@ enum nss_status _nss_mdns_gethostbyname3_r(
 #endif
     }
 
-    status = gethostbyname_impl(name, af, &u, errnop, h_errnop);
+    enum nss_status status = gethostbyname_impl(name, af, &u, errnop, h_errnop);
     if (status != NSS_STATUS_SUCCESS) {
         return status;
     }
-
-    if (buflen <
-        sizeof(char*) +         // alias names
-            strlen(name) + 1) { // official name
-
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_TRYAGAIN;
-    }
-
-    address_length = (af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t));
-
-    /* Alias names */
-    *((char**)buffer) = NULL;
-    result->h_aliases = (char**)buffer;
-    idx = sizeof(char*);
-
-    /* Official name */
-    strcpy(buffer + idx, name);
-    result->h_name = buffer + idx;
-    idx += strlen(name) + 1;
-
-    ALIGN(idx);
-
-    result->h_addrtype = af;
-    result->h_length = address_length;
-
-    /* Check if there's enough space for the addresses */
-    if (buflen < idx + u.data_len + sizeof(char*) * (u.count + 1) + sizeof(void*)) {
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_TRYAGAIN;
-    }
-
-    /* Addresses */
-    astart = idx;
-    for (i = 0; i < u.count; i++) {
-        memcpy(buffer + idx, &u.data.result[i].address, address_length);
-        idx += address_length;
-    }
-
-    /* realign, whilst the address is a multiple of 32bits, we
-     * frequently lose alignment for 64bit systems */
-    ALIGN(idx);
-
-    /* Address array address_length is always a multiple of 32bits */
-    for (i = 0; i < u.count; i++) {
-        ((char**)(buffer + idx))[i] = buffer + astart + address_length * i;
-    }
-    ((char**)(buffer + idx))[i] = NULL;
-    result->h_addr_list = (char**)(buffer + idx);
-
-    return NSS_STATUS_SUCCESS;
+    return convert_userdata_for_name_to_hostent(&u, name, af, result, buffer,
+                                                buflen, errnop, h_errnop);
 }
 
 enum nss_status _nss_mdns_gethostbyname2_r(
@@ -339,7 +282,7 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
 
     userdata_t u;
     int r;
-    size_t address_length, idx, astart;
+    size_t address_length;
     char t[256];
     *errnop = EINVAL;
     *h_errnop = NO_RECOVERY;
@@ -364,16 +307,6 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
         return NSS_STATUS_UNAVAIL;
     }
 
-    /* Check for buffer space */
-    if (buflen <
-        sizeof(char*) +       /* alias names */
-            address_length) { /* address */
-
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_TRYAGAIN;
-    }
-
 #ifdef MDNS_MINIMAL
 
     /* Only query for 169.254.0.0/16 IPv4 in minimal mode */
@@ -395,52 +328,6 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
         return NSS_STATUS_NOTFOUND;
     }
 
-    if (u.count == 0) {
-        *errnop = ETIMEDOUT;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_UNAVAIL;
-    }
-
-    /* Alias names, assuming buffer starts a nicely aligned offset */
-    *((char**)buffer) = NULL;
-    result->h_aliases = (char**)buffer;
-    idx = sizeof(char*);
-
-    assert(u.count > 0);
-    assert(u.data.name[0]);
-
-    if (buflen <
-        strlen(u.data.name[0]) + 1 + /* official names */
-            sizeof(char*) +          /* alias names */
-            address_length +         /* address */
-            sizeof(void*) * 2 +      /* address list */
-            sizeof(void*)) {         /* padding to get the alignment right */
-
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_TRYAGAIN;
-    }
-
-    /* Official name */
-    strcpy(buffer + idx, u.data.name[0]);
-    result->h_name = buffer + idx;
-    idx += strlen(u.data.name[0]) + 1;
-
-    result->h_addrtype = af;
-    result->h_length = address_length;
-
-    /* Address */
-    astart = idx;
-    memcpy(buffer + astart, addr, address_length);
-    idx += address_length;
-
-    /* Address array, idx might not be at pointer alignment anymore, so we need
-     * to ensure it is */
-    ALIGN(idx);
-
-    ((char**)(buffer + idx))[0] = buffer + astart;
-    ((char**)(buffer + idx))[1] = NULL;
-    result->h_addr_list = (char**)(buffer + idx);
-
-    return NSS_STATUS_SUCCESS;
+    return convert_userdata_for_addr_to_hostent(&u, addr, len, af, result,
+                                                buffer, buflen, errnop, h_errnop);
 }
