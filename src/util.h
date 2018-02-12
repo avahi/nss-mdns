@@ -47,6 +47,14 @@ void* buffer_alloc(buffer_t* buf, size_t size);
 // If there is insufficient space, returns NULL.
 char* buffer_strdup(buffer_t* buf, const char* str);
 
+// Macro to help with checking buffer allocation results.
+#define RETURN_IF_FAILED_ALLOC(ptr) \
+    if (ptr == NULL) {              \
+        *errnop = ERANGE;           \
+        *h_errnop = NO_RECOVERY;    \
+        return NSS_STATUS_TRYAGAIN; \
+    }
+
 int set_cloexec(int fd);
 int ends_with(const char* name, const char* suffix);
 
