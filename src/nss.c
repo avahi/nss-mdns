@@ -169,12 +169,14 @@ enum nss_status _nss_mdns_gethostbyname4_r(
     int32_t* ttlp) {
 
     userdata_t u;
+    buffer_t buf;
 
     enum nss_status status = gethostbyname_impl(name, AF_UNSPEC, &u, errnop, h_errnop);
     if (status != NSS_STATUS_SUCCESS) {
         return status;
     }
-    return convert_userdata_to_addrtuple(&u, name, pat, buffer, buflen,
+    buffer_init(&buf, buffer, buflen);
+    return convert_userdata_to_addrtuple(&u, name, pat, &buf,
                                          errnop, h_errnop);
 }
 
@@ -187,6 +189,7 @@ enum nss_status _nss_mdns_gethostbyname3_r(
     int32_t* ttlp,
     char** canonp) {
 
+    buffer_t buf;
     userdata_t u;
 
     // The interfaces for gethostbyname3_r and below do not actually support returning results
@@ -203,8 +206,9 @@ enum nss_status _nss_mdns_gethostbyname3_r(
     if (status != NSS_STATUS_SUCCESS) {
         return status;
     }
-    return convert_userdata_for_name_to_hostent(&u, name, af, result, buffer,
-                                                buflen, errnop, h_errnop);
+    buffer_init(&buf, buffer, buflen);
+    return convert_userdata_for_name_to_hostent(&u, name, af, result, &buf,
+                                                errnop, h_errnop);
 }
 
 enum nss_status _nss_mdns_gethostbyname2_r(
@@ -251,6 +255,7 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     int* errnop,
     int* h_errnop) {
 
+    buffer_t buf;
     userdata_t u;
     int r;
     size_t address_length;
@@ -298,6 +303,7 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
         return NSS_STATUS_NOTFOUND;
     }
 
+    buffer_init(&buf, buffer, buflen);
     return convert_userdata_for_addr_to_hostent(&u, addr, address_length, af, result,
-                                                buffer, buflen, errnop, h_errnop);
+                                                &buf, errnop, h_errnop);
 }

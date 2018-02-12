@@ -150,67 +150,52 @@ enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
                                                      const void* addr, int len,
                                                      int af,
                                                      struct hostent* result,
-                                                     char* buffer, size_t buflen,
+                                                     buffer_t* buf,
                                                      int* errnop, int* h_errnop) {
-
-    size_t idx, astart;
-
+    // Ensure we have some results.
     if (u->count == 0) {
         *errnop = ETIMEDOUT;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_UNAVAIL;
     }
 
-    /* Check for buffer space */
-    if (buflen <
-        sizeof(char*) + /* alias names */
-            len) {      /* address */
-
+    // Set empty list of aliases.
+    result->h_aliases = (char**)buffer_alloc(buf, sizeof(char**));
+    if (result->h_aliases == NULL) {
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_TRYAGAIN;
     }
 
-    /* Alias names, assuming buffer starts a nicely aligned offset */
-    *((char**)buffer) = NULL;
-    result->h_aliases = (char**)buffer;
-    idx = sizeof(char*);
-
-    assert(u->count > 0);
+    // Set official name.
     assert(u->data.name[0]);
-
-    if (buflen <
-        strlen(u->data.name[0]) + 1 + /* official names */
-            sizeof(char*) +           /* alias names */
-            len +                     /* address */
-            sizeof(void*) * 2 +       /* address list */
-            sizeof(void*)) {          /* padding to get the alignment right */
-
+    result->h_name = buffer_strdup(buf, u->data.name[0]);
+    if (result->h_name == NULL) {
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_TRYAGAIN;
     }
 
-    /* Official name */
-    strcpy(buffer + idx, u->data.name[0]);
-    result->h_name = buffer + idx;
-    idx += strlen(u->data.name[0]) + 1;
-
+    // Set addrtype and length.
     result->h_addrtype = af;
     result->h_length = len;
 
-    /* Address */
-    astart = idx;
-    memcpy(buffer + astart, addr, len);
-    idx += len;
+    // Initialize address list of length 1, NULL terminated.
+    result->h_addr_list = buffer_alloc(buf, 2 * sizeof(char**));
+    if (result->h_addr_list == NULL) {
+        *errnop = ERANGE;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_TRYAGAIN;
+    }
 
-    /* Address array, idx might not be at pointer alignment anymore, so we need
-     * to ensure it is */
-    ALIGN(idx);
-
-    ((char**)(buffer + idx))[0] = buffer + astart;
-    ((char**)(buffer + idx))[1] = NULL;
-    result->h_addr_list = (char**)(buffer + idx);
+    // Copy the address.
+    result->h_addr_list[0] = buffer_alloc(buf, len);
+    if (result->h_addr_list[0] == NULL) {
+        *errnop = ERANGE;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_TRYAGAIN;
+    }
+    memcpy(result->h_addr_list[0], addr, len);
 
     return NSS_STATUS_SUCCESS;
 }
@@ -220,62 +205,50 @@ enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
 enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
                                                      const char* name, int af,
                                                      struct hostent* result,
-                                                     char* buffer, size_t buflen,
+                                                     buffer_t* buf,
                                                      int* errnop, int* h_errnop) {
+    size_t address_length =
+        af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t);
 
-    int i;
-    size_t address_length, idx, astart;
-
-    if (buflen <
-        sizeof(char*) +         // alias names
-            strlen(name) + 1) { // official name
-
+    // Set empty list of aliases.
+    result->h_aliases = (char**)buffer_alloc(buf, sizeof(char**));
+    if (result->h_aliases == NULL) {
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_TRYAGAIN;
     }
 
-    address_length = (af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t));
+    // Set official name.
+    result->h_name = buffer_strdup(buf, name);
+    if (result->h_name == NULL) {
+        *errnop = ERANGE;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_TRYAGAIN;
+    }
 
-    /* Alias names */
-    *((char**)buffer) = NULL;
-    result->h_aliases = (char**)buffer;
-    idx = sizeof(char*);
-
-    /* Official name */
-    strcpy(buffer + idx, name);
-    result->h_name = buffer + idx;
-    idx += strlen(name) + 1;
-
-    ALIGN(idx);
-
+    // Set addrtype and length.
     result->h_addrtype = af;
     result->h_length = address_length;
 
-    /* Check if there's enough space for the addresses */
-    if (buflen < idx + u->data_len + sizeof(char*) * (u->count + 1) + sizeof(void*)) {
+    // Initialize address list, NULL terminated.
+    result->h_addr_list = buffer_alloc(buf, (u->count + 1) * sizeof(char**));
+    if (result->h_addr_list == NULL) {
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_TRYAGAIN;
     }
 
-    /* Addresses */
-    astart = idx;
-    for (i = 0; i < u->count; i++) {
-        memcpy(buffer + idx, &u->data.result[i].address, address_length);
-        idx += address_length;
+    // Copy the addresses.
+    for (size_t i = 0; i < u->count; i++) {
+        char* addr = buffer_alloc(buf, address_length);
+        if (addr == NULL) {
+            *errnop = ERANGE;
+            *h_errnop = NO_RECOVERY;
+            return NSS_STATUS_TRYAGAIN;
+        }
+        memcpy(addr, &u->data.result[i].address, address_length);
+        result->h_addr_list[i] = addr;
     }
-
-    /* realign, whilst the address is a multiple of 32bits, we
-     * frequently lose alignment for 64bit systems */
-    ALIGN(idx);
-
-    /* Address array address_length is always a multiple of 32bits */
-    for (i = 0; i < u->count; i++) {
-        ((char**)(buffer + idx))[i] = buffer + astart + address_length * i;
-    }
-    ((char**)(buffer + idx))[i] = NULL;
-    result->h_addr_list = (char**)(buffer + idx);
 
     return NSS_STATUS_SUCCESS;
 }
@@ -283,29 +256,20 @@ enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
 enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
                                               const char* name,
                                               struct gaih_addrtuple** pat,
-                                              char* buffer, size_t buflen,
+                                              buffer_t* buf,
                                               int* errnop, int* h_errnop) {
 
-    /* Check if there's enough space for the addresses */
-    // strlen(name)+1                         - Host name string
-    // sizeof(struct gaih_addrtuple)*u->count - All address result structures
-    // 3*(1+u->count)                         - Theoretical alignment byte maximum
-    if (buflen < (strlen(name) + 1 + sizeof(struct gaih_addrtuple) * u->count + 3 * (1 + u->count))) {
+    // Copy name to buffer (referenced in every result address tuple).
+    char* buffer_name = buffer_strdup(buf, name);
+    if (buffer_name == NULL) {
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_TRYAGAIN;
     }
 
-    size_t idx = 0;
-
-    // Copy name to buffer (referenced in every result address tuple)
-    char* buffer_name = buffer + idx;
-    strcpy(buffer_name, name);
-    idx += strlen(buffer_name) + 1;
-    ALIGN(idx);
-
     struct gaih_addrtuple* tuple_prev = NULL;
     for (int i = 0; i < u->count; i++) {
+        const query_address_result_t* result = &u->data.result[i];
         struct gaih_addrtuple* tuple;
         if (tuple_prev == NULL && *pat) {
             // The caller has provided a valid initial location in *pat,
@@ -315,33 +279,31 @@ enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
             // See
             // https://lists.freedesktop.org/archives/systemd-devel/2013-February/008606.html
             tuple = *pat;
+            memset(tuple, 0, sizeof(*tuple));
         } else {
             // Allocate a new tuple from the buffer.
-            tuple = (struct gaih_addrtuple*)(buffer + idx);
-            idx += sizeof(*tuple);
-            ALIGN(idx);
+            tuple = buffer_alloc(buf, sizeof(struct gaih_addrtuple));
+            if (tuple == NULL) {
+                *errnop = ERANGE;
+                *h_errnop = NO_RECOVERY;
+                return NSS_STATUS_TRYAGAIN;
+            }
         }
 
-        size_t address_length = sizeof(ipv4_address_t);
-        if (u->data.result[i].af == AF_INET6) {
-            address_length = sizeof(ipv6_address_t);
-        }
+        size_t address_length =
+            result->af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t);
 
-        // Will be overwritten by next address assignment (if there is one)
-        tuple->next = NULL;
-
-        // Assign the (always same) name
+        // Assign the (always same) name.
         tuple->name = buffer_name;
 
-        // Assign actual address family of address
-        tuple->family = u->data.result[i].af;
+        // Assign actual address family of address.
+        tuple->family = result->af;
 
-        // Copy address
-        memset(&(tuple->addr), 0, sizeof(tuple->addr));
-        memcpy(&(tuple->addr), &(u->data.result[i].address), address_length);
+        // Copy address.
+        memcpy(&(tuple->addr), &(result->address), address_length);
 
         // Assign interface scope id
-        tuple->scopeid = u->data.result[i].scopeid;
+        tuple->scopeid = result->scopeid;
 
         if (tuple_prev == NULL) {
             // This is the first tuple.
@@ -391,6 +353,15 @@ void* buffer_alloc(buffer_t* buf, size_t size) {
     buf->next = aligned_ptr(alloc_end);
     memset(current, 0, size);
     return current;
+}
+
+char* buffer_strdup(buffer_t* buf, const char* str) {
+    char* result = buffer_alloc(buf, strlen(str) + 1);
+    if (result == NULL) {
+        return NULL;
+    }
+    strcpy(result, str);
+    return result;
 }
 
 void append_address_to_userdata(const query_address_result_t* result,
