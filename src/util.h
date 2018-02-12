@@ -38,12 +38,12 @@ typedef struct {
 // Sets up a buffer.
 void buffer_init(buffer_t* buf, char* buffer, size_t buflen);
 
-// Allocate a zeroed, aligned chunk of memory of a given size from the buffer
+// Allocates a zeroed, aligned chunk of memory of a given size from the buffer
 // manager.
 // If there is insufficient space, returns NULL.
 void* buffer_alloc(buffer_t* buf, size_t size);
 
-// Duplicate a string into a newly allocated chunk of memory.
+// Duplicates a string into a newly allocated chunk of memory.
 // If there is insufficient space, returns NULL.
 char* buffer_strdup(buffer_t* buf, const char* str);
 
