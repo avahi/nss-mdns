@@ -103,8 +103,6 @@ static enum nss_status gethostbyname_impl(
     int* errnop,
     int* h_errnop) {
 
-    enum nss_status status = NSS_STATUS_UNAVAIL;
-
     int name_allowed;
     FILE* mdns_allow_file = NULL;
 
@@ -130,8 +128,7 @@ static enum nss_status gethostbyname_impl(
     {
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
-
-        return status;
+        return NSS_STATUS_UNAVAIL;
     }
 
     u->count = 0;
@@ -145,19 +142,27 @@ static enum nss_status gethostbyname_impl(
         fclose(mdns_allow_file);
 #endif
 
-    if (name_allowed) {
-        if (!do_avahi_resolve_name(af, name, u)) {
-            status = NSS_STATUS_NOTFOUND;
-        }
+    if (!name_allowed) {
+        *errnop = EINVAL;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_UNAVAIL;
     }
 
-    if (u->count == 0) {
+    int result = do_avahi_resolve_name(af, name, u);
+    if (result == 0) {
+        // Success.
+        return NSS_STATUS_SUCCESS;
+    } else if (result > 0) {
+        // No results.
         *errnop = ETIMEDOUT;
         *h_errnop = HOST_NOT_FOUND;
-        return status;
+        return NSS_STATUS_NOTFOUND;
+    } else {
+        // Failure.
+        *errnop = ETIMEDOUT;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_UNAVAIL;
     }
-
-    return NSS_STATUS_SUCCESS;
 }
 
 enum nss_status _nss_mdns_gethostbyname4_r(
@@ -254,15 +259,9 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     int* errnop,
     int* h_errnop) {
 
-    buffer_t buf;
-    userdata_t u;
     int r;
     size_t address_length;
     char t[256];
-    *errnop = EINVAL;
-    *h_errnop = NO_RECOVERY;
-
-    u.count = 0;
 
     /* Check for address types */
     address_length = af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t);
@@ -285,7 +284,6 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     /* Only query for 169.254.0.0/16 IPv4 in minimal mode */
     if ((af == AF_INET && ((ntohl(*(const uint32_t*)addr) & 0xFFFF0000UL) != 0xA9FE0000UL)) ||
         (af == AF_INET6 && !(((const uint8_t*)addr)[0] == 0xFE && (((const uint8_t*)addr)[1] >> 6) == 2))) {
-
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_UNAVAIL;
@@ -294,14 +292,24 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
 
     /* Lookup using Avahi */
     if ((r = avahi_resolve_address(af, addr, t, sizeof(t))) == 0) {
+        // Success.
+        userdata_t u;
+        u.count = 0;
         append_name_to_userdata(t, &u);
+        buffer_t buf;
+        buffer_init(&buf, buffer, buflen);
+        return convert_userdata_for_addr_to_hostent(&u, addr, address_length,
+                                                    af, result,
+                                                    &buf, errnop, h_errnop);
     } else if (r > 0) {
+        // No results.
         *errnop = ETIMEDOUT;
         *h_errnop = HOST_NOT_FOUND;
         return NSS_STATUS_NOTFOUND;
+    } else {
+        // Failure.
+        *errnop = ETIMEDOUT;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_UNAVAIL;
     }
-
-    buffer_init(&buf, buffer, buflen);
-    return convert_userdata_for_addr_to_hostent(&u, addr, address_length, af, result,
-                                                &buf, errnop, h_errnop);
 }
