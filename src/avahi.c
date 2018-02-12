@@ -65,27 +65,22 @@ fail:
     return NULL;
 }
 
-int avahi_resolve_name(int af, const char* name, query_address_result_t* result) {
-    FILE* f = NULL;
+static int avahi_resolve_name_with_socket(FILE* f, int af, const char* name,
+                                          query_address_result_t* result) {
     char* p;
-    int ret = -1;
     char ln[256];
-
-    if (af != AF_INET && af != AF_INET6)
-        goto finish;
-
-    if (!(f = open_socket()))
-        goto finish;
 
     fprintf(f, "RESOLVE-HOSTNAME%s %s\n", af == AF_INET ? "-IPV4" : "-IPV6", name);
     fflush(f);
 
-    if (!(fgets(ln, sizeof(ln), f)))
-        goto finish;
+    if (!(fgets(ln, sizeof(ln), f))) {
+        // Failure.
+        return -1;
+    }
 
     if (ln[0] != '+') {
-        ret = 1;
-        goto finish;
+        // No host found.
+        return 1;
     }
 
     result->af = af;
@@ -109,16 +104,29 @@ int avahi_resolve_name(int af, const char* name, query_address_result_t* result)
     /* Cut off end of line */
     *(p + strcspn(p, "\n\r\t ")) = 0;
 
-    if (inet_pton(af, p, &(result->address)) <= 0)
-        goto finish;
+    if (inet_pton(af, p, &(result->address)) <= 0) {
+        // Failure.
+        return -1;
+    }
 
-    ret = 0;
+    // Success.
+    return 0;
+}
 
-finish:
+int avahi_resolve_name(int af, const char* name, query_address_result_t* result) {
+    if (af != AF_INET && af != AF_INET6) {
+        // Failure.
+        return -1;
+    }
 
-    if (f)
-        fclose(f);
+    FILE* f = open_socket();
+    if (!f) {
+        // Failure.
+        return -1;
+    }
 
+    int ret = avahi_resolve_name_with_socket(f, af, name, result);
+    fclose(f);
     return ret;
 }
 
