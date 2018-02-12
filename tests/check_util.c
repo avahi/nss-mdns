@@ -575,10 +575,16 @@ static userdata_t create_address_userdata(int num_addresses, int af) {
     u.data_len = 0;
     for (int i = 0; i < num_addresses; i++) {
         query_address_result_t result = create_address_result(i, af);
-        u.count++;
-        u.data_len += sizeof(result);
-        u.data.result[i] = result;
+        append_address_to_userdata(&result, &u);
     }
+    return u;
+}
+
+static userdata_t create_name_userdata() {
+    userdata_t u;
+    u.count = 0;
+    u.data_len = 0;
+    append_name_to_userdata("example.local", &u);
     return u;
 }
 
@@ -670,6 +676,7 @@ START_TEST(test_userdata_to_addrtuple_smallest_buffer_eventually_works) {
     size_t buflen;
     for (buflen = 0; buflen < sizeof(buffer); buflen++) {
         poison(buffer, sizeof(buffer));
+        errnop = h_errnop = 0;
         status = convert_userdata_to_addrtuple(&u, "example.local", &pat,
                                                buffer, buflen,
                                                &errnop, &h_errnop);
@@ -764,6 +771,7 @@ START_TEST(test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_4)
     size_t buflen;
     for (buflen = 0; buflen < sizeof(buffer); buflen++) {
         poison(buffer, sizeof(buffer));
+        errnop = h_errnop = 0;
         status =
             convert_userdata_for_name_to_hostent(&u, "example.local", AF_INET,
                                                  &result,
@@ -792,8 +800,129 @@ START_TEST(test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_6)
     size_t buflen;
     for (buflen = 0; buflen < sizeof(buffer); buflen++) {
         poison(buffer, sizeof(buffer));
+        errnop = h_errnop = 0;
         status =
             convert_userdata_for_name_to_hostent(&u, "example.local", AF_INET,
+                                                 &result,
+                                                 buffer, buflen,
+                                                 &errnop, &h_errnop);
+        validate_poison(buffer, buflen, sizeof(buffer));
+        if (errnop != ERANGE)
+            break;
+        if (h_errnop != NO_RECOVERY)
+            break;
+        if (status != NSS_STATUS_TRYAGAIN)
+            break;
+    }
+    ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
+}
+END_TEST
+
+// Tests for convert_userdata_for_addr_to_hostent.
+
+START_TEST(test_userdata_for_addr_to_hostent_returns_hostent_4) {
+    userdata_t u = create_name_userdata();
+    struct hostent result;
+    char buffer[2048];
+    int errnop;
+    int h_errnop;
+    uint32_t ipv4 = htonl(ipv4_test_addr);
+    enum nss_status status =
+        convert_userdata_for_addr_to_hostent(&u, &ipv4,
+                                             sizeof ipv4,
+                                             AF_INET,
+                                             &result,
+                                             buffer, sizeof(buffer),
+                                             &errnop, &h_errnop);
+    ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
+    validate_hostent(&result, "example.local", AF_INET, 1);
+}
+END_TEST
+
+START_TEST(test_userdata_for_addr_to_hostent_returns_hostent_6) {
+    userdata_t u = create_name_userdata();
+    struct hostent result;
+    char buffer[2048];
+    int errnop;
+    int h_errnop;
+    enum nss_status status =
+        convert_userdata_for_addr_to_hostent(&u, &ipv6_doc_prefix,
+                                             sizeof ipv6_doc_prefix,
+                                             AF_INET6,
+                                             &result,
+                                             buffer, sizeof(buffer),
+                                             &errnop, &h_errnop);
+    ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
+    validate_hostent(&result, "example.local", AF_INET6, 1);
+}
+END_TEST
+
+START_TEST(test_userdata_for_addr_to_hostent_buffer_too_small_returns_erange) {
+    userdata_t u = create_name_userdata();
+    struct hostent result;
+    char buffer[10];
+    int errnop;
+    int h_errnop;
+    uint32_t ipv4 = htonl(ipv4_test_addr);
+    enum nss_status status =
+        convert_userdata_for_addr_to_hostent(&u, &ipv4,
+                                             sizeof ipv4,
+                                             AF_INET,
+                                             &result,
+                                             buffer, sizeof(buffer),
+                                             &errnop, &h_errnop);
+    ck_assert_int_eq(errnop, ERANGE);
+    ck_assert_int_eq(h_errnop, NO_RECOVERY);
+    ck_assert_int_eq(status, NSS_STATUS_TRYAGAIN);
+}
+END_TEST
+
+START_TEST(test_userdata_for_addr_to_hostent_smallest_buffer_eventually_works_4) {
+    userdata_t u = create_name_userdata();
+    struct hostent result;
+    char buffer[2048];
+    int errnop;
+    int h_errnop;
+    uint32_t ipv4 = htonl(ipv4_test_addr);
+    enum nss_status status = 0;
+    size_t buflen;
+    for (buflen = 0; buflen < sizeof(buffer); buflen++) {
+        poison(buffer, sizeof(buffer));
+        errnop = h_errnop = 0;
+        status =
+            convert_userdata_for_addr_to_hostent(&u, &ipv4,
+                                                 sizeof ipv4,
+                                                 AF_INET,
+                                                 &result,
+                                                 buffer, buflen,
+                                                 &errnop, &h_errnop);
+        validate_poison(buffer, buflen, sizeof(buffer));
+        if (errnop != ERANGE)
+            break;
+        if (h_errnop != NO_RECOVERY)
+            break;
+        if (status != NSS_STATUS_TRYAGAIN)
+            break;
+    }
+    ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
+}
+END_TEST
+
+START_TEST(test_userdata_for_addr_to_hostent_smallest_buffer_eventually_works_6) {
+    userdata_t u = create_name_userdata();
+    struct hostent result;
+    char buffer[2048];
+    int errnop;
+    int h_errnop;
+    enum nss_status status = 0;
+    size_t buflen;
+    for (buflen = 0; buflen < sizeof(buffer); buflen++) {
+        poison(buffer, sizeof(buffer));
+        errnop = h_errnop = 0;
+        status =
+            convert_userdata_for_addr_to_hostent(&u, &ipv6_doc_prefix,
+                                                 sizeof ipv6_doc_prefix,
+                                                 AF_INET6,
                                                  &result,
                                                  buffer, buflen,
                                                  &errnop, &h_errnop);
@@ -872,6 +1001,19 @@ static Suite* util_suite(void) {
     tcase_add_test(tc_userdata_for_name_to_hostent,
                    test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_6);
     suite_add_tcase(s, tc_userdata_for_name_to_hostent);
+
+    TCase* tc_userdata_for_addr_to_hostent = tcase_create("userdata_for_addr_to_hostent");
+    tcase_add_test(tc_userdata_for_addr_to_hostent,
+                   test_userdata_for_addr_to_hostent_returns_hostent_4);
+    tcase_add_test(tc_userdata_for_addr_to_hostent,
+                   test_userdata_for_addr_to_hostent_returns_hostent_6);
+    tcase_add_test(tc_userdata_for_addr_to_hostent,
+                   test_userdata_for_addr_to_hostent_buffer_too_small_returns_erange);
+    tcase_add_test(tc_userdata_for_addr_to_hostent,
+                   test_userdata_for_addr_to_hostent_smallest_buffer_eventually_works_4);
+    tcase_add_test(tc_userdata_for_addr_to_hostent,
+                   test_userdata_for_addr_to_hostent_smallest_buffer_eventually_works_6);
+    suite_add_tcase(s, tc_userdata_for_addr_to_hostent);
 
     return s;
 }
