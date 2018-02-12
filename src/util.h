@@ -29,13 +29,6 @@
 
 #include "avahi.h"
 
-// Increments idx to align on machine word boundary.
-#define ALIGN(idx)                                        \
-    do {                                                  \
-        if (idx % sizeof(void*))                          \
-            idx += (sizeof(void*) - idx % sizeof(void*)); \
-    } while (0)
-
 // Simple buffer allocator.
 typedef struct {
     char* next;
