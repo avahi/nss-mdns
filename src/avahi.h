@@ -44,10 +44,7 @@ typedef struct {
 
 typedef struct {
     int count;
-    union {
-        query_address_result_t result[MAX_ENTRIES];
-        char* name[MAX_ENTRIES];
-    } data;
+    query_address_result_t result[MAX_ENTRIES];
 } userdata_t;
 
 int avahi_resolve_name(int af, const char* name, query_address_result_t* result);
