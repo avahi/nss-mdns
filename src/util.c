@@ -372,7 +372,6 @@ void append_address_to_userdata(const query_address_result_t* result,
         return;
 
     memcpy(&(u->data.result[u->count]), result, sizeof(*result));
-    u->data_len += sizeof(*result);
     u->count++;
 }
 
@@ -383,5 +382,4 @@ void append_name_to_userdata(const char* name, userdata_t* u) {
         return;
 
     u->data.name[u->count++] = strdup(name);
-    u->data_len += strlen(name) + 1;
 }

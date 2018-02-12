@@ -135,7 +135,6 @@ static enum nss_status gethostbyname_impl(
     }
 
     u->count = 0;
-    u->data_len = 0;
 
 #ifndef MDNS_MINIMAL
     mdns_allow_file = fopen(MDNS_ALLOW_FILE, "r");
@@ -264,7 +263,6 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     *h_errnop = NO_RECOVERY;
 
     u.count = 0;
-    u.data_len = 0;
 
     /* Check for address types */
     address_length = af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t);

@@ -572,7 +572,6 @@ static userdata_t create_address_userdata(int num_addresses, int af) {
 
     userdata_t u;
     u.count = 0;
-    u.data_len = 0;
     for (int i = 0; i < num_addresses; i++) {
         query_address_result_t result = create_address_result(i, af);
         append_address_to_userdata(&result, &u);
@@ -583,7 +582,6 @@ static userdata_t create_address_userdata(int num_addresses, int af) {
 static userdata_t create_name_userdata() {
     userdata_t u;
     u.count = 0;
-    u.data_len = 0;
     append_name_to_userdata("example.local", &u);
     return u;
 }
