@@ -293,14 +293,11 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     /* Lookup using Avahi */
     if ((r = avahi_resolve_address(af, addr, t, sizeof(t))) == 0) {
         // Success.
-        userdata_t u;
-        u.count = 0;
-        append_name_to_userdata(t, &u);
         buffer_t buf;
         buffer_init(&buf, buffer, buflen);
-        return convert_userdata_for_addr_to_hostent(&u, addr, address_length,
-                                                    af, result,
-                                                    &buf, errnop, h_errnop);
+        return convert_name_and_addr_to_hostent(t, addr, address_length,
+                                                af, result,
+                                                &buf, errnop, h_errnop);
     } else if (r > 0) {
         // No results.
         *errnop = ETIMEDOUT;

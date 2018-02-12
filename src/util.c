@@ -144,14 +144,12 @@ int label_count(const char* name) {
     return count;
 }
 
-// Converts from the userdata struct into the hostent format, used by
-// gethostbyaddr_r.
-enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
-                                                     const void* addr, int len,
-                                                     int af,
-                                                     struct hostent* result,
-                                                     buffer_t* buf,
-                                                     int* errnop, int* h_errnop) {
+enum nss_status convert_name_and_addr_to_hostent(const char* name,
+                                                 const void* addr, int len,
+                                                 int af,
+                                                 struct hostent* result,
+                                                 buffer_t* buf,
+                                                 int* errnop, int* h_errnop) {
     // Set empty list of aliases.
     result->h_aliases = (char**)buffer_alloc(buf, sizeof(char**));
     if (result->h_aliases == NULL) {
@@ -161,8 +159,7 @@ enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
     }
 
     // Set official name.
-    assert(u->data.name[0]);
-    result->h_name = buffer_strdup(buf, u->data.name[0]);
+    result->h_name = buffer_strdup(buf, name);
     if (result->h_name == NULL) {
         *errnop = ERANGE;
         *h_errnop = NO_RECOVERY;
@@ -193,8 +190,6 @@ enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
     return NSS_STATUS_SUCCESS;
 }
 
-// Converts from the userdata struct into the hostent format, used by
-// gethostbyaddr3_r.
 enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
                                                      const char* name, int af,
                                                      struct hostent* result,
@@ -239,7 +234,7 @@ enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
             *h_errnop = NO_RECOVERY;
             return NSS_STATUS_TRYAGAIN;
         }
-        memcpy(addr, &u->data.result[i].address, address_length);
+        memcpy(addr, &u->result[i].address, address_length);
         result->h_addr_list[i] = addr;
     }
 
@@ -262,7 +257,7 @@ enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
 
     struct gaih_addrtuple* tuple_prev = NULL;
     for (int i = 0; i < u->count; i++) {
-        const query_address_result_t* result = &u->data.result[i];
+        const query_address_result_t* result = &u->result[i];
         struct gaih_addrtuple* tuple;
         if (tuple_prev == NULL && *pat) {
             // The caller has provided a valid initial location in *pat,
@@ -364,15 +359,6 @@ void append_address_to_userdata(const query_address_result_t* result,
     if (u->count >= MAX_ENTRIES)
         return;
 
-    memcpy(&(u->data.result[u->count]), result, sizeof(*result));
+    memcpy(&(u->result[u->count]), result, sizeof(*result));
     u->count++;
-}
-
-void append_name_to_userdata(const char* name, userdata_t* u) {
-    assert(name && u);
-
-    if (u->count >= MAX_ENTRIES)
-        return;
-
-    u->data.name[u->count++] = strdup(name);
 }

@@ -79,14 +79,14 @@ int local_soa(void);
 // Returns the number of labels in a name.
 int label_count(const char* name);
 
-// Converts from the userdata struct into the hostent format, used by
+// Converts from a name and addr into the hostent format, used by
 // gethostbyaddr_r.
-enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
-                                                     const void* addr, int len,
-                                                     int af,
-                                                     struct hostent* result,
-                                                     buffer_t* buf,
-                                                     int* errnop, int* h_errnop);
+enum nss_status convert_name_and_addr_to_hostent(const char* name,
+                                                 const void* addr, int len,
+                                                 int af,
+                                                 struct hostent* result,
+                                                 buffer_t* buf,
+                                                 int* errnop, int* h_errnop);
 
 // Converts from the userdata struct into the hostent format, used by
 // gethostbyaddr3_r.
@@ -107,8 +107,5 @@ enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
 // Appends a query_address_result to userdata.
 void append_address_to_userdata(const query_address_result_t* result,
                                 userdata_t* u);
-
-// Appends a name to userdata.
-void append_name_to_userdata(const char* name, userdata_t* u);
 
 #endif
