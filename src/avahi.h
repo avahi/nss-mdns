@@ -44,7 +44,6 @@ typedef struct {
 
 typedef struct {
     int count;
-    int data_len; /* only valid when doing reverse lookup */
     union {
         query_address_result_t result[MAX_ENTRIES];
         char* name[MAX_ENTRIES];
