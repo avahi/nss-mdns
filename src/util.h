@@ -36,6 +36,24 @@
             idx += (sizeof(void*) - idx % sizeof(void*)); \
     } while (0)
 
+// Simple buffer allocator.
+typedef struct {
+    char* next;
+    char* end;
+} buffer_t;
+
+// Sets up a buffer.
+void buffer_init(buffer_t* buf, char* buffer, size_t buflen);
+
+// Allocate a zeroed, aligned chunk of memory of a given size from the buffer
+// manager.
+// If there is insufficient space, returns NULL.
+void* buffer_alloc(buffer_t* buf, size_t size);
+
+// Duplicate a string into a newly allocated chunk of memory.
+// If there is insufficient space, returns NULL.
+char* buffer_strdup(buffer_t* buf, const char* str);
+
 int set_cloexec(int fd);
 int ends_with(const char* name, const char* suffix);
 
@@ -74,7 +92,7 @@ enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
                                                      const void* addr, int len,
                                                      int af,
                                                      struct hostent* result,
-                                                     char* buffer, size_t buflen,
+                                                     buffer_t* buf,
                                                      int* errnop, int* h_errnop);
 
 // Converts from the userdata struct into the hostent format, used by
@@ -82,7 +100,7 @@ enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
 enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
                                                      const char* name, int af,
                                                      struct hostent* result,
-                                                     char* buffer, size_t buflen,
+                                                     buffer_t* buf,
                                                      int* errnop, int* h_errnop);
 
 // Converts from the userdata struct into the gaih_addrtuple format, used by
@@ -90,7 +108,7 @@ enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
 enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
                                               const char* name,
                                               struct gaih_addrtuple** pat,
-                                              char* buffer, size_t buflen,
+                                              buffer_t* buf,
                                               int* errnop, int* h_errnop);
 
 // Appends a query_address_result to userdata.
@@ -99,19 +117,5 @@ void append_address_to_userdata(const query_address_result_t* result,
 
 // Appends a name to userdata.
 void append_name_to_userdata(const char* name, userdata_t* u);
-
-// Simple buffer allocator.
-typedef struct {
-    char* next;
-    char* end;
-} buffer_t;
-
-// Sets up a buffer.
-void buffer_init(buffer_t* buf, char* buffer, size_t buflen);
-
-// Allocate a zeroed, aligned chunk of memory of a given size from the buffer
-// manager.
-// If there is insufficient space, returns NULL.
-void* buffer_alloc(buffer_t* buf, size_t size);
 
 #endif
