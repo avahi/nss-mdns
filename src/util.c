@@ -152,13 +152,6 @@ enum nss_status convert_userdata_for_addr_to_hostent(const userdata_t* u,
                                                      struct hostent* result,
                                                      buffer_t* buf,
                                                      int* errnop, int* h_errnop) {
-    // Ensure we have some results.
-    if (u->count == 0) {
-        *errnop = ETIMEDOUT;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_UNAVAIL;
-    }
-
     // Set empty list of aliases.
     result->h_aliases = (char**)buffer_alloc(buf, sizeof(char**));
     if (result->h_aliases == NULL) {
