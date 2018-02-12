@@ -152,19 +152,11 @@ enum nss_status convert_name_and_addr_to_hostent(const char* name,
                                                  int* errnop, int* h_errnop) {
     // Set empty list of aliases.
     result->h_aliases = (char**)buffer_alloc(buf, sizeof(char**));
-    if (result->h_aliases == NULL) {
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_TRYAGAIN;
-    }
+    RETURN_IF_FAILED_ALLOC(result->h_aliases);
 
     // Set official name.
     result->h_name = buffer_strdup(buf, name);
-    if (result->h_name == NULL) {
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_TRYAGAIN;
-    }
+    RETURN_IF_FAILED_ALLOC(result->h_name);
 
     // Set addrtype and length.
     result->h_addrtype = af;
@@ -172,19 +164,11 @@ enum nss_status convert_name_and_addr_to_hostent(const char* name,
 
     // Initialize address list of length 1, NULL terminated.
     result->h_addr_list = buffer_alloc(buf, 2 * sizeof(char**));
-    if (result->h_addr_list == NULL) {
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_TRYAGAIN;
-    }
+    RETURN_IF_FAILED_ALLOC(result->h_addr_list);
 
     // Copy the address.
     result->h_addr_list[0] = buffer_alloc(buf, len);
-    if (result->h_addr_list[0] == NULL) {
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_TRYAGAIN;
-    }
+    RETURN_IF_FAILED_ALLOC(result->h_addr_list[0]);
     memcpy(result->h_addr_list[0], addr, len);
 
     return NSS_STATUS_SUCCESS;
@@ -200,19 +184,11 @@ enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
 
     // Set empty list of aliases.
     result->h_aliases = (char**)buffer_alloc(buf, sizeof(char**));
-    if (result->h_aliases == NULL) {
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_TRYAGAIN;
-    }
+    RETURN_IF_FAILED_ALLOC(result->h_aliases);
 
     // Set official name.
     result->h_name = buffer_strdup(buf, name);
-    if (result->h_name == NULL) {
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_TRYAGAIN;
-    }
+    RETURN_IF_FAILED_ALLOC(result->h_name);
 
     // Set addrtype and length.
     result->h_addrtype = af;
@@ -220,20 +196,12 @@ enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
 
     // Initialize address list, NULL terminated.
     result->h_addr_list = buffer_alloc(buf, (u->count + 1) * sizeof(char**));
-    if (result->h_addr_list == NULL) {
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_TRYAGAIN;
-    }
+    RETURN_IF_FAILED_ALLOC(result->h_addr_list);
 
     // Copy the addresses.
     for (size_t i = 0; i < u->count; i++) {
         char* addr = buffer_alloc(buf, address_length);
-        if (addr == NULL) {
-            *errnop = ERANGE;
-            *h_errnop = NO_RECOVERY;
-            return NSS_STATUS_TRYAGAIN;
-        }
+        RETURN_IF_FAILED_ALLOC(addr);
         memcpy(addr, &u->result[i].address, address_length);
         result->h_addr_list[i] = addr;
     }
@@ -249,11 +217,7 @@ enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
 
     // Copy name to buffer (referenced in every result address tuple).
     char* buffer_name = buffer_strdup(buf, name);
-    if (buffer_name == NULL) {
-        *errnop = ERANGE;
-        *h_errnop = NO_RECOVERY;
-        return NSS_STATUS_TRYAGAIN;
-    }
+    RETURN_IF_FAILED_ALLOC(buffer_name);
 
     struct gaih_addrtuple* tuple_prev = NULL;
     for (int i = 0; i < u->count; i++) {
@@ -271,11 +235,7 @@ enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
         } else {
             // Allocate a new tuple from the buffer.
             tuple = buffer_alloc(buf, sizeof(struct gaih_addrtuple));
-            if (tuple == NULL) {
-                *errnop = ERANGE;
-                *h_errnop = NO_RECOVERY;
-                return NSS_STATUS_TRYAGAIN;
-            }
+            RETURN_IF_FAILED_ALLOC(tuple);
         }
 
         size_t address_length =
