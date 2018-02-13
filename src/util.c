@@ -68,8 +68,8 @@ int verify_name_allowed_with_soa(const char* name, FILE* mdns_allow_file) {
     }
 }
 
-enum verify_name_result verify_name_allowed(const char* name,
-                                            FILE* mdns_allow_file) {
+verify_name_result_t verify_name_allowed(const char* name,
+                                         FILE* mdns_allow_file) {
     assert(name);
 
     if (mdns_allow_file) {
