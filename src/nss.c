@@ -73,28 +73,50 @@ enum nss_status _nss_mdns_gethostbyname2_r(const char*, int, struct hostent*, ch
 enum nss_status _nss_mdns_gethostbyname_r(const char*, struct hostent*, char*, size_t, int*, int*);
 enum nss_status _nss_mdns_gethostbyaddr_r(const void*, int, int, struct hostent*, char*, size_t, int*, int*);
 
-static bool do_avahi_resolve_name(int af, const char* name,
-                                  userdata_t* userdata) {
-    query_address_result_t address_result;
-    bool found = false;
+static avahi_resolve_result_t do_avahi_resolve_name(int af, const char* name,
+                                                    userdata_t* userdata) {
+    bool ipv4_found = false;
+    bool ipv6_found = false;
 
     if (af == AF_INET || af == AF_UNSPEC) {
-        if (avahi_resolve_name(AF_INET, name, &address_result) == 0) {
-            /* Lookup succeeded */
+        query_address_result_t address_result;
+        switch (avahi_resolve_name(AF_INET, name, &address_result)) {
+        case AVAHI_RESOLVE_RESULT_SUCCESS:
             append_address_to_userdata(&address_result, userdata);
-            found = true;
+            ipv4_found = true;
+            break;
+
+        case AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND:
+            break;
+
+        case AVAHI_RESOLVE_RESULT_UNAVAIL:
+            // Something went wrong, just fail.
+            return AVAHI_RESOLVE_RESULT_UNAVAIL;
         }
     }
 
     if (af == AF_INET6 || af == AF_UNSPEC) {
-        if (avahi_resolve_name(AF_INET6, name, &address_result) == 0) {
-            /* Lookup succeeded */
+        query_address_result_t address_result;
+        switch (avahi_resolve_name(AF_INET6, name, &address_result)) {
+        case AVAHI_RESOLVE_RESULT_SUCCESS:
             append_address_to_userdata(&address_result, userdata);
-            found = true;
+            ipv6_found = true;
+            break;
+
+        case AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND:
+            break;
+
+        case AVAHI_RESOLVE_RESULT_UNAVAIL:
+            // Something went wrong, just fail.
+            return AVAHI_RESOLVE_RESULT_UNAVAIL;
         }
     }
 
-    return found;
+    if (ipv4_found || ipv6_found) {
+        return AVAHI_RESOLVE_RESULT_SUCCESS;
+    } else {
+        return AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND;
+    }
 }
 
 static enum nss_status gethostbyname_impl(
@@ -148,17 +170,17 @@ static enum nss_status gethostbyname_impl(
         return NSS_STATUS_UNAVAIL;
     }
 
-    int result = do_avahi_resolve_name(af, name, u);
-    if (result == 0) {
-        // Success.
+    switch (do_avahi_resolve_name(af, name, u)) {
+    case AVAHI_RESOLVE_RESULT_SUCCESS:
         return NSS_STATUS_SUCCESS;
-    } else if (result > 0) {
-        // No results.
+
+    case AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND:
         *errnop = ETIMEDOUT;
         *h_errnop = HOST_NOT_FOUND;
         return NSS_STATUS_NOTFOUND;
-    } else {
-        // Failure.
+
+    case AVAHI_RESOLVE_RESULT_UNAVAIL:
+    default:
         *errnop = ETIMEDOUT;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_UNAVAIL;
@@ -259,7 +281,6 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
     int* errnop,
     int* h_errnop) {
 
-    int r;
     size_t address_length;
     char t[256];
 
@@ -291,20 +312,21 @@ enum nss_status _nss_mdns_gethostbyaddr_r(
 #endif
 
     /* Lookup using Avahi */
-    if ((r = avahi_resolve_address(af, addr, t, sizeof(t))) == 0) {
-        // Success.
-        buffer_t buf;
+    buffer_t buf;
+    switch (avahi_resolve_address(af, addr, t, sizeof(t))) {
+    case AVAHI_RESOLVE_RESULT_SUCCESS:
         buffer_init(&buf, buffer, buflen);
         return convert_name_and_addr_to_hostent(t, addr, address_length,
                                                 af, result,
                                                 &buf, errnop, h_errnop);
-    } else if (r > 0) {
-        // No results.
+
+    case AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND:
         *errnop = ETIMEDOUT;
         *h_errnop = HOST_NOT_FOUND;
         return NSS_STATUS_NOTFOUND;
-    } else {
-        // Failure.
+
+    case AVAHI_RESOLVE_RESULT_UNAVAIL:
+    default:
         *errnop = ETIMEDOUT;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_UNAVAIL;

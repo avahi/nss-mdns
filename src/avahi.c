@@ -65,8 +65,9 @@ fail:
     return NULL;
 }
 
-static int avahi_resolve_name_with_socket(FILE* f, int af, const char* name,
-                                          query_address_result_t* result) {
+static avahi_resolve_result_t avahi_resolve_name_with_socket(FILE* f, int af,
+                                                             const char* name,
+                                                             query_address_result_t* result) {
     char* p;
     char ln[256];
 
@@ -74,13 +75,11 @@ static int avahi_resolve_name_with_socket(FILE* f, int af, const char* name,
     fflush(f);
 
     if (!(fgets(ln, sizeof(ln), f))) {
-        // Failure.
-        return -1;
+        return AVAHI_RESOLVE_RESULT_UNAVAIL;
     }
 
     if (ln[0] != '+') {
-        // No host found.
-        return 1;
+        return AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND;
     }
 
     result->af = af;
@@ -105,46 +104,45 @@ static int avahi_resolve_name_with_socket(FILE* f, int af, const char* name,
     *(p + strcspn(p, "\n\r\t ")) = 0;
 
     if (inet_pton(af, p, &(result->address)) <= 0) {
-        // Failure.
-        return -1;
+        return AVAHI_RESOLVE_RESULT_UNAVAIL;
     }
 
-    // Success.
-    return 0;
+    return AVAHI_RESOLVE_RESULT_SUCCESS;
 }
 
-int avahi_resolve_name(int af, const char* name, query_address_result_t* result) {
+avahi_resolve_result_t avahi_resolve_name(int af, const char* name,
+                                          query_address_result_t* result) {
     if (af != AF_INET && af != AF_INET6) {
-        // Failure.
-        return -1;
+        return AVAHI_RESOLVE_RESULT_UNAVAIL;
     }
 
     FILE* f = open_socket();
     if (!f) {
-        // Failure.
-        return -1;
+        return AVAHI_RESOLVE_RESULT_UNAVAIL;
     }
 
-    int ret = avahi_resolve_name_with_socket(f, af, name, result);
+    avahi_resolve_result_t ret = avahi_resolve_name_with_socket(f, af, name,
+                                                                result);
     fclose(f);
     return ret;
 }
 
-static int avahi_resolve_address_with_socket(FILE* f, int af, const void* data,
-                                             char* name, size_t name_len) {
+static avahi_resolve_result_t avahi_resolve_address_with_socket(FILE* f,
+                                                                int af,
+                                                                const void* data,
+                                                                char* name,
+                                                                size_t name_len) {
     char* p;
     char a[256], ln[256];
 
     fprintf(f, "RESOLVE-ADDRESS %s\n", inet_ntop(af, data, a, sizeof(a)));
 
     if (!(fgets(ln, sizeof(ln), f))) {
-        // Failure.
-        return -1;
+        return AVAHI_RESOLVE_RESULT_UNAVAIL;
     }
 
     if (ln[0] != '+') {
-        // No address found.
-        return 1;
+        return AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND;
     }
 
     p = ln + 1;
@@ -165,22 +163,22 @@ static int avahi_resolve_address_with_socket(FILE* f, int af, const void* data,
     name[name_len - 1] = 0;
 
     // Success.
-    return 0;
+    return AVAHI_RESOLVE_RESULT_SUCCESS;
 }
 
-int avahi_resolve_address(int af, const void* data, char* name, size_t name_len) {
+avahi_resolve_result_t avahi_resolve_address(int af, const void* data,
+                                             char* name, size_t name_len) {
     if (af != AF_INET && af != AF_INET6) {
-        // Failure.
-        return -1;
+        return AVAHI_RESOLVE_RESULT_UNAVAIL;
     }
 
     FILE* f = open_socket();
     if (!f) {
-        // Failure.
-        return -1;
+        return AVAHI_RESOLVE_RESULT_UNAVAIL;
     }
 
-    int ret = avahi_resolve_address_with_socket(f, af, data, name, name_len);
+    avahi_resolve_result_t ret =
+        avahi_resolve_address_with_socket(f, af, data, name, name_len);
     fclose(f);
     return ret;
 }

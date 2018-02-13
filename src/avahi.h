@@ -47,8 +47,16 @@ typedef struct {
     query_address_result_t result[MAX_ENTRIES];
 } userdata_t;
 
-int avahi_resolve_name(int af, const char* name, query_address_result_t* result);
+typedef enum {
+    AVAHI_RESOLVE_RESULT_SUCCESS,
+    AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND,
+    AVAHI_RESOLVE_RESULT_UNAVAIL
+} avahi_resolve_result_t;
 
-int avahi_resolve_address(int af, const void* data, char* name, size_t name_len);
+avahi_resolve_result_t avahi_resolve_name(int af, const char* name,
+                                          query_address_result_t* result);
+
+avahi_resolve_result_t avahi_resolve_address(int af, const void* data,
+                                             char* name, size_t name_len);
 
 #endif
