@@ -1,5 +1,15 @@
 # News
 
+## Mon Feb 12 2018:
+
+Version 0.13 released. Highlights:
+
+* Fix an old memory leak in reverse lookup
+* Fix the broken workaround for nscd segfaults (not all clients
+  would see all results)
+* Simplify buffer management
+* More unit tests, more cleanups, and fewer gotos
+
 ## Sat Feb 10 2018:
 
 Version 0.12 released. Highlights:
