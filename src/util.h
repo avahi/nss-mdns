@@ -70,16 +70,16 @@ int ends_with(const char* name, const char* suffix);
 // is not NULL.
 int verify_name_allowed_with_soa(const char* name, FILE* mdns_allow_file);
 
-enum verify_name_result {
+typedef enum {
     VERIFY_NAME_RESULT_NOT_ALLOWED,
     VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA,
     VERIFY_NAME_RESULT_ALLOWED
-};
+} verify_name_result_t;
 
 // Tells us if the name is not allowed unconditionally, allowed only
 // if local_soa() returns false, or unconditionally allowed.
-enum verify_name_result verify_name_allowed(const char* name,
-                                            FILE* mdns_allow_file);
+verify_name_result_t verify_name_allowed(const char* name,
+                                         FILE* mdns_allow_file);
 
 // Returns true if a DNS server claims authority over "local".
 int local_soa(void);
