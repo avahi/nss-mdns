@@ -2,7 +2,8 @@
 
 ## Mon Feb 12 2018:
 
-Version 0.13 released. Highlights:
+[Version 0.13](https://github.com/lathiat/nss-mdns/releases/tag/v0.13)
+released. Highlights:
 
 * Fix an old memory leak in reverse lookup
 * Fix the broken workaround for nscd segfaults (not all clients
@@ -12,7 +13,8 @@ Version 0.13 released. Highlights:
 
 ## Sat Feb 10 2018:
 
-Version 0.12 released. Highlights:
+[Version 0.12](https://github.com/lathiat/nss-mdns/releases/tag/v0.12)
+released. Highlights:
 
 * Fix segfault when using nscd
 * Remove untested, unmaintained BSD support (please help out if you
@@ -20,7 +22,8 @@ Version 0.12 released. Highlights:
 
 ## Mon Jan 22 2018:
 
-Version 0.11 released. The first release in some time! Highlights:
+[Version 0.11](https://github.com/lathiat/nss-mdns/releases/tag/v0.11)
+released. The first release in some time! Highlights:
 
 * Moved to new GitHub location, docs migrated to markdown
 * The long-deprecated `LEGACY` mode is removed
@@ -36,12 +39,12 @@ Version 0.11 released. The first release in some time! Highlights:
 
 ## Sat May 12 2007:
 
-[Version 0.10](http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-0.10.tar.gz)
+[Version 0.10](https://github.com/lathiat/nss-mdns/releases/tag/v0.10)
 released. Changes include: Ported to FreeBSD; alignment fixes for SPARC.
 
 ## Mon Jan 1 2007:
 
-[Version 0.9](http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-0.9.tar.gz)
+[Version 0.9](https://github.com/lathiat/nss-mdns/releases/tag/v0.9)
 released. Changes include: Make most shared library symbols private to
 not conflict with any symbols of the program we're loaded into. Fix a
 potential endless loop in the mDNS packet parsing code.
@@ -58,7 +61,7 @@ reenable this functionality by passing `--enable-search-domains`.**
 
 ## Sat Apr 29 2006:
 
-[Version 0.8](http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-0.8.tar.gz)
+[Version 0.8](https://github.com/lathiat/nss-mdns/releases/tag/v0.8)
 released. Changes include: Build time option to disable "legacy unicast" mDNS
 requests, i.e. resolve exclusively with Avahi; build a special
 `_minimal` flavour of the shared objects to minimize
@@ -72,7 +75,7 @@ for more information!**
 ## Sat Nov 19 2005:
 
 [Version
-0.7](http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-0.7.tar.gz)
+0.7](https://github.com/lathiat/nss-mdns/releases/tag/v0.7)
 released. Changes include: Portability patch for ARM from Philipp
 Zabel; make sure not to print any messages to STDERR; deal with OOM
 situations properly; if multiple addresses are assigned to the same
@@ -80,21 +83,21 @@ interface make sure to send a query packet only once; other cleanups
 
 ## Sun Aug 21 2005:
 
-[Version 0.6](http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-0.6.tar.gz)
+[Version 0.6](https://github.com/lathiat/nss-mdns/releases/tag/v0.6)
 released. Changes include: honour search list in
 `/etc/resolv.conf`; try to contact [Avahi](http://avahi.org/) for
 resolving.
 
 ## Sat Jun 4 2005:
 
-[Version 0.5](http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-0.5.tar.gz)
+[Version 0.5](https://github.com/lathiat/nss-mdns/releases/tag/v0.5)
 released. Changes include: only lookup hostnames ending in
 `.local`; add support for a configuration file
 (`/etc/mdns.allow`) to allow lookups for other names.
 
 ## Sun May 15 2005:
 
-[Version 0.4](http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-0.4.tar.gz)
+[Version 0.4](https://github.com/lathiat/nss-mdns/releases/tag/v0.4)
 released. Changes include: small portability fix for big endian
 architectures; send "legacy unicast" packets instead of normal mDNS
 packets (this should reduce traffic and improve response time)
@@ -102,13 +105,13 @@ packets (this should reduce traffic and improve response time)
 ## Jan Sun 16 2005:
 
 [Version
-0.3](http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-0.3.tar.gz)
+0.3](https://github.com/lathiat/nss-mdns/releases/tag/v0.3)
 released. Changes include: add Debianization; use `ip6.arpa` instead
 of `ip6.int` for reverse IPv6 lookups.
 
 ## Fri Dec 17 2004:
 
-[Version 0.2](http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-0.2.tar.gz)
+[Version 0.2](https://github.com/lathiat/nss-mdns/releases/tag/v0.2)
 released. Changes include: send mDNS queries on every interface that
 supports multicasts, instead of only the one with the default route,
 making `nss-mdns` more robust on multi-homed hosts; gcc 2.95
@@ -116,4 +119,4 @@ compatiblity.
 
 ## Mon Dec 6 2004:
 
-[Version 0.1](http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-0.1.tar.gz)
+[Version 0.1](https://github.com/lathiat/nss-mdns/releases/tag/v0.1)
