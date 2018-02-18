@@ -194,6 +194,8 @@ enum nss_status _nss_mdns_gethostbyname4_r(
     int* errnop, int* h_errnop,
     int32_t* ttlp) {
 
+    (void)ttlp;
+
     userdata_t u;
     buffer_t buf;
 
@@ -214,6 +216,9 @@ enum nss_status _nss_mdns_gethostbyname3_r(
     int* errnop, int* h_errnop,
     int32_t* ttlp,
     char** canonp) {
+
+    (void)ttlp;
+    (void)canonp;
 
     buffer_t buf;
     userdata_t u;
