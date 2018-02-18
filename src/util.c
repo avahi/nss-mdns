@@ -199,7 +199,7 @@ enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
     RETURN_IF_FAILED_ALLOC(result->h_addr_list);
 
     // Copy the addresses.
-    for (size_t i = 0; i < u->count; i++) {
+    for (int i = 0; i < u->count; i++) {
         char* addr = buffer_alloc(buf, address_length);
         RETURN_IF_FAILED_ALLOC(addr);
         memcpy(addr, &u->result[i].address, address_length);

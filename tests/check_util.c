@@ -507,11 +507,11 @@ START_TEST(test_buffer_alloc_returns_zeroed_memory) {
 }
 END_TEST
 
-const static uint8_t ipv6_doc_prefix[16] = {0x0, 0x0, 0x0, 0x0,
+static const uint8_t ipv6_doc_prefix[16] = {0x0, 0x0, 0x0, 0x0,
                                             0x0, 0x0, 0x0, 0x0,
                                             0x0, 0x0, 0x0, 0x0,
                                             0xb8, 0x0d, 0x01, 0x20}; // Documentation prefix
-const static uint32_t ipv4_test_addr = 0xc6336401;                   // 198.51.100.1 (TEST-NET-2)
+static const uint32_t ipv4_test_addr = 0xc6336401;                   // 198.51.100.1 (TEST-NET-2)
 
 static query_address_result_t create_address_result(int offset, int af) {
     query_address_result_t result;
