@@ -33,13 +33,13 @@ AC_USE_SYSTEM_EXTENSIONS
 AM_SILENT_RULES([yes])
 
 # Conditionally enable unittests.
-PKG_CHECK_MODULES([CHECK], [check >= 0.11], [have_check=yes], [have_check=no])
-AM_CONDITIONAL([HAVE_CHECK], [test "x$have_check" = "xyes"])
+AC_ARG_ENABLE([tests],
+  AS_HELP_STRING([--disable-tests], [Disable building tests]))
 
-if test "x$have_check" = "xno" ; then
-    AC_MSG_WARN([$CHECK_PKG_ERRORS])
-    AC_MSG_WARN([Unit tests will be disabled])
-fi
+AS_IF([test "x$enable_tests" != "xno"], [
+    PKG_CHECK_MODULES([CHECK], [check >= 0.11])
+])
+AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_tests" != "xno"])
 
 # Checks for programs.
 AM_PROG_AR
