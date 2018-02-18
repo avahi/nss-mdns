@@ -1,4 +1,4 @@
-if HAVE_CHECK
+if ENABLE_TESTS
 
 TESTS = check_util
 check_PROGRAMS = check_util
