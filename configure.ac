@@ -21,7 +21,7 @@ AC_PREREQ([2.69])
 AC_INIT([nss-mdns],[0.13],[https://github.com/lathiat/nss-mdns/issues])
 AC_CONFIG_SRCDIR([src/nss.c])
 AC_CONFIG_HEADERS([config.h])
-AM_INIT_AUTOMAKE([foreign 1.9 -Wall])
+AM_INIT_AUTOMAKE([foreign 1.9 -Wall subdir-objects])
 AC_CONFIG_MACRO_DIRS([m4])
 
 AC_SUBST(PACKAGE_URL, [https://github.com/lathiat/nss-mdns])
@@ -63,5 +63,5 @@ AC_PROG_CC_C99
 AC_SEARCH_LIBS([__res_nquery], [resolv])
 AC_CHECK_FUNCS([gethostbyaddr gethostbyname gettimeofday inet_ntoa memset select socket strcspn strdup strerror strncasecmp strcasecmp strspn])
 
-AC_CONFIG_FILES([Makefile src/Makefile tests/Makefile])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

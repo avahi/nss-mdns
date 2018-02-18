@@ -15,5 +15,83 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 EXTRA_DIST=bootstrap.sh README.md ACKNOWLEDGEMENTS.md NEWS.md LICENSE
-SUBDIRS=src tests
 ACLOCAL_AMFLAGS=-I m4
+
+# src
+EXTRA_DIST += src/map-file
+
+AM_CFLAGS = \
+	-DMDNS_ALLOW_FILE=\"$(sysconfdir)/mdns.allow\" \
+	-DAVAHI_SOCKET=\"$(localstatedir)/run/avahi-daemon/socket\"
+
+AM_LDFLAGS=-avoid-version -module -export-dynamic
+
+lib_LTLIBRARIES = \
+	libnss_mdns.la \
+	libnss_mdns4.la \
+	libnss_mdns6.la \
+	libnss_mdns_minimal.la \
+	libnss_mdns4_minimal.la \
+	libnss_mdns6_minimal.la
+
+check_PROGRAMS = nss-test avahi-test
+
+libnss_mdns_la_SOURCES=src/util.c src/util.h src/avahi.c src/avahi.h src/nss.c
+libnss_mdns_la_CFLAGS=$(AM_CFLAGS)
+libnss_mdns_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.2 -Wl,-version-script=$(srcdir)/src/map-file
+
+libnss_mdns_minimal_la_SOURCES=$(libnss_mdns_la_SOURCES)
+libnss_mdns_minimal_la_CFLAGS=$(libnss_mdns_la_CFLAGS) -DMDNS_MINIMAL
+libnss_mdns_minimal_la_LDFLAGS=$(libnss_mdns_la_LDFLAGS)
+
+libnss_mdns4_la_SOURCES=$(libnss_mdns_la_SOURCES)
+libnss_mdns4_la_CFLAGS=$(libnss_mdns_la_CFLAGS) -DNSS_IPV4_ONLY=1
+libnss_mdns4_la_LDFLAGS=$(libnss_mdns_la_LDFLAGS)
+
+libnss_mdns4_minimal_la_SOURCES=$(libnss_mdns_la_SOURCES)
+libnss_mdns4_minimal_la_CFLAGS=$(libnss_mdns_la_CFLAGS) -DNSS_IPV4_ONLY=1 -DMDNS_MINIMAL
+libnss_mdns4_minimal_la_LDFLAGS=$(libnss_mdns_la_LDFLAGS)
+
+libnss_mdns6_la_SOURCES=$(libnss_mdns_la_SOURCES)
+libnss_mdns6_la_CFLAGS=$(libnss_mdns_la_CFLAGS) -DNSS_IPV6_ONLY=1
+libnss_mdns6_la_LDFLAGS=$(libnss_mdns_la_LDFLAGS)
+
+libnss_mdns6_minimal_la_SOURCES=$(libnss_mdns_la_SOURCES)
+libnss_mdns6_minimal_la_CFLAGS=$(libnss_mdns_la_CFLAGS) -DNSS_IPV6_ONLY=1 -DMDNS_MINIMAL
+libnss_mdns6_minimal_la_LDFLAGS=$(libnss_mdns_la_LDFLAGS)
+
+avahi_test_SOURCES = \
+	src/avahi.c src/avahi.h \
+	src/util.c src/util.h \
+	src/avahi-test.c
+
+nss_test_SOURCES = \
+	src/nss-test.c
+
+install-exec-hook:
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns.la
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns_minimal.la
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns4.la
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns4_minimal.la
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns6.la
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns6_minimal.la
+
+uninstall-hook:
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns.so.2
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns_minimal.so.2
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns4.so.2
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns4_minimal.so.2
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns6.so.2
+	rm -f $(DESTDIR)$(libdir)/libnss_mdns6_minimal.so.2
+
+
+# tests
+if ENABLE_TESTS
+TESTS = check_util
+check_PROGRAMS += check_util
+check_util_SOURCES = tests/check_util.c src/util.h
+check_util_CFLAGS = @CHECK_CFLAGS@
+check_util_LDADD = src/util.o @CHECK_LIBS@
+endif
+
+EXTRA_DIST += tests/check_util.c
