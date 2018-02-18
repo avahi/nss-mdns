@@ -1,5 +1,17 @@
 # News
 
+## Sun Feb 18 2018:
+
+[Version 0.13.1](https://github.com/lathiat/nss-mdns/releases/tag/v0.13.1)
+released. Highlights:
+
+* Very minor code changes (should result in no binary changes)
+* Reformat source to 80 columns
+* Improve configure options to allow disabling tests even if
+  the testing libraries are present
+* Automake is now non-recursive
+* Hardcoded paths are now exposed as configure variables
+
 ## Mon Feb 12 2018:
 
 [Version 0.13](https://github.com/lathiat/nss-mdns/releases/tag/v0.13)
