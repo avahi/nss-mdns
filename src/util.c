@@ -122,8 +122,8 @@ int local_soa(void) {
     result = res_ninit(&state);
     if (result == -1)
         return 0;
-    result = res_nquery(&state, "local", ns_c_in, ns_t_soa,
-                        answer, sizeof answer);
+    result =
+        res_nquery(&state, "local", ns_c_in, ns_t_soa, answer, sizeof answer);
     res_nclose(&state);
     return result > 0;
 }
@@ -146,10 +146,9 @@ int label_count(const char* name) {
 
 enum nss_status convert_name_and_addr_to_hostent(const char* name,
                                                  const void* addr, int len,
-                                                 int af,
-                                                 struct hostent* result,
-                                                 buffer_t* buf,
-                                                 int* errnop, int* h_errnop) {
+                                                 int af, struct hostent* result,
+                                                 buffer_t* buf, int* errnop,
+                                                 int* h_errnop) {
     // Set empty list of aliases.
     result->h_aliases = (char**)buffer_alloc(buf, sizeof(char**));
     RETURN_IF_FAILED_ALLOC(result->h_aliases);
@@ -177,8 +176,8 @@ enum nss_status convert_name_and_addr_to_hostent(const char* name,
 enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
                                                      const char* name, int af,
                                                      struct hostent* result,
-                                                     buffer_t* buf,
-                                                     int* errnop, int* h_errnop) {
+                                                     buffer_t* buf, int* errnop,
+                                                     int* h_errnop) {
     size_t address_length =
         af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t);
 
@@ -212,8 +211,8 @@ enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
 enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
                                               const char* name,
                                               struct gaih_addrtuple** pat,
-                                              buffer_t* buf,
-                                              int* errnop, int* h_errnop) {
+                                              buffer_t* buf, int* errnop,
+                                              int* h_errnop) {
 
     // Copy name to buffer (referenced in every result address tuple).
     char* buffer_name = buffer_strdup(buf, name);
@@ -238,8 +237,8 @@ enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
             RETURN_IF_FAILED_ALLOC(tuple);
         }
 
-        size_t address_length =
-            result->af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t);
+        size_t address_length = result->af == AF_INET ? sizeof(ipv4_address_t)
+                                                      : sizeof(ipv6_address_t);
 
         // Assign the (always same) name.
         tuple->name = buffer_name;

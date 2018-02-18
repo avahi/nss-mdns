@@ -65,13 +65,14 @@ fail:
     return NULL;
 }
 
-static avahi_resolve_result_t avahi_resolve_name_with_socket(FILE* f, int af,
-                                                             const char* name,
-                                                             query_address_result_t* result) {
+static avahi_resolve_result_t
+avahi_resolve_name_with_socket(FILE* f, int af, const char* name,
+                               query_address_result_t* result) {
     char* p;
     char ln[256];
 
-    fprintf(f, "RESOLVE-HOSTNAME%s %s\n", af == AF_INET ? "-IPV4" : "-IPV6", name);
+    fprintf(f, "RESOLVE-HOSTNAME%s %s\n", af == AF_INET ? "-IPV4" : "-IPV6",
+            name);
     fflush(f);
 
     if (!(fgets(ln, sizeof(ln), f))) {
@@ -121,17 +122,15 @@ avahi_resolve_result_t avahi_resolve_name(int af, const char* name,
         return AVAHI_RESOLVE_RESULT_UNAVAIL;
     }
 
-    avahi_resolve_result_t ret = avahi_resolve_name_with_socket(f, af, name,
-                                                                result);
+    avahi_resolve_result_t ret =
+        avahi_resolve_name_with_socket(f, af, name, result);
     fclose(f);
     return ret;
 }
 
-static avahi_resolve_result_t avahi_resolve_address_with_socket(FILE* f,
-                                                                int af,
-                                                                const void* data,
-                                                                char* name,
-                                                                size_t name_len) {
+static avahi_resolve_result_t
+avahi_resolve_address_with_socket(FILE* f, int af, const void* data, char* name,
+                                  size_t name_len) {
     char* p;
     char a[256], ln[256];
 

@@ -79,9 +79,8 @@ START_TEST(test_verify_name_allowed_empty) {
     ck_assert_int_eq(
         verify_name_allowed_from_string("com.example.local.", allow_file),
         VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(
-        verify_name_allowed_from_string("example.com", allow_file),
-        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("example.com", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
     ck_assert_int_eq(
         verify_name_allowed_from_string("example.com.", allow_file),
         VERIFY_NAME_RESULT_NOT_ALLOWED);
@@ -91,12 +90,10 @@ START_TEST(test_verify_name_allowed_empty) {
     ck_assert_int_eq(
         verify_name_allowed_from_string("example.local.com.", allow_file),
         VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(
-        verify_name_allowed_from_string("", allow_file),
-        VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(
-        verify_name_allowed_from_string(".", allow_file),
-        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string(".", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
 }
 END_TEST
 
@@ -104,10 +101,9 @@ END_TEST
 // .local is unconditionally permitted, without SOA check.
 // Multi-label names are allowed.
 START_TEST(test_verify_name_allowed_default) {
-    const char allow_file[] =
-        "# /etc/mdns.allow\n"
-        ".local.\n"
-        ".local\n";
+    const char allow_file[] = "# /etc/mdns.allow\n"
+                              ".local.\n"
+                              ".local\n";
 
     ck_assert_int_eq(
         verify_name_allowed_from_string("example.local", allow_file),
@@ -121,9 +117,8 @@ START_TEST(test_verify_name_allowed_default) {
     ck_assert_int_eq(
         verify_name_allowed_from_string("com.example.local.", allow_file),
         VERIFY_NAME_RESULT_ALLOWED);
-    ck_assert_int_eq(
-        verify_name_allowed_from_string("example.com", allow_file),
-        VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("example.com", allow_file),
+                     VERIFY_NAME_RESULT_NOT_ALLOWED);
     ck_assert_int_eq(
         verify_name_allowed_from_string("example.com.", allow_file),
         VERIFY_NAME_RESULT_NOT_ALLOWED);
@@ -158,9 +153,8 @@ START_TEST(test_verify_name_allowed_wildcard) {
     ck_assert_int_eq(
         verify_name_allowed_from_string("com.example.local.", allow_file),
         VERIFY_NAME_RESULT_ALLOWED);
-    ck_assert_int_eq(
-        verify_name_allowed_from_string("example.com", allow_file),
-        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("example.com", allow_file),
+                     VERIFY_NAME_RESULT_ALLOWED);
     ck_assert_int_eq(
         verify_name_allowed_from_string("example.com.", allow_file),
         VERIFY_NAME_RESULT_ALLOWED);
@@ -170,12 +164,10 @@ START_TEST(test_verify_name_allowed_wildcard) {
     ck_assert_int_eq(
         verify_name_allowed_from_string("example.local.com.", allow_file),
         VERIFY_NAME_RESULT_ALLOWED);
-    ck_assert_int_eq(
-        verify_name_allowed_from_string("", allow_file),
-        VERIFY_NAME_RESULT_ALLOWED);
-    ck_assert_int_eq(
-        verify_name_allowed_from_string(".", allow_file),
-        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("", allow_file),
+                     VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string(".", allow_file),
+                     VERIFY_NAME_RESULT_ALLOWED);
 }
 END_TEST
 
@@ -204,8 +196,9 @@ START_TEST(test_verify_name_allowed_too_long) {
         VERIFY_NAME_RESULT_ALLOWED);
     ck_assert_int_eq(verify_name_allowed_from_string("example.com", allow_file),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(verify_name_allowed_from_string("example.com.", allow_file),
-                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.com.", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
     ck_assert_int_eq(
         verify_name_allowed_from_string("example.local.com", allow_file),
         VERIFY_NAME_RESULT_NOT_ALLOWED);
@@ -233,25 +226,34 @@ START_TEST(test_verify_name_allowed_too_long2) {
         ".local\n";
 
     // The input is truncated at 127 bytes, so we allow this string.
-    ck_assert_int_eq(verify_name_allowed_from_string(
-                         "example"
-                         ".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
-                         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50 characters
-                         "aaaaaaaaaaaaaaaaaaaaaaaaaaa",                       // 27 characters
-                         allow_file),
-                     VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string(
+            "example"
+            ".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50
+                                                                 // characters
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" // 50
+                                                                 // characters
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaa", // 27 characters
+            allow_file),
+        VERIFY_NAME_RESULT_ALLOWED);
 
     // Even though this exactly matches the item in the allow file,
     // it is too long.
-    ck_assert_int_eq(verify_name_allowed_from_string(
-                         "example"
-                         ".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  // 50 characters
-                         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  // 50 characters
-                         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  // 50 characters
-                         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  // 50 characters
-                         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // 50 characters
-                         allow_file),
-                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string(
+            "example"
+            ".aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  // 50
+                                                                  // characters
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  // 50
+                                                                  // characters
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  // 50
+                                                                  // characters
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  // 50
+                                                                  // characters
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // 50
+                                                                  // characters
+            allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
 
     ck_assert_int_eq(
         verify_name_allowed_from_string("example.local", allow_file),
@@ -267,8 +269,9 @@ START_TEST(test_verify_name_allowed_too_long2) {
         VERIFY_NAME_RESULT_ALLOWED);
     ck_assert_int_eq(verify_name_allowed_from_string("example.com", allow_file),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(verify_name_allowed_from_string("example.com.", allow_file),
-                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.com.", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
     ck_assert_int_eq(
         verify_name_allowed_from_string("example.local.com", allow_file),
         VERIFY_NAME_RESULT_NOT_ALLOWED);
@@ -284,12 +287,11 @@ END_TEST
 
 // Tests verify_name_allowed with a custom config.
 START_TEST(test_verify_name_allowed_com_and_local) {
-    const char allow_file[] =
-        "# /etc/mdns.allow\n"
-        ".com.\n"
-        ".com\n"
-        ".local.\n"
-        ".local\n";
+    const char allow_file[] = "# /etc/mdns.allow\n"
+                              ".com.\n"
+                              ".com\n"
+                              ".local.\n"
+                              ".local\n";
 
     ck_assert_int_eq(
         verify_name_allowed_from_string("example.local", allow_file),
@@ -303,9 +305,8 @@ START_TEST(test_verify_name_allowed_com_and_local) {
     ck_assert_int_eq(
         verify_name_allowed_from_string("com.example.local.", allow_file),
         VERIFY_NAME_RESULT_ALLOWED);
-    ck_assert_int_eq(
-        verify_name_allowed_from_string("example.com", allow_file),
-        VERIFY_NAME_RESULT_ALLOWED);
+    ck_assert_int_eq(verify_name_allowed_from_string("example.com", allow_file),
+                     VERIFY_NAME_RESULT_ALLOWED);
     ck_assert_int_eq(
         verify_name_allowed_from_string("example.com.", allow_file),
         VERIFY_NAME_RESULT_ALLOWED);
@@ -317,8 +318,9 @@ START_TEST(test_verify_name_allowed_com_and_local) {
         VERIFY_NAME_RESULT_ALLOWED);
     ck_assert_int_eq(verify_name_allowed_from_string("example.net", allow_file),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(verify_name_allowed_from_string("example.net.", allow_file),
-                     VERIFY_NAME_RESULT_NOT_ALLOWED);
+    ck_assert_int_eq(
+        verify_name_allowed_from_string("example.net.", allow_file),
+        VERIFY_NAME_RESULT_NOT_ALLOWED);
     ck_assert_int_eq(verify_name_allowed_from_string("", allow_file),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
     ck_assert_int_eq(verify_name_allowed_from_string(".", allow_file),
@@ -507,11 +509,10 @@ START_TEST(test_buffer_alloc_returns_zeroed_memory) {
 }
 END_TEST
 
-static const uint8_t ipv6_doc_prefix[16] = {0x0, 0x0, 0x0, 0x0,
-                                            0x0, 0x0, 0x0, 0x0,
-                                            0x0, 0x0, 0x0, 0x0,
-                                            0xb8, 0x0d, 0x01, 0x20}; // Documentation prefix
-static const uint32_t ipv4_test_addr = 0xc6336401;                   // 198.51.100.1 (TEST-NET-2)
+static const uint8_t ipv6_doc_prefix[16] = {
+    0x0, 0x0, 0x0, 0x0, 0x0,  0x0,  0x0,  0x0,
+    0x0, 0x0, 0x0, 0x0, 0xb8, 0x0d, 0x01, 0x20};   // Documentation prefix
+static const uint32_t ipv4_test_addr = 0xc6336401; // 198.51.100.1 (TEST-NET-2)
 
 static query_address_result_t create_address_result(int offset, int af) {
     query_address_result_t result;
@@ -527,7 +528,8 @@ static query_address_result_t create_address_result(int offset, int af) {
         result.address.ipv4.address = htonl(ipv4_test_addr + offset);
         break;
     case AF_INET6:
-        memcpy(result.address.ipv6.address, ipv6_doc_prefix, sizeof ipv6_doc_prefix);
+        memcpy(result.address.ipv6.address, ipv6_doc_prefix,
+               sizeof ipv6_doc_prefix);
         result.address.ipv6.address[0] = offset;
         result.scopeid = (offset / 2) % 3;
         break;
@@ -549,14 +551,10 @@ static void validate_addrtuples(struct gaih_addrtuple* pat,
         expected_ipv6[0] = i;
         switch (expected_af) {
         case AF_INET:
-            ck_assert_mem_eq(pat->addr,
-                             &expected_ipv4,
-                             sizeof expected_ipv4);
+            ck_assert_mem_eq(pat->addr, &expected_ipv4, sizeof expected_ipv4);
             break;
         case AF_INET6:
-            ck_assert_mem_eq(pat->addr,
-                             expected_ipv6,
-                             sizeof expected_ipv6);
+            ck_assert_mem_eq(pat->addr, expected_ipv6, sizeof expected_ipv6);
             ck_assert_int_eq(pat->scopeid, (i / 2) % 3);
             break;
         }
@@ -579,9 +577,7 @@ static userdata_t create_address_userdata(int num_addresses, int af) {
     return u;
 }
 
-static void poison(char* buf, size_t buflen) {
-    memset(buf, 0x55, buflen);
-}
+static void poison(char* buf, size_t buflen) { memset(buf, 0x55, buflen); }
 
 static void validate_poison(char* buf, size_t buflen, size_t full_buflen) {
     size_t excess = full_buflen - buflen;
@@ -596,7 +592,8 @@ static void validate_hostent(struct hostent* hostent, const char* name, int af,
     ck_assert_ptr_nonnull(hostent->h_aliases);
     ck_assert_ptr_null(hostent->h_aliases[0]);
     ck_assert_int_eq(af, hostent->h_addrtype);
-    ck_assert_int_eq(af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t),
+    ck_assert_int_eq(af == AF_INET ? sizeof(ipv4_address_t)
+                                   : sizeof(ipv6_address_t),
                      hostent->h_length);
     ck_assert_ptr_nonnull(hostent->h_addr_list);
 
@@ -609,14 +606,10 @@ static void validate_hostent(struct hostent* hostent, const char* name, int af,
         expected_ipv6[0] = i;
         switch (af) {
         case AF_INET:
-            ck_assert_mem_eq(*addr,
-                             &expected_ipv4,
-                             sizeof expected_ipv4);
+            ck_assert_mem_eq(*addr, &expected_ipv4, sizeof expected_ipv4);
             break;
         case AF_INET6:
-            ck_assert_mem_eq(*addr,
-                             expected_ipv6,
-                             sizeof expected_ipv6);
+            ck_assert_mem_eq(*addr, expected_ipv6, sizeof expected_ipv6);
             break;
         }
         addr++;
@@ -636,9 +629,8 @@ START_TEST(test_userdata_to_addrtuple_returns_tuples) {
 
     buffer_t buf;
     buffer_init(&buf, buffer, sizeof(buffer));
-    enum nss_status status = convert_userdata_to_addrtuple(&u, "example.local", &pat,
-                                                           &buf,
-                                                           &errnop, &h_errnop);
+    enum nss_status status = convert_userdata_to_addrtuple(
+        &u, "example.local", &pat, &buf, &errnop, &h_errnop);
     ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
     validate_addrtuples(pat, "example.local", 16);
 }
@@ -653,9 +645,8 @@ START_TEST(test_userdata_to_addrtuple_buffer_too_small_returns_erange) {
 
     buffer_t buf;
     buffer_init(&buf, buffer, 0);
-    enum nss_status status = convert_userdata_to_addrtuple(&u, "example.local", &pat,
-                                                           &buf,
-                                                           &errnop, &h_errnop);
+    enum nss_status status = convert_userdata_to_addrtuple(
+        &u, "example.local", &pat, &buf, &errnop, &h_errnop);
     ck_assert_int_eq(errnop, ERANGE);
     ck_assert_int_eq(h_errnop, NO_RECOVERY);
     ck_assert_int_eq(status, NSS_STATUS_TRYAGAIN);
@@ -677,8 +668,7 @@ START_TEST(test_userdata_to_addrtuple_smallest_buffer_eventually_works) {
         buffer_t buf;
         pat = NULL;
         buffer_init(&buf, buffer, buflen);
-        status = convert_userdata_to_addrtuple(&u, "example.local", &pat,
-                                               &buf,
+        status = convert_userdata_to_addrtuple(&u, "example.local", &pat, &buf,
                                                &errnop, &h_errnop);
         validate_poison(buffer, buflen, sizeof(buffer));
         if (errnop != ERANGE)
@@ -704,9 +694,8 @@ START_TEST(test_userdata_to_addrtuple_nonnull_pat_is_used) {
     memset(&tuple, 0, sizeof tuple);
     buffer_t buf;
     buffer_init(&buf, buffer, sizeof(buffer));
-    enum nss_status status = convert_userdata_to_addrtuple(&u, "example.local", &pat,
-                                                           &buf,
-                                                           &errnop, &h_errnop);
+    enum nss_status status = convert_userdata_to_addrtuple(
+        &u, "example.local", &pat, &buf, &errnop, &h_errnop);
     ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
     validate_addrtuples(&tuple, "example.local", 16);
 }
@@ -723,11 +712,8 @@ START_TEST(test_userdata_for_name_to_hostent_returns_hostent_4) {
 
     buffer_t buf;
     buffer_init(&buf, buffer, sizeof(buffer));
-    enum nss_status status =
-        convert_userdata_for_name_to_hostent(&u, "example.local", AF_INET,
-                                             &result,
-                                             &buf,
-                                             &errnop, &h_errnop);
+    enum nss_status status = convert_userdata_for_name_to_hostent(
+        &u, "example.local", AF_INET, &result, &buf, &errnop, &h_errnop);
     ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
     validate_hostent(&result, "example.local", AF_INET, 16);
 }
@@ -742,11 +728,8 @@ START_TEST(test_userdata_for_name_to_hostent_returns_hostent_6) {
 
     buffer_t buf;
     buffer_init(&buf, buffer, sizeof(buffer));
-    enum nss_status status =
-        convert_userdata_for_name_to_hostent(&u, "example.local", AF_INET6,
-                                             &result,
-                                             &buf,
-                                             &errnop, &h_errnop);
+    enum nss_status status = convert_userdata_for_name_to_hostent(
+        &u, "example.local", AF_INET6, &result, &buf, &errnop, &h_errnop);
     ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
     validate_hostent(&result, "example.local", AF_INET6, 16);
 }
@@ -761,18 +744,16 @@ START_TEST(test_userdata_for_name_to_hostent_buffer_too_small_returns_erange) {
 
     buffer_t buf;
     buffer_init(&buf, buffer, 0);
-    enum nss_status status =
-        convert_userdata_for_name_to_hostent(&u, "example.local", AF_INET,
-                                             &result,
-                                             &buf,
-                                             &errnop, &h_errnop);
+    enum nss_status status = convert_userdata_for_name_to_hostent(
+        &u, "example.local", AF_INET, &result, &buf, &errnop, &h_errnop);
     ck_assert_int_eq(errnop, ERANGE);
     ck_assert_int_eq(h_errnop, NO_RECOVERY);
     ck_assert_int_eq(status, NSS_STATUS_TRYAGAIN);
 }
 END_TEST
 
-START_TEST(test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_4) {
+START_TEST(
+    test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_4) {
     userdata_t u = create_address_userdata(16, AF_INET);
     struct hostent result;
     char buffer[2048];
@@ -787,11 +768,8 @@ START_TEST(test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_4)
 
         buffer_t buf;
         buffer_init(&buf, buffer, buflen);
-        status =
-            convert_userdata_for_name_to_hostent(&u, "example.local", AF_INET,
-                                                 &result,
-                                                 &buf,
-                                                 &errnop, &h_errnop);
+        status = convert_userdata_for_name_to_hostent(
+            &u, "example.local", AF_INET, &result, &buf, &errnop, &h_errnop);
         validate_poison(buffer, buflen, sizeof(buffer));
         if (errnop != ERANGE)
             break;
@@ -805,7 +783,8 @@ START_TEST(test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_4)
 }
 END_TEST
 
-START_TEST(test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_6) {
+START_TEST(
+    test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_6) {
     userdata_t u = create_address_userdata(16, AF_INET6);
     struct hostent result;
     char buffer[2048];
@@ -819,11 +798,8 @@ START_TEST(test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_6)
         errnop = h_errnop = 0;
         buffer_t buf;
         buffer_init(&buf, buffer, buflen);
-        status =
-            convert_userdata_for_name_to_hostent(&u, "example.local", AF_INET6,
-                                                 &result,
-                                                 &buf,
-                                                 &errnop, &h_errnop);
+        status = convert_userdata_for_name_to_hostent(
+            &u, "example.local", AF_INET6, &result, &buf, &errnop, &h_errnop);
         validate_poison(buffer, buflen, sizeof(buffer));
         if (errnop != ERANGE)
             break;
@@ -848,13 +824,9 @@ START_TEST(test_name_and_addr_to_hostent_returns_hostent_4) {
 
     buffer_t buf;
     buffer_init(&buf, buffer, sizeof(buffer));
-    enum nss_status status =
-        convert_name_and_addr_to_hostent("example.local", &ipv4,
-                                         sizeof ipv4,
-                                         AF_INET,
-                                         &result,
-                                         &buf,
-                                         &errnop, &h_errnop);
+    enum nss_status status = convert_name_and_addr_to_hostent(
+        "example.local", &ipv4, sizeof ipv4, AF_INET, &result, &buf, &errnop,
+        &h_errnop);
     ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
     validate_hostent(&result, "example.local", AF_INET, 1);
 }
@@ -868,13 +840,9 @@ START_TEST(test_name_and_addr_to_hostent_returns_hostent_6) {
 
     buffer_t buf;
     buffer_init(&buf, buffer, sizeof(buffer));
-    enum nss_status status =
-        convert_name_and_addr_to_hostent("example.local", &ipv6_doc_prefix,
-                                         sizeof ipv6_doc_prefix,
-                                         AF_INET6,
-                                         &result,
-                                         &buf,
-                                         &errnop, &h_errnop);
+    enum nss_status status = convert_name_and_addr_to_hostent(
+        "example.local", &ipv6_doc_prefix, sizeof ipv6_doc_prefix, AF_INET6,
+        &result, &buf, &errnop, &h_errnop);
     ck_assert_int_eq(status, NSS_STATUS_SUCCESS);
     validate_hostent(&result, "example.local", AF_INET6, 1);
 }
@@ -889,13 +857,9 @@ START_TEST(test_name_and_addr_to_hostent_buffer_too_small_returns_erange) {
 
     buffer_t buf;
     buffer_init(&buf, buffer, sizeof(buffer));
-    enum nss_status status =
-        convert_name_and_addr_to_hostent("example.local", &ipv4,
-                                         sizeof ipv4,
-                                         AF_INET,
-                                         &result,
-                                         &buf,
-                                         &errnop, &h_errnop);
+    enum nss_status status = convert_name_and_addr_to_hostent(
+        "example.local", &ipv4, sizeof ipv4, AF_INET, &result, &buf, &errnop,
+        &h_errnop);
     ck_assert_int_eq(errnop, ERANGE);
     ck_assert_int_eq(h_errnop, NO_RECOVERY);
     ck_assert_int_eq(status, NSS_STATUS_TRYAGAIN);
@@ -915,13 +879,9 @@ START_TEST(test_name_and_addr_to_hostent_smallest_buffer_eventually_works_4) {
         errnop = h_errnop = 0;
         buffer_t buf;
         buffer_init(&buf, buffer, buflen);
-        status =
-            convert_name_and_addr_to_hostent("example.local", &ipv4,
-                                             sizeof ipv4,
-                                             AF_INET,
-                                             &result,
-                                             &buf,
-                                             &errnop, &h_errnop);
+        status = convert_name_and_addr_to_hostent("example.local", &ipv4,
+                                                  sizeof ipv4, AF_INET, &result,
+                                                  &buf, &errnop, &h_errnop);
         validate_poison(buffer, buflen, sizeof(buffer));
         if (errnop != ERANGE)
             break;
@@ -947,13 +907,9 @@ START_TEST(test_name_and_addr_to_hostent_smallest_buffer_eventually_works_6) {
         errnop = h_errnop = 0;
         buffer_t buf;
         buffer_init(&buf, buffer, buflen);
-        status =
-            convert_name_and_addr_to_hostent("example.local", &ipv6_doc_prefix,
-                                             sizeof ipv6_doc_prefix,
-                                             AF_INET6,
-                                             &result,
-                                             &buf,
-                                             &errnop, &h_errnop);
+        status = convert_name_and_addr_to_hostent(
+            "example.local", &ipv6_doc_prefix, sizeof ipv6_doc_prefix, AF_INET6,
+            &result, &buf, &errnop, &h_errnop);
         validate_poison(buffer, buflen, sizeof(buffer));
         if (errnop != ERANGE)
             break;
@@ -1001,7 +957,8 @@ static Suite* util_suite(void) {
     tcase_add_test(tc_buffer, test_zero_buffer_nonzero_alloc_returns_null);
     tcase_add_test(tc_buffer, test_buffer_tiny_alloc_returns_nonnull);
     tcase_add_test(tc_buffer, test_tiny_buffer_tiny_alloc_returns_nonnull);
-    tcase_add_test(tc_buffer, test_tiny_unaligned_buffer_tiny_alloc_returns_null);
+    tcase_add_test(tc_buffer,
+                   test_tiny_unaligned_buffer_tiny_alloc_returns_null);
     tcase_add_test(tc_buffer, test_tiny_buffer_second_alloc_returns_null);
     tcase_add_test(tc_buffer, test_tiny_buffer_one_too_big_alloc_returns_null);
     tcase_add_test(tc_buffer, test_buffer_alloc_returns_zeroed_memory);
@@ -1018,30 +975,38 @@ static Suite* util_suite(void) {
                    test_userdata_to_addrtuple_nonnull_pat_is_used);
     suite_add_tcase(s, tc_userdata_to_addrtuple);
 
-    TCase* tc_userdata_for_name_to_hostent = tcase_create("userdata_for_name_to_hostent");
+    TCase* tc_userdata_for_name_to_hostent =
+        tcase_create("userdata_for_name_to_hostent");
     tcase_add_test(tc_userdata_for_name_to_hostent,
                    test_userdata_for_name_to_hostent_returns_hostent_4);
     tcase_add_test(tc_userdata_for_name_to_hostent,
                    test_userdata_for_name_to_hostent_returns_hostent_6);
-    tcase_add_test(tc_userdata_for_name_to_hostent,
-                   test_userdata_for_name_to_hostent_buffer_too_small_returns_erange);
-    tcase_add_test(tc_userdata_for_name_to_hostent,
-                   test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_4);
-    tcase_add_test(tc_userdata_for_name_to_hostent,
-                   test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_6);
+    tcase_add_test(
+        tc_userdata_for_name_to_hostent,
+        test_userdata_for_name_to_hostent_buffer_too_small_returns_erange);
+    tcase_add_test(
+        tc_userdata_for_name_to_hostent,
+        test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_4);
+    tcase_add_test(
+        tc_userdata_for_name_to_hostent,
+        test_userdata_for_name_to_hostent_smallest_buffer_eventually_works_6);
     suite_add_tcase(s, tc_userdata_for_name_to_hostent);
 
-    TCase* tc_name_and_addr_to_hostent = tcase_create("name_and_addr_to_hostent");
+    TCase* tc_name_and_addr_to_hostent =
+        tcase_create("name_and_addr_to_hostent");
     tcase_add_test(tc_name_and_addr_to_hostent,
                    test_name_and_addr_to_hostent_returns_hostent_4);
     tcase_add_test(tc_name_and_addr_to_hostent,
                    test_name_and_addr_to_hostent_returns_hostent_6);
-    tcase_add_test(tc_name_and_addr_to_hostent,
-                   test_name_and_addr_to_hostent_buffer_too_small_returns_erange);
-    tcase_add_test(tc_name_and_addr_to_hostent,
-                   test_name_and_addr_to_hostent_smallest_buffer_eventually_works_4);
-    tcase_add_test(tc_name_and_addr_to_hostent,
-                   test_name_and_addr_to_hostent_smallest_buffer_eventually_works_6);
+    tcase_add_test(
+        tc_name_and_addr_to_hostent,
+        test_name_and_addr_to_hostent_buffer_too_small_returns_erange);
+    tcase_add_test(
+        tc_name_and_addr_to_hostent,
+        test_name_and_addr_to_hostent_smallest_buffer_eventually_works_4);
+    tcase_add_test(
+        tc_name_and_addr_to_hostent,
+        test_name_and_addr_to_hostent_smallest_buffer_eventually_works_6);
     suite_add_tcase(s, tc_name_and_addr_to_hostent);
 
     return s;
