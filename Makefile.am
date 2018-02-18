@@ -21,8 +21,8 @@ ACLOCAL_AMFLAGS=-I m4
 EXTRA_DIST += src/map-file
 
 AM_CFLAGS = \
-	-DMDNS_ALLOW_FILE=\"$(sysconfdir)/mdns.allow\" \
-	-DAVAHI_SOCKET=\"$(localstatedir)/run/avahi-daemon/socket\"
+	-DMDNS_ALLOW_FILE=\"$(MDNS_ALLOW_FILE)\" \
+	-DAVAHI_SOCKET=\"$(AVAHI_SOCKET)\"
 
 AM_LDFLAGS=-avoid-version -module -export-dynamic
 

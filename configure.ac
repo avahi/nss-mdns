@@ -41,6 +41,17 @@ AS_IF([test "x$enable_tests" != "xno"], [
 ])
 AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_tests" != "xno"])
 
+# Options for file locations.
+AC_ARG_VAR([AVAHI_SOCKET],
+           [Full path to the avahi-daemon socket, overriding default])
+AS_IF([test "x$AVAHI_SOCKET" = x],
+      [AVAHI_SOCKET="${localstatedir}/run/avahi-daemon/socket"])
+
+AC_ARG_VAR([MDNS_ALLOW_FILE],
+           [Full path to the mdns.allow file, overriding default])
+AS_IF([test "x$MDNS_ALLOW_FILE" = x],
+      [MDNS_ALLOW_FILE="${sysconfdir}/mdns.allow"])
+
 # Checks for programs.
 AM_PROG_AR
 AC_PROG_CC
