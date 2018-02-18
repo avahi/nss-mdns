@@ -53,16 +53,21 @@ static int gai(const char* node) {
         }
         switch (rp->ai_family) {
         case AF_INET:
-            inet_ntop(AF_INET, &((struct sockaddr_in*)rp->ai_addr)->sin_addr, str, sizeof(str));
-            fprintf(stderr, "[%d] addr type: inet\n[%d] address: %s\n", i, i, str);
+            inet_ntop(AF_INET, &((struct sockaddr_in*)rp->ai_addr)->sin_addr,
+                      str, sizeof(str));
+            fprintf(stderr, "[%d] addr type: inet\n[%d] address: %s\n", i, i,
+                    str);
             break;
         case AF_INET6:
-            inet_ntop(AF_INET6, &((struct sockaddr_in6*)rp->ai_addr)->sin6_addr, str6, sizeof(str6));
+            inet_ntop(AF_INET6, &((struct sockaddr_in6*)rp->ai_addr)->sin6_addr,
+                      str6, sizeof(str6));
             int scope_id = ((struct sockaddr_in6*)rp->ai_addr)->sin6_scope_id;
             if (scope_id) {
-                fprintf(stderr, "[%d] addr type: inet6\n[%d] address: %s%%%d\n", i, i, str6, scope_id);
+                fprintf(stderr, "[%d] addr type: inet6\n[%d] address: %s%%%d\n",
+                        i, i, str6, scope_id);
             } else {
-                fprintf(stderr, "[%d] addr type: inet6\n[%d] address: %s\n", i, i, str6);
+                fprintf(stderr, "[%d] addr type: inet6\n[%d] address: %s\n", i,
+                        i, str6);
             }
             break;
         }
@@ -107,7 +112,10 @@ static int gethostbyX(const char* node) {
         fprintf(stderr, "\n");
     }
 
-    fprintf(stderr, "addr type: %s\n", he->h_addrtype == AF_INET ? "inet" : (he->h_addrtype == AF_INET6 ? "inet6" : NULL));
+    fprintf(stderr, "addr type: %s\n",
+            he->h_addrtype == AF_INET
+                ? "inet"
+                : (he->h_addrtype == AF_INET6 ? "inet6" : NULL));
     fprintf(stderr, "addr length: %i\n", he->h_length);
 
     fprintf(stderr, "addresses:");
@@ -122,7 +130,8 @@ static int gethostbyX(const char* node) {
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        fprintf(stderr, "Requires 1 argument: either a host or numeric address\n");
+        fprintf(stderr,
+                "Requires 1 argument: either a host or numeric address\n");
         return 1;
     }
     const char* node = argv[1];

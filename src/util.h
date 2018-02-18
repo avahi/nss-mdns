@@ -48,11 +48,11 @@ void* buffer_alloc(buffer_t* buf, size_t size);
 char* buffer_strdup(buffer_t* buf, const char* str);
 
 // Macro to help with checking buffer allocation results.
-#define RETURN_IF_FAILED_ALLOC(ptr) \
-    if (ptr == NULL) {              \
-        *errnop = ERANGE;           \
-        *h_errnop = NO_RECOVERY;    \
-        return NSS_STATUS_TRYAGAIN; \
+#define RETURN_IF_FAILED_ALLOC(ptr)                                            \
+    if (ptr == NULL) {                                                         \
+        *errnop = ERANGE;                                                      \
+        *h_errnop = NO_RECOVERY;                                               \
+        return NSS_STATUS_TRYAGAIN;                                            \
     }
 
 int set_cloexec(int fd);
@@ -91,26 +91,25 @@ int label_count(const char* name);
 // gethostbyaddr_r.
 enum nss_status convert_name_and_addr_to_hostent(const char* name,
                                                  const void* addr, int len,
-                                                 int af,
-                                                 struct hostent* result,
-                                                 buffer_t* buf,
-                                                 int* errnop, int* h_errnop);
+                                                 int af, struct hostent* result,
+                                                 buffer_t* buf, int* errnop,
+                                                 int* h_errnop);
 
 // Converts from the userdata struct into the hostent format, used by
 // gethostbyaddr3_r.
 enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
                                                      const char* name, int af,
                                                      struct hostent* result,
-                                                     buffer_t* buf,
-                                                     int* errnop, int* h_errnop);
+                                                     buffer_t* buf, int* errnop,
+                                                     int* h_errnop);
 
 // Converts from the userdata struct into the gaih_addrtuple format, used by
 // gethostbyaddr4_r.
 enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
                                               const char* name,
                                               struct gaih_addrtuple** pat,
-                                              buffer_t* buf,
-                                              int* errnop, int* h_errnop);
+                                              buffer_t* buf, int* errnop,
+                                              int* h_errnop);
 
 // Appends a query_address_result to userdata.
 void append_address_to_userdata(const query_address_result_t* result,
