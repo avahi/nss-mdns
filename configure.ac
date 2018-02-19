@@ -34,12 +34,22 @@ AM_SILENT_RULES([yes])
 
 # Conditionally enable unittests.
 AC_ARG_ENABLE([tests],
-  AS_HELP_STRING([--disable-tests], [Disable building tests]))
+  AS_HELP_STRING([--disable-tests],
+                 [disable building tests]))
 
-AS_IF([test "x$enable_tests" != "xno"], [
-    PKG_CHECK_MODULES([CHECK], [check >= 0.11])
+AS_IF([test "x$enable_tests" != "xno"],
+      [PKG_CHECK_MODULES([CHECK], [check >= 0.11],
+                         [have_check=yes], [have_check=no])],
+      [have_check=no])
+
+AS_IF([test "x$have_check" = "xyes"],
+      [],
+      [AS_IF([test "x$enable_tests" = "xyes"],
+           [AC_MSG_ERROR([Cannot enable tests: $CHECK_PKG_ERRORS])
+    ])
 ])
-AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_tests" != "xno"])
+
+AM_CONDITIONAL([ENABLE_TESTS], [test "x$have_check" = "xyes"])
 
 # Options for file locations.
 AC_ARG_VAR([AVAHI_SOCKET],
