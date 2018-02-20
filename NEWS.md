@@ -1,5 +1,19 @@
 # News
 
+## Tue Feb 20 2018:
+
+[Version 0.13.2](https://github.com/lathiat/nss-mdns/releases/tag/v0.13.2)
+released. Highlights:
+
+* No code changes
+* Change how `./configure --enable/disable-tests` works:
+  * `--enable-tests`: tests are enabled and will fail if dependencies are
+    not found
+  * `--disable-tests`: tests are not enabled and will not be built even
+    if dependencies are found
+  * no flag given: tests are conditionally enabled if dependencies are
+    found
+
 ## Sun Feb 18 2018:
 
 [Version 0.13.1](https://github.com/lathiat/nss-mdns/releases/tag/v0.13.1)
