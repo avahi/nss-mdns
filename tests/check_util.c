@@ -361,45 +361,49 @@ END_TEST
 // Tests for buffer_t functions.
 
 START_TEST(test_buffer_alloc_too_large_returns_null) {
-    char buffer[100];
+    char *buffer = malloc(100);
     buffer_t buf;
-    buffer_init(&buf, buffer, sizeof(buffer));
+    buffer_init(&buf, buffer, 100);
 
     ck_assert_ptr_null(buffer_alloc(&buf, 101));
+    free(buffer);
 }
 END_TEST
 
 START_TEST(test_buffer_alloc_just_right_returns_nonnull) {
-    char buffer[100];
+    char *buffer = malloc(100);
     buffer_t buf;
-    buffer_init(&buf, buffer, sizeof(buffer));
+    buffer_init(&buf, buffer, 100);
 
     ck_assert_ptr_nonnull(buffer_alloc(&buf, 100));
+    free(buffer);
 }
 END_TEST
 
 START_TEST(test_unaligned_buffer_alloc_returns_aligned) {
-    char buffer[1000];
+    char *buffer = malloc(1000);
     buffer_t buf;
 
     for (size_t i = 0; i < 32; i++) {
-        buffer_init(&buf, buffer + i, sizeof(buffer) - i);
+        buffer_init(&buf, buffer + i, 1000 - i);
         char* ptr = buffer_alloc(&buf, 10);
         ck_assert_uint_eq((uintptr_t)ptr % sizeof(void*), 0);
     }
+    free(buffer);
 }
 END_TEST
 
 START_TEST(test_buffer_alloc_returns_aligned) {
-    char buffer[1000];
+    char *buffer = malloc(1000);
     buffer_t buf;
-    buffer_init(&buf, buffer, sizeof(buffer));
+    buffer_init(&buf, buffer, 1000);
 
     for (size_t i = 0; i < 32; i++) {
         char* ptr = buffer_alloc(&buf, i);
         ck_assert_ptr_nonnull(ptr);
         ck_assert_uint_eq((uintptr_t)ptr % sizeof(void*), 0);
     }
+    free(buffer);
 }
 END_TEST
 
@@ -412,20 +416,22 @@ START_TEST(test_null_buffer_zero_alloc_returns_nonnull) {
 END_TEST
 
 START_TEST(test_zero_buffer_zero_alloc_returns_nonnull) {
-    char buffer[1];
+    char *buffer = malloc(1);
     buffer_t buf;
     buffer_init(&buf, buffer, 0);
 
     ck_assert_ptr_nonnull(buffer_alloc(&buf, 0));
+    free(buffer);
 }
 END_TEST
 
 START_TEST(test_nonzero_buffer_zero_alloc_returns_nonnull) {
-    char buffer[100];
+    char *buffer = malloc(100);
     buffer_t buf;
-    buffer_init(&buf, buffer, sizeof(buffer));
+    buffer_init(&buf, buffer, 100);
 
     ck_assert_ptr_nonnull(buffer_alloc(&buf, 0));
+    free(buffer);
 }
 END_TEST
 
@@ -438,25 +444,27 @@ START_TEST(test_null_buffer_nonzero_alloc_returns_null) {
 END_TEST
 
 START_TEST(test_zero_buffer_nonzero_alloc_returns_null) {
-    char buffer[1];
+    char *buffer = malloc(1);
     buffer_t buf;
     buffer_init(&buf, buffer, 0);
 
     ck_assert_ptr_null(buffer_alloc(&buf, 1));
+    free(buffer);
 }
 END_TEST
 
 START_TEST(test_buffer_tiny_alloc_returns_nonnull) {
-    char buffer[100];
+    char *buffer = malloc(100);
     buffer_t buf;
-    buffer_init(&buf, buffer, sizeof(buffer));
+    buffer_init(&buf, buffer, 100);
 
     ck_assert_ptr_nonnull(buffer_alloc(&buf, 1));
+    free(buffer);
 }
 END_TEST
 
 START_TEST(test_tiny_buffer_tiny_alloc_returns_nonnull) {
-    char* buffer = malloc(1); // Need to malloc to get pre-aligned buffer.
+    char* buffer = malloc(1);
     buffer_t buf;
     buffer_init(&buf, buffer, 1);
 
@@ -466,7 +474,7 @@ START_TEST(test_tiny_buffer_tiny_alloc_returns_nonnull) {
 END_TEST
 
 START_TEST(test_tiny_unaligned_buffer_tiny_alloc_returns_null) {
-    char* buffer = malloc(2); // Need to malloc to get pre-aligned buffer.
+    char* buffer = malloc(2);
     buffer_t buf;
     buffer_init(&buf, buffer + 1, 1);
 
@@ -476,7 +484,7 @@ START_TEST(test_tiny_unaligned_buffer_tiny_alloc_returns_null) {
 END_TEST
 
 START_TEST(test_tiny_buffer_second_alloc_returns_null) {
-    char* buffer = malloc(2); // Need to malloc to get pre-aligned buffer.
+    char* buffer = malloc(2);
     buffer_t buf;
     buffer_init(&buf, buffer, 2);
 
@@ -497,15 +505,16 @@ START_TEST(test_tiny_buffer_one_too_big_alloc_returns_null) {
 END_TEST
 
 START_TEST(test_buffer_alloc_returns_zeroed_memory) {
-    char buffer[100];
-    memset(buffer, 0xFF, sizeof(buffer));
+    char *buffer = malloc(100);
+    memset(buffer, 0xFF, 100);
 
     char zero[100];
     memset(zero, 0, sizeof(zero));
 
     buffer_t buf;
-    buffer_init(&buf, buffer, sizeof(buffer));
+    buffer_init(&buf, buffer, 100);
     ck_assert_mem_eq(buffer_alloc(&buf, 50), zero, 50);
+    free(buffer);
 }
 END_TEST
 
