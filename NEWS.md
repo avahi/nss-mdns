@@ -2,6 +2,14 @@
 
 ## Sun Mar 18 2018:
 
+[Version 0.14.1](https://github.com/lathiat/nss-mdns/releases/tag/v0.14.1)
+released. Highlights:
+
+* No code changes
+* Fix unit tests to properly work on s390x
+
+## Sun Mar 18 2018:
+
 [Version 0.14](https://github.com/lathiat/nss-mdns/releases/tag/v0.14)
 released. Highlights:
 

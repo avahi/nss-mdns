@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 AC_PREREQ([2.69])
-AC_INIT([nss-mdns],[0.14],[https://github.com/lathiat/nss-mdns/issues])
+AC_INIT([nss-mdns],[0.14.1],[https://github.com/lathiat/nss-mdns/issues])
 AC_CONFIG_SRCDIR([src/nss.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign 1.9 -Wall subdir-objects])
