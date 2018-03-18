@@ -76,7 +76,7 @@ verify_name_result_t verify_name_allowed(const char* name,
         int valid = 0;
 
         while (!feof(mdns_allow_file)) {
-            char ln[128], ln2[128], *t;
+            char ln[128], ln2[129], *t;
 
             if (!fgets(ln, sizeof(ln), mdns_allow_file))
                 break;
