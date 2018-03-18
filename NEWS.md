@@ -1,5 +1,12 @@
 # News
 
+## Sun Mar 18 2018:
+
+[Version 0.14](https://github.com/lathiat/nss-mdns/releases/tag/v0.14)
+released. Highlights:
+
+* Fix -Wformat-truncation problem during reading of the allow file
+
 ## Tue Feb 20 2018:
 
 [Version 0.13.2](https://github.com/lathiat/nss-mdns/releases/tag/v0.13.2)
