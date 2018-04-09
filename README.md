@@ -56,6 +56,8 @@ It works!
 
 ## Documentation
 
+### Libraries
+
 After compiling and installing `nss-mdns` you'll find six
 new NSS modules in `/lib`:
 
@@ -88,6 +90,8 @@ Combining the `_minimal` and the normal NSS modules allows us to make
 mDNS authoritative for Zeroconf host names and addresses (and thus
 creating no extra burden on DNS servers with always failing requests)
 and use it as fallback for everything else.
+
+### Activation
 
 To activate one of the NSS modules you have to edit
 `/etc/nsswitch.conf` and add `mdns4` and
@@ -138,22 +142,38 @@ or if there is no `/etc/mdns.allow` file. Any domain, with any number
 of labels, (including `.local`) will still be served authoritatively
 from `nss-mdns` if specified in `/etc/mdns.allow`.)
 
-Starting with version 0.5, `nss-mdns` has a simple
-configuration file `/etc/mdns.allow` for enabling name lookups
-via mDNS in other domains than `.local`. The file contains
-valid domain suffixes, seperated by newlines. Empty lines are ignored
-as are comments starting with #. To enable mDNS lookups of all names,
-regardless of the domain suffix add a line consisting of `*`
-only (similar to `nss-mdns` mode of operation of versions &lt;= 0.4):
+### `/etc/mdns.allow`
 
-```
-# /etc/mdns.allow
-*
-```
+`nss-mdns` has a simple configuration file `/etc/mdns.allow` for
+enabling name lookups via mDNS in other domains than `.local`.
 
-If the configuration file is absent or unreadable
-`nss-mdns` behaves mostly as if a configuration file with the following
-contents is read:
+> Note: The "minimal" version of `nss-mdns` does not read `/etc/mdns.allow`
+> under any circumstances. It behaves as if the file does not exist.
+
+In the recommended configuration, no `/etc/mdns.allow` file is
+present. In this case:
+
+* If the request does not end with `.local` or `.local.`, it is rejected.
+  Example: `example.test` is rejected.
+
+* If the request has more than two labels, it is rejected. Example:
+  `foo.bar.local` is rejected. **This is the two-label limit heuristic.**
+
+* If, during a request, the system-configured unicast DNS (specified
+  in `/etc/resolv.conf`) reports an `SOA` record for the top-level
+  `local` name, the request is rejected. Example: `host -t SOA local`
+  returns something other than `Host local not found:
+  3(NXDOMAIN)`. **This is the unicast SOA heuristic.**
+
+* Otherwise, the request is processed.
+
+If present, the file should contain valid domain suffixes, seperated
+by newlines. Empty lines are ignored as are comments starting with
+`#`.
+
+To disable the two heuristics described above, and force all `.local`
+domains to be resolved regardless of label count or unicast SOA
+records, use this configuration file:
 
 ```
 # /etc/mdns.allow
@@ -161,16 +181,21 @@ contents is read:
 .local
 ```
 
-i.e. only hostnames ending with `.local` are resolved via mDNS. Note
-that this is not exactly the same as having no such file, since we will
-always be authoritative for the entries in the file. (The heuristics
-of checking for SOA and requiring two-label names do not apply if the
-configuration file is used.)
+To enable mDNS lookups of all names regardless of the domain suffix
+and disabling the two heuristics, add a line consisting of `*` only:
 
-If the configuration file is existent but empty, mDNS name lookups are
-disabled completely. Please note that usually mDNS is not used for
-anything but `.local`, hence you usually don't want to touch this
-file.
+```
+# /etc/mdns.allow
+*
+```
+
+To complete disable mDNS name lookups, use an empty file:
+```
+# /etc/mdns.allow
+```
+
+Again, remember that changing this file has no effect on the "minimal"
+version of `nss-mdns`.
 
 ## Requirements
 
