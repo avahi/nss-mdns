@@ -6,4 +6,4 @@
 - Philipp Zabel, for ARM support
 - Bruce M Simpson, for porting it to FreeBSD
 - Trent Lloyd, for migrating to GitHub
-- Adam Goode (agoode@google.com), for patches
+- Google LLC, for patches
