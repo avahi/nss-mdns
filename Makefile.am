@@ -29,11 +29,7 @@ AM_LDFLAGS=-avoid-version -module -export-dynamic
 if FREEBSD_NSS
 lib_LTLIBRARIES = \
 	nss_mdns.la \
-	nss_mdns4.la \
-	nss_mdns6.la \
-	nss_mdns_minimal.la \
-	nss_mdns4_minimal.la \
-	nss_mdns6_minimal.la
+	nss_mdns_minimal.la
 else
 lib_LTLIBRARIES = \
 	libnss_mdns.la \
@@ -78,22 +74,6 @@ nss_mdns_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.1
 nss_mdns_minimal_la_SOURCES=$(nss_mdns_la_SOURCES)
 nss_mdns_minimal_la_CFLAGS=$(nss_mdns_la_CFLAGS) -DMDNS_MINIMAL
 nss_mdns_minimal_la_LDFLAGS=$(nss_mdns_la_LDFLAGS)
-
-nss_mdns4_la_SOURCES=$(nss_mdns_la_SOURCES)
-nss_mdns4_la_CFLAGS=$(nss_mdns_la_CFLAGS) -DNSS_IPV4_ONLY=1
-nss_mdns4_la_LDFLAGS=$(nss_mdns_la_LDFLAGS)
-
-nss_mdns4_minimal_la_SOURCES=$(nss_mdns_la_SOURCES)
-nss_mdns4_minimal_la_CFLAGS=$(nss_mdns_la_CFLAGS) -DNSS_IPV4_ONLY=1 -DMDNS_MINIMAL
-nss_mdns4_minimal_la_LDFLAGS=$(nss_mdns_la_LDFLAGS)
-
-nss_mdns6_la_SOURCES=$(nss_mdns_la_SOURCES)
-nss_mdns6_la_CFLAGS=$(nss_mdns_la_CFLAGS) -DNSS_IPV6_ONLY=1
-nss_mdns6_la_LDFLAGS=$(nss_mdns_la_LDFLAGS)
-
-nss_mdns6_minimal_la_SOURCES=$(nss_mdns_la_SOURCES)
-nss_mdns6_minimal_la_CFLAGS=$(nss_mdns_la_CFLAGS) -DNSS_IPV6_ONLY=1 -DMDNS_MINIMAL
-nss_mdns6_minimal_la_LDFLAGS=$(nss_mdns_la_LDFLAGS)
 
 avahi_test_SOURCES = \
 	src/avahi.c src/avahi.h \

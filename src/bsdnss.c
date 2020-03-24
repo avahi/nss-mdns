@@ -50,17 +50,6 @@
  */
 #endif
 
-#if defined(NSS_IPV4_ONLY) || defined(NSS_IPV6_ONLY)
-/*
- * FreeBSD's libc is always built with IPv4 support.
- * There is no way of telling at compile time with a define if libc
- * was built with -DINET6 or not; a configure test would be required.
- * Therefore, distinguishing between the two makes no sense.
- */
-#define NO_BUILD_BSD_NSS
-#endif
-
-#ifndef NO_BUILD_BSD_NSS
 /*
  * To turn on utrace() records, compile with -DDEBUG_UTRACE.
  */
@@ -444,5 +433,3 @@ static int __nss_bsdcompat_ghbyname(void* retval, void* mdata __unused,
     *resultp = hp;
     return (status);
 }
-
-#endif /* !NO_BUILD_BSD_NSS */
