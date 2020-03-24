@@ -220,27 +220,8 @@ static int __nss_bsdcompat_getaddrinfo(void* retval, void* mdata __unused,
     ai = (struct addrinfo*)cbufp;
     psa = (struct sockaddr*)(ai + 1);
 
-    /*
-     * 1. Select which function to call based on the address family.
-     * 2. Map hostent to addrinfo.
-     * 3. Hand-off buffer to libc.
-     */
-    switch (pai->ai_family) {
-    case AF_UNSPEC:
-        status = _nss_mdns_gethostbyname_r(name, hp, buffer, mbuflen, &_errno,
-                                           &_h_errno);
-        break;
-    case AF_INET:
-        status = _nss_mdns4_gethostbyname_r(name, hp, buffer, mbuflen, &_errno,
-                                            &_h_errno);
-        break;
-    case AF_INET6:
-        status = _nss_mdns6_gethostbyname_r(name, hp, buffer, mbuflen, &_errno,
-                                            &_h_errno);
-        break;
-    default:
-        break;
-    }
+    status = _nss_mdns_gethostbyname2_r(name, pai->ai_family, hp, buffer,
+                                        mbuflen, &_errno, &_h_errno);
     status = __nss_compat_result(status, _errno);
 
     if (status == NS_SUCCESS) {
