@@ -67,8 +67,10 @@
 #endif
 
 // Define prototypes for nss function we're going to export (fixes GCC warnings)
+#ifndef __FreeBSD__
 enum nss_status _nss_mdns_gethostbyname4_r(const char*, struct gaih_addrtuple**,
                                            char*, size_t, int*, int*, int32_t*);
+#endif
 enum nss_status _nss_mdns_gethostbyname3_r(const char*, int, struct hostent*,
                                            char*, size_t, int*, int*, int32_t*,
                                            char**);
@@ -192,6 +194,7 @@ static enum nss_status gethostbyname_impl(const char* name, int af,
     }
 }
 
+#ifndef __FreeBSD__
 enum nss_status _nss_mdns_gethostbyname4_r(const char* name,
                                            struct gaih_addrtuple** pat,
                                            char* buffer, size_t buflen,
@@ -211,6 +214,7 @@ enum nss_status _nss_mdns_gethostbyname4_r(const char* name,
     buffer_init(&buf, buffer, buflen);
     return convert_userdata_to_addrtuple(&u, name, pat, &buf, errnop, h_errnop);
 }
+#endif
 
 enum nss_status _nss_mdns_gethostbyname3_r(const char* name, int af,
                                            struct hostent* result, char* buffer,
