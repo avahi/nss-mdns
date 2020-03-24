@@ -25,6 +25,9 @@
 #include <netdb.h>
 #include <nss.h>
 #include <stdio.h>
+#ifdef __FreeBSD__
+#include <netinet/in.h>
+#endif
 #include <resolv.h>
 
 #include "avahi.h"
