@@ -26,6 +26,9 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <arpa/inet.h>
+#ifdef __FreeBSD__
+#include <netinet/in.h>
+#endif
 
 static int gai(const char* node) {
     struct addrinfo hints;

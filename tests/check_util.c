@@ -546,6 +546,7 @@ static query_address_result_t create_address_result(int offset, int af) {
     return result;
 }
 
+#ifndef __FreeBSD__
 static void validate_addrtuples(struct gaih_addrtuple* pat,
                                 const char* expected_name, int expected_count) {
     int i = 0;
@@ -573,6 +574,7 @@ static void validate_addrtuples(struct gaih_addrtuple* pat,
     }
     ck_assert_int_eq(i, expected_count);
 }
+#endif
 
 static userdata_t create_address_userdata(int num_addresses, int af) {
     ck_assert_int_le(num_addresses, MAX_ENTRIES);
@@ -629,6 +631,7 @@ static void validate_hostent(struct hostent* hostent, const char* name, int af,
 
 // Tests for convert_userdata_to_addrtuple.
 
+#ifndef __FreeBSD__
 START_TEST(test_userdata_to_addrtuple_returns_tuples) {
     userdata_t u = create_address_userdata(16, AF_UNSPEC);
     struct gaih_addrtuple* pat = NULL;
@@ -709,6 +712,7 @@ START_TEST(test_userdata_to_addrtuple_nonnull_pat_is_used) {
     validate_addrtuples(&tuple, "example.local", 16);
 }
 END_TEST
+#endif
 
 // Tests for convert_userdata_for_name_to_hostent.
 
@@ -973,6 +977,7 @@ static Suite* util_suite(void) {
     tcase_add_test(tc_buffer, test_buffer_alloc_returns_zeroed_memory);
     suite_add_tcase(s, tc_buffer);
 
+#ifndef __FreeBSD__
     TCase* tc_userdata_to_addrtuple = tcase_create("userdata_to_addrtuple");
     tcase_add_test(tc_userdata_to_addrtuple,
                    test_userdata_to_addrtuple_returns_tuples);
@@ -983,6 +988,7 @@ static Suite* util_suite(void) {
     tcase_add_test(tc_userdata_to_addrtuple,
                    test_userdata_to_addrtuple_nonnull_pat_is_used);
     suite_add_tcase(s, tc_userdata_to_addrtuple);
+#endif
 
     TCase* tc_userdata_for_name_to_hostent =
         tcase_create("userdata_for_name_to_hostent");
