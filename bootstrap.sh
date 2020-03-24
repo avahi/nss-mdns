@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # This file is part of nss-mdns.
 #
