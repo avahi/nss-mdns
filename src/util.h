@@ -108,11 +108,13 @@ enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
 
 // Converts from the userdata struct into the gaih_addrtuple format, used by
 // gethostbyaddr4_r.
+#ifndef __FreeBSD__
 enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
                                               const char* name,
                                               struct gaih_addrtuple** pat,
                                               buffer_t* buf, int* errnop,
                                               int* h_errnop);
+#endif
 
 // Appends a query_address_result to userdata.
 void append_address_to_userdata(const query_address_result_t* result,

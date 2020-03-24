@@ -208,6 +208,7 @@ enum nss_status convert_userdata_for_name_to_hostent(const userdata_t* u,
     return NSS_STATUS_SUCCESS;
 }
 
+#ifndef __FreeBSD__
 enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
                                               const char* name,
                                               struct gaih_addrtuple** pat,
@@ -266,6 +267,7 @@ enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
 
     return NSS_STATUS_SUCCESS;
 }
+#endif
 
 static char* aligned_ptr(char* p) {
     uintptr_t ptr = (uintptr_t)p;
