@@ -115,7 +115,10 @@ verify_name_result_t verify_name_allowed(const char* name,
 }
 
 int local_soa(void) {
-    struct __res_state state;
+    /* FreeBSD requires the state to be zeroed before calling res_ninit() */
+    struct __res_state state = {
+        0,
+    };
     int result;
     unsigned char answer[NS_MAXMSG];
 
