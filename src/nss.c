@@ -128,9 +128,9 @@ static avahi_resolve_result_t do_avahi_resolve_name(int af, const char* name,
     }
 }
 
-static enum nss_status gethostbyname_impl(const char* name, int af,
-                                          userdata_t* u, int* errnop,
-                                          int* h_errnop) {
+enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
+                                             userdata_t* u, int* errnop,
+                                             int* h_errnop) {
 
     int name_allowed;
     FILE* mdns_allow_file = NULL;
@@ -207,7 +207,7 @@ enum nss_status _nss_mdns_gethostbyname4_r(const char* name,
     buffer_t buf;
 
     enum nss_status status =
-        gethostbyname_impl(name, AF_UNSPEC, &u, errnop, h_errnop);
+        _nss_mdns_gethostbyname_impl(name, AF_UNSPEC, &u, errnop, h_errnop);
     if (status != NSS_STATUS_SUCCESS) {
         return status;
     }
@@ -238,7 +238,7 @@ enum nss_status _nss_mdns_gethostbyname3_r(const char* name, int af,
 #endif
     }
 
-    enum nss_status status = gethostbyname_impl(name, af, &u, errnop, h_errnop);
+    enum nss_status status = _nss_mdns_gethostbyname_impl(name, af, &u, errnop, h_errnop);
     if (status != NSS_STATUS_SUCCESS) {
         return status;
     }
