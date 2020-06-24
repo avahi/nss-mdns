@@ -42,7 +42,9 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
+#include "avahi.h"
 #include "config.h"
+#include "util.h"
 
 #ifdef MDNS_MINIMAL
 /*
@@ -141,8 +143,6 @@ ns_mtab* nss_module_register(const char* source, unsigned int* mtabsize,
  * ap: const char *name (optional), struct addrinfo *pai (hints, optional)
  * retval: struct addrinfo **
  *
- * TODO: Map all returned hostents, not just the first match.
- *
  * name must always be specified by libc; pai is allocated
  * by libc and must always be specified.
  *
@@ -159,92 +159,74 @@ ns_mtab* nss_module_register(const char* source, unsigned int* mtabsize,
  */
 static int __nss_bsdcompat_getaddrinfo(void* retval, void* mdata __unused,
                                        va_list ap) {
-    struct addrinfo sentinel;
-    struct addrinfo* ai;
-    char* buffer;
-    void* cbufp; /* buffer handed to libc */
-    char* hap;
-    struct hostent* hp;
-    void* mbufp; /* buffer handed to mdns */
+    enum nss_status status;
+    int _errno = 0;
+    int _h_errno = 0;
+    struct addrinfo sentinel = {0}, *curp = &sentinel;
     const char* name;
     const struct addrinfo* pai;
-    struct sockaddr* psa; /* actually *sockaddr_storage */
     struct addrinfo** resultp;
-    int _errno;
-    int _h_errno;
-    size_t mbuflen = 1024;
-    enum nss_status status;
+    userdata_t u;
 
     _NSS_UTRACE("__nss_bsdcompat_getaddrinfo: called");
-
-    _h_errno = _errno = 0;
-    status = NSS_STATUS_UNAVAIL;
 
     name = va_arg(ap, const char*);
     pai = va_arg(ap, struct addrinfo*);
     resultp = (struct addrinfo**)retval;
 
-    /* XXX: Will be used to hang off multiple matches later. */
-    memset(&sentinel, 0, sizeof(sentinel));
-
     if (name == NULL || pai == NULL) {
-        *resultp = sentinel.ai_next;
+        *resultp = NULL;
         return (NS_UNAVAIL);
     }
 
-    mbufp = malloc((sizeof(struct hostent) + mbuflen));
-    if (mbufp == NULL) {
-        *resultp = sentinel.ai_next;
-        return (NS_UNAVAIL);
-    }
-    hp = (struct hostent*)mbufp;
-    buffer = (char*)(hp + 1);
+    extern enum nss_status _nss_mdns_gethostbyname_impl(
+        const char* name, int af, userdata_t* u, int* errnop, int* h_errnop);
 
-    cbufp = malloc(sizeof(struct addrinfo) + sizeof(struct sockaddr_storage));
-    if (cbufp == NULL) {
-        free(mbufp);
-        *resultp = sentinel.ai_next;
-        return (NS_UNAVAIL);
-    }
-    ai = (struct addrinfo*)cbufp;
-    psa = (struct sockaddr*)(ai + 1);
-
-    status = _nss_mdns_gethostbyname2_r(name, pai->ai_family, hp, buffer,
-                                        mbuflen, &_errno, &_h_errno);
+    status = _nss_mdns_gethostbyname_impl(name, pai->ai_family, &u, &_errno,
+                                          &_h_errno);
     status = __nss_compat_result(status, _errno);
+    if (status != NS_SUCCESS) {
+        return (status);
+    }
 
-    if (status == NS_SUCCESS) {
+    for (int i = 0; i < u.count; i++) {
+        struct addrinfo* ai = (struct addrinfo*)malloc(
+            sizeof(struct addrinfo) + sizeof(struct sockaddr_storage));
+        if (ai == NULL) {
+            if (sentinel.ai_next != NULL)
+                freeaddrinfo(sentinel.ai_next);
+            *resultp = NULL;
+            return (NS_UNAVAIL);
+        }
+        struct sockaddr* psa = (struct sockaddr*)(ai + 1);
+
         memset(ai, 0, sizeof(struct addrinfo));
         ai->ai_flags = pai->ai_flags;
         ai->ai_socktype = pai->ai_socktype;
         ai->ai_protocol = pai->ai_protocol;
-        ai->ai_family = hp->h_addrtype;
+        ai->ai_family = u.result[i].af;
         memset(psa, 0, sizeof(struct sockaddr_storage));
         psa->sa_len = ai->ai_addrlen;
         psa->sa_family = ai->ai_family;
         ai->ai_addr = psa;
-        hap = hp->h_addr_list[0];
         switch (ai->ai_family) {
         case AF_INET:
             ai->ai_addrlen = sizeof(struct sockaddr_in);
-            memcpy(&((struct sockaddr_in*)psa)->sin_addr, hap, ai->ai_addrlen);
+            memcpy(&((struct sockaddr_in*)psa)->sin_addr, &u.result[i].address,
+                   ai->ai_addrlen);
             break;
         case AF_INET6:
             ai->ai_addrlen = sizeof(struct sockaddr_in6);
-            memcpy(&((struct sockaddr_in6*)psa)->sin6_addr, hap,
-                   ai->ai_addrlen);
+            memcpy(&((struct sockaddr_in6*)psa)->sin6_addr,
+                   &u.result[i].address, ai->ai_addrlen);
             break;
         default:
             ai->ai_addrlen = sizeof(struct sockaddr_storage);
-            memcpy(psa->sa_data, hap, ai->ai_addrlen);
+            memcpy(psa->sa_data, &u.result[i].address, ai->ai_addrlen);
         }
-        sentinel.ai_next = ai;
-        free(mbufp);
-    }
 
-    if (sentinel.ai_next == NULL) {
-        free(cbufp);
-        free(mbufp);
+        curp->ai_next = ai;
+        curp = ai;
     }
 
     *resultp = sentinel.ai_next;
