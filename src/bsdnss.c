@@ -114,7 +114,6 @@ extern enum nss_status _nss_mdns6_gethostbyaddr_r(struct in_addr* addr, int len,
 typedef enum nss_status (*_bsd_nsstub_fn_t)(const char*, struct hostent*, char*,
                                             size_t, int*, int*);
 
-/* XXX: FreeBSD 5.x is not supported. */
 static NSS_METHOD_PROTOTYPE(__nss_bsdcompat_getaddrinfo);
 static NSS_METHOD_PROTOTYPE(__nss_bsdcompat_gethostbyaddr_r);
 static NSS_METHOD_PROTOTYPE(__nss_bsdcompat_gethostbyname2_r);
