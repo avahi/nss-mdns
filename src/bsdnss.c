@@ -45,6 +45,7 @@
 #include "avahi.h"
 #include "config.h"
 #include "util.h"
+#include "nss.h"
 
 #ifdef MDNS_MINIMAL
 /*
@@ -67,49 +68,6 @@
 
 ns_mtab* nss_module_register(const char* source, unsigned int* mtabsize,
                              nss_module_unregister_fn* unreg);
-
-extern enum nss_status _nss_mdns_gethostbyname_r(const char* name,
-                                                 struct hostent* result,
-                                                 char* buffer, size_t buflen,
-                                                 int* errnop, int* h_errnop);
-
-extern enum nss_status _nss_mdns_gethostbyname2_r(const char* name, int af,
-                                                  struct hostent* result,
-                                                  char* buffer, size_t buflen,
-                                                  int* errnop, int* h_errnop);
-extern enum nss_status _nss_mdns_gethostbyaddr_r(struct in_addr* addr, int len,
-                                                 int type,
-                                                 struct hostent* result,
-                                                 char* buffer, size_t buflen,
-                                                 int* errnop, int* h_errnop);
-extern enum nss_status _nss_mdns4_gethostbyname_r(const char* name,
-                                                  struct hostent* result,
-                                                  char* buffer, size_t buflen,
-                                                  int* errnop, int* h_errnop);
-
-extern enum nss_status _nss_mdns4_gethostbyname2_r(const char* name, int af,
-                                                   struct hostent* result,
-                                                   char* buffer, size_t buflen,
-                                                   int* errnop, int* h_errnop);
-extern enum nss_status _nss_mdns4_gethostbyaddr_r(struct in_addr* addr, int len,
-                                                  int type,
-                                                  struct hostent* result,
-                                                  char* buffer, size_t buflen,
-                                                  int* errnop, int* h_errnop);
-extern enum nss_status _nss_mdns6_gethostbyname_r(const char* name,
-                                                  struct hostent* result,
-                                                  char* buffer, size_t buflen,
-                                                  int* errnop, int* h_errnop);
-
-extern enum nss_status _nss_mdns6_gethostbyname2_r(const char* name, int af,
-                                                   struct hostent* result,
-                                                   char* buffer, size_t buflen,
-                                                   int* errnop, int* h_errnop);
-extern enum nss_status _nss_mdns6_gethostbyaddr_r(struct in_addr* addr, int len,
-                                                  int type,
-                                                  struct hostent* result,
-                                                  char* buffer, size_t buflen,
-                                                  int* errnop, int* h_errnop);
 
 typedef enum nss_status (*_bsd_nsstub_fn_t)(const char*, struct hostent*, char*,
                                             size_t, int*, int*);
