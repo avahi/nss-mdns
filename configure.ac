@@ -55,7 +55,7 @@ AM_CONDITIONAL([ENABLE_TESTS], [test "x$have_check" = "xyes"])
 AC_ARG_VAR([AVAHI_SOCKET],
            [Full path to the avahi-daemon socket, overriding default])
 AS_IF([test "x$AVAHI_SOCKET" = x],
-      [AVAHI_SOCKET="${localstatedir}/run/avahi-daemon/socket"])
+      [AVAHI_SOCKET="${runstatedir}/avahi-daemon/socket"])
 
 AC_ARG_VAR([MDNS_ALLOW_FILE],
            [Full path to the mdns.allow file, overriding default])
