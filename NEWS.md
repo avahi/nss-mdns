@@ -1,5 +1,14 @@
 # News
 
+## Mon May 10 2021:
+
+[Version 0.15](https://github.com/lathiat/nss-mdns/releases/tag/v0.15)
+released. Highlights:
+
+* Updated README.md for clarity
+* The return of BSD support!
+* Support for `AVAHI_SOCKET` in `/run` (instead of legacy `/var/run`)
+
 ## Sun Mar 18 2018:
 
 [Version 0.14.1](https://github.com/lathiat/nss-mdns/releases/tag/v0.14.1)
