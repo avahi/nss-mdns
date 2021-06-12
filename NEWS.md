@@ -1,5 +1,14 @@
 # News
 
+## Sat Jun 12 2021:
+
+[Version 0.15.1](https://github.com/lathiat/nss-mdns/releases/tag/v0.15.1)
+released. Highlights:
+
+* This fixes the broken previous release by restoring the missing
+  `src/nss.h` file. If you are using 0.15, you must upgrade to this
+  version, or downgrade to a previous one.
+
 ## Mon May 10 2021:
 
 [Version 0.15](https://github.com/lathiat/nss-mdns/releases/tag/v0.15)

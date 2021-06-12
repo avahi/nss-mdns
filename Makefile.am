@@ -47,7 +47,7 @@ endif
 
 check_PROGRAMS = nss-test avahi-test
 
-libnss_mdns_la_SOURCES=src/util.c src/util.h src/avahi.c src/avahi.h src/nss.c
+libnss_mdns_la_SOURCES=src/util.c src/util.h src/avahi.c src/avahi.h src/nss.c src/nss.h
 libnss_mdns_la_CFLAGS=$(AM_CFLAGS)
 libnss_mdns_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.2 -Wl,-version-script=$(srcdir)/src/map-file
 
