@@ -85,8 +85,8 @@ enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
                                              userdata_t* u, int* errnop,
                                              int* h_errnop) {
 
-    int name_allowed;
     FILE* mdns_allow_file = NULL;
+    use_name_result_t result;
 
 #ifdef NSS_IPV4_ONLY
     if (af == AF_UNSPEC) {
@@ -118,13 +118,13 @@ enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
 #ifndef MDNS_MINIMAL
     mdns_allow_file = fopen(MDNS_ALLOW_FILE, "r");
 #endif
-    name_allowed = verify_name_allowed_with_soa(name, mdns_allow_file);
+    result = verify_name_allowed_with_soa(name, mdns_allow_file);
 #ifndef MDNS_MINIMAL
     if (mdns_allow_file)
         fclose(mdns_allow_file);
 #endif
 
-    if (!name_allowed) {
+    if (result == USE_NAME_RESULT_SKIP) {
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_UNAVAIL;
@@ -137,6 +137,11 @@ enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
     case AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND:
         *errnop = ETIMEDOUT;
         *h_errnop = HOST_NOT_FOUND;
+        if (result == USE_NAME_RESULT_OPTIONAL) {
+            /* continue to dns plugin if DNS .local zone is detected. */
+            *h_errnop = TRY_AGAIN;
+            return NSS_STATUS_UNAVAIL;
+	}
         return NSS_STATUS_NOTFOUND;
 
     case AVAHI_RESOLVE_RESULT_UNAVAIL:

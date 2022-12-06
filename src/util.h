@@ -61,6 +61,12 @@ char* buffer_strdup(buffer_t* buf, const char* str);
 int set_cloexec(int fd);
 int ends_with(const char* name, const char* suffix);
 
+typedef enum {
+    USE_NAME_RESULT_SKIP,
+    USE_NAME_RESULT_AUTHORITATIVE,
+    USE_NAME_RESULT_OPTIONAL,
+} use_name_result_t;
+
 // Returns true if we should try to resolve the name with mDNS.
 //
 // If mdns_allow_file is NULL, then this implements the "local" SOA
@@ -71,7 +77,8 @@ int ends_with(const char* name, const char* suffix);
 //
 // The two heuristics described above are disabled if mdns_allow_file
 // is not NULL.
-int verify_name_allowed_with_soa(const char* name, FILE* mdns_allow_file);
+use_name_result_t verify_name_allowed_with_soa(const char* name,
+                                               FILE* mdns_allow_file);
 
 typedef enum {
     VERIFY_NAME_RESULT_NOT_ALLOWED,
