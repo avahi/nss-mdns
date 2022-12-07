@@ -67,6 +67,12 @@ typedef enum {
     USE_NAME_RESULT_OPTIONAL,
 } use_name_result_t;
 
+typedef enum {
+    TEST_LOCAL_SOA_NO,
+    TEST_LOCAL_SOA_YES,
+    TEST_LOCAL_SOA_AUTO,
+} test_local_soa_t;
+
 // Returns true if we should try to resolve the name with mDNS.
 //
 // If mdns_allow_file is NULL, then this implements the "local" SOA
@@ -78,7 +84,8 @@ typedef enum {
 // The two heuristics described above are disabled if mdns_allow_file
 // is not NULL.
 use_name_result_t verify_name_allowed_with_soa(const char* name,
-                                               FILE* mdns_allow_file);
+                                               FILE* mdns_allow_file,
+                                               test_local_soa_t test);
 
 typedef enum {
     VERIFY_NAME_RESULT_NOT_ALLOWED,

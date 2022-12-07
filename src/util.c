@@ -55,14 +55,17 @@ int ends_with(const char* name, const char* suffix) {
     return strcasecmp(name + ln - ls, suffix) == 0;
 }
 
-use_name_result_t verify_name_allowed_with_soa(const char* name, FILE* mdns_allow_file) {
+use_name_result_t verify_name_allowed_with_soa(const char* name,
+                                               FILE* mdns_allow_file,
+                                               test_local_soa_t test) {
     switch (verify_name_allowed(name, mdns_allow_file)) {
     case VERIFY_NAME_RESULT_NOT_ALLOWED:
         return USE_NAME_RESULT_SKIP;
     case VERIFY_NAME_RESULT_ALLOWED:
         return USE_NAME_RESULT_AUTHORITATIVE;
     case VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA:
-	if (local_soa())
+	if (test == TEST_LOCAL_SOA_YES ||
+	    (test == TEST_LOCAL_SOA_AUTO && local_soa()) )
 		/* Make multicast resolution not authoritative for .local zone.
 		 * Allow continuing to unicast resolution after multicast had not worked. */
 		return USE_NAME_RESULT_OPTIONAL;

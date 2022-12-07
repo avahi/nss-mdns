@@ -50,6 +50,24 @@ START_TEST(test_verify_name_allowed_minimal) {
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
     ck_assert_int_eq(verify_name_allowed(".", NULL),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
+
+    ck_assert_int_eq(verify_name_allowed_with_soa(".", NULL, TEST_LOCAL_SOA_YES),
+                     USE_NAME_RESULT_SKIP);
+    ck_assert_int_eq(verify_name_allowed_with_soa(".", NULL, TEST_LOCAL_SOA_NO),
+                     USE_NAME_RESULT_SKIP);
+    ck_assert_int_eq(verify_name_allowed_with_soa(".", NULL, TEST_LOCAL_SOA_AUTO),
+                     USE_NAME_RESULT_SKIP);
+    ck_assert_int_eq(verify_name_allowed_with_soa("example3.sub.local",
+                         NULL, TEST_LOCAL_SOA_YES), USE_NAME_RESULT_SKIP);
+    ck_assert_int_eq(verify_name_allowed_with_soa("example4.sub.local",
+                         NULL, TEST_LOCAL_SOA_NO), USE_NAME_RESULT_SKIP);
+    ck_assert_int_eq(verify_name_allowed_with_soa("example4.sub.local",
+                         NULL, TEST_LOCAL_SOA_AUTO), USE_NAME_RESULT_SKIP);
+    ck_assert_int_eq(verify_name_allowed_with_soa("example1.local",
+                         NULL, TEST_LOCAL_SOA_YES), USE_NAME_RESULT_OPTIONAL);
+    ck_assert_int_eq(verify_name_allowed_with_soa("example2.local",
+                         NULL, TEST_LOCAL_SOA_NO), USE_NAME_RESULT_AUTHORITATIVE);
+    /* TEST_LOCAL_SOA_AUTO would test actual DNS on host, skip that. */
 }
 END_TEST
 
