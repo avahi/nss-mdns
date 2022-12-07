@@ -118,7 +118,8 @@ enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
 #ifndef MDNS_MINIMAL
     mdns_allow_file = fopen(MDNS_ALLOW_FILE, "r");
 #endif
-    result = verify_name_allowed_with_soa(name, mdns_allow_file);
+    result = verify_name_allowed_with_soa(name, mdns_allow_file,
+                                          TEST_LOCAL_SOA_AUTO);
 #ifndef MDNS_MINIMAL
     if (mdns_allow_file)
         fclose(mdns_allow_file);
