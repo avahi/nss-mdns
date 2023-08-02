@@ -35,6 +35,13 @@
 #include "util.h"
 #include "nss.h"
 
+#ifdef MDNS_MINIMAL
+#ifdef MDNS_ALLOW_FILE
+#  undef MDNS_ALLOW_FILE
+#endif
+#define MDNS_ALLOW_FILE NULL
+#endif
+
 static avahi_resolve_result_t do_avahi_resolve_name(int af, const char* name,
                                                     userdata_t* userdata) {
     bool ipv4_found = false;
@@ -115,16 +122,8 @@ enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
 
     u->count = 0;
 
-#ifndef MDNS_MINIMAL
-    mdns_allow_file = fopen(MDNS_ALLOW_FILE, "r");
-#endif
-    result = verify_name_allowed_with_soa(name, mdns_allow_file,
+    result = verify_name_allowed_with_soa(name, MDNS_ALLOW_FILE,
                                           TEST_LOCAL_SOA_AUTO);
-#ifndef MDNS_MINIMAL
-    if (mdns_allow_file)
-        fclose(mdns_allow_file);
-#endif
-
     if (result == USE_NAME_RESULT_SKIP) {
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
