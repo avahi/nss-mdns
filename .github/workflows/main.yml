@@ -1,0 +1,25 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master", "actions" ]
+  pull_request:
+    branches: [ "master", "actions" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: autoreconf
+      run: autoreconf -i -f -v
+    - name: configure
+      run: ./configure --sysconfdir=/etc --localstatedir=/var CFLAGS="-Wall -W -Wextra"
+    - name: make
+      run: make
+    - name: make check
+      run: make check
+    - name: make distcheck
+      run: make distcheck
