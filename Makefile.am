@@ -24,7 +24,7 @@ AM_CFLAGS = \
 	-DMDNS_ALLOW_FILE=\"$(MDNS_ALLOW_FILE)\" \
 	-DAVAHI_SOCKET=\"$(AVAHI_SOCKET)\"
 
-AM_LDFLAGS=-avoid-version -module -export-dynamic
+AM_LDFLAGS=-module -export-dynamic
 
 if FREEBSD_NSS
 lib_LTLIBRARIES = \
@@ -49,7 +49,7 @@ check_PROGRAMS = nss-test avahi-test
 
 libnss_mdns_la_SOURCES=src/util.c src/util.h src/avahi.c src/avahi.h src/nss.c src/nss.h
 libnss_mdns_la_CFLAGS=$(AM_CFLAGS)
-libnss_mdns_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.2 -Wl,-version-script=$(srcdir)/src/map-file
+libnss_mdns_la_LDFLAGS=$(AM_LDFLAGS) -version-info 2:0:0 -Wl,-version-script=$(srcdir)/src/map-file
 
 libnss_mdns_minimal_la_SOURCES=$(libnss_mdns_la_SOURCES)
 libnss_mdns_minimal_la_CFLAGS=$(libnss_mdns_la_CFLAGS) -DMDNS_MINIMAL
@@ -73,7 +73,7 @@ libnss_mdns6_minimal_la_LDFLAGS=$(libnss_mdns_la_LDFLAGS)
 
 nss_mdns_la_SOURCES=$(libnss_mdns_la_SOURCES) src/bsdnss.c
 nss_mdns_la_CFLAGS=$(AM_CFLAGS)
-nss_mdns_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.1
+nss_mdns_la_LDFLAGS=$(AM_LDFLAGS) -version-info 1:0:0
 
 nss_mdns_minimal_la_SOURCES=$(nss_mdns_la_SOURCES)
 nss_mdns_minimal_la_CFLAGS=$(nss_mdns_la_CFLAGS) -DMDNS_MINIMAL
