@@ -33,6 +33,7 @@
 #define _nss_mdns_gethostbyaddr_r _nss_mdns_minimal_gethostbyaddr_r
 #endif
 
+#ifndef VER_SYM_MAP_GEN
 // Define prototypes for nss function we're going to export (fixes GCC warnings)
 #ifndef __FreeBSD__
 enum nss_status _nss_mdns_gethostbyname4_r(const char*, struct gaih_addrtuple**,
@@ -49,4 +50,5 @@ enum nss_status _nss_mdns_gethostbyaddr_r(const void*, int, int,
                                           struct hostent*, char*, size_t, int*,
                                           int*);
 
+#endif
 #endif
