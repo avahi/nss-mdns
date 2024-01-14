@@ -17,9 +17,6 @@
 EXTRA_DIST=bootstrap.sh README.md ACKNOWLEDGEMENTS.md NEWS.md LICENSE
 ACLOCAL_AMFLAGS=-I m4
 
-# src
-EXTRA_DIST += src/map-file
-
 AM_CFLAGS = \
 	-DMDNS_ALLOW_FILE=\"$(MDNS_ALLOW_FILE)\" \
 	-DAVAHI_SOCKET=\"$(AVAHI_SOCKET)\"
@@ -47,29 +44,53 @@ endif
 
 check_PROGRAMS = nss-test avahi-test
 
+src/libnss-mdns-la-map-file: $(srcdir)/src/map-file.in $(srcdir)/src/nss.h
+	$(COMPILE) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(libnss_mdns_la_CFLAGS) -E -x assembler-with-cpp -DVER_SYM_MAP_GEN -o $@ $<
+
+src/libnss-mdns-minimal-la-map-file: $(srcdir)/src/map-file.in $(srcdir)/src/nss.h
+	$(COMPILE) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(libnss_mdns_minimal_la_CFLAGS) -E -x assembler-with-cpp -DVER_SYM_MAP_GEN -o $@ $<
+
+src/libnss-mdns4-la-map-file: $(srcdir)/src/map-file.in $(srcdir)/src/nss.h
+	$(COMPILE) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(libnss_mdns4_la_CFLAGS) -E -x assembler-with-cpp -DVER_SYM_MAP_GEN -o $@ $<
+
+src/libnss-mdns4-minimal-la-map-file: $(srcdir)/src/map-file.in $(srcdir)/src/nss.h
+	$(COMPILE) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(libnss_mdns4_minimal_la_CFLAGS) -E -x assembler-with-cpp -DVER_SYM_MAP_GEN -o $@ $<
+
+src/libnss-mdns6-la-map-file: $(srcdir)/src/map-file.in $(srcdir)/src/nss.h
+	$(COMPILE) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(libnss_mdns6_la_CFLAGS) -E -x assembler-with-cpp -DVER_SYM_MAP_GEN -o $@ $<
+
+src/libnss-mdns6-minimal-la-map-file: $(srcdir)/src/map-file.in $(srcdir)/src/nss.h
+	$(COMPILE) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(libnss_mdns6_minimal_la_CFLAGS) -E -x assembler-with-cpp -DVER_SYM_MAP_GEN -o $@ $<
+
 libnss_mdns_la_SOURCES=src/util.c src/util.h src/avahi.c src/avahi.h src/nss.c src/nss.h
+EXTRA_libnss_mdns_la_DEPENDENCIES=src/libnss-mdns-la-map-file
 libnss_mdns_la_CFLAGS=$(AM_CFLAGS)
-libnss_mdns_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.2 -Wl,-version-script=$(srcdir)/src/map-file
+libnss_mdns_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.2 -Wl,-version-script=src/libnss-mdns-la-map-file
 
 libnss_mdns_minimal_la_SOURCES=$(libnss_mdns_la_SOURCES)
+EXTRA_libnss_mdns_minimal_la_DEPENDENCIES=src/libnss-mdns-minimal-la-map-file
 libnss_mdns_minimal_la_CFLAGS=$(libnss_mdns_la_CFLAGS) -DMDNS_MINIMAL
-libnss_mdns_minimal_la_LDFLAGS=$(libnss_mdns_la_LDFLAGS)
+libnss_mdns_minimal_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.2 -Wl,-version-script=src/libnss-mdns-minimal-la-map-file
 
 libnss_mdns4_la_SOURCES=$(libnss_mdns_la_SOURCES)
+EXTRA_libnss_mdns4_la_DEPENDENCIES=src/libnss-mdns4-la-map-file
 libnss_mdns4_la_CFLAGS=$(libnss_mdns_la_CFLAGS) -DNSS_IPV4_ONLY=1
-libnss_mdns4_la_LDFLAGS=$(libnss_mdns_la_LDFLAGS)
+libnss_mdns4_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.2 -Wl,-version-script=src/libnss-mdns4-la-map-file
 
 libnss_mdns4_minimal_la_SOURCES=$(libnss_mdns_la_SOURCES)
+EXTRA_libnss_mdns4_minimal_la_DEPENDENCIES=src/libnss-mdns4-minimal-la-map-file
 libnss_mdns4_minimal_la_CFLAGS=$(libnss_mdns_la_CFLAGS) -DNSS_IPV4_ONLY=1 -DMDNS_MINIMAL
-libnss_mdns4_minimal_la_LDFLAGS=$(libnss_mdns_la_LDFLAGS)
+libnss_mdns4_minimal_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.2 -Wl,-version-script=src/libnss-mdns4-minimal-la-map-file
 
 libnss_mdns6_la_SOURCES=$(libnss_mdns_la_SOURCES)
+EXTRA_libnss_mdns6_la_DEPENDENCIES=src/libnss-mdns6-la-map-file
 libnss_mdns6_la_CFLAGS=$(libnss_mdns_la_CFLAGS) -DNSS_IPV6_ONLY=1
-libnss_mdns6_la_LDFLAGS=$(libnss_mdns_la_LDFLAGS)
+libnss_mdns6_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.2 -Wl,-version-script=src/libnss-mdns6-la-map-file
 
 libnss_mdns6_minimal_la_SOURCES=$(libnss_mdns_la_SOURCES)
+EXTRA_libnss_mdns6_minimal_la_DEPENDENCIES=src/libnss-mdns6-minimal-la-map-file
 libnss_mdns6_minimal_la_CFLAGS=$(libnss_mdns_la_CFLAGS) -DNSS_IPV6_ONLY=1 -DMDNS_MINIMAL
-libnss_mdns6_minimal_la_LDFLAGS=$(libnss_mdns_la_LDFLAGS)
+libnss_mdns6_minimal_la_LDFLAGS=$(AM_LDFLAGS) -shrext .so.2 -Wl,-version-script=src/libnss-mdns6-minimal-la-map-file
 
 nss_mdns_la_SOURCES=$(libnss_mdns_la_SOURCES) src/bsdnss.c
 nss_mdns_la_CFLAGS=$(AM_CFLAGS)
