@@ -19,13 +19,13 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 AC_PREREQ([2.69])
-AC_INIT([nss-mdns],[0.15.1],[https://github.com/lathiat/nss-mdns/issues])
+AC_INIT([nss-mdns],[0.16],[https://github.com/avahi/nss-mdns/issues])
 AC_CONFIG_SRCDIR([src/nss.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign 1.9 -Wall subdir-objects])
 AC_CONFIG_MACRO_DIRS([m4])
 
-AC_SUBST(PACKAGE_URL, [https://github.com/lathiat/nss-mdns])
+AC_SUBST(PACKAGE_URL, [https://github.com/avahi/nss-mdns])
 
 AC_PREFIX_DEFAULT([])
 
