@@ -46,15 +46,14 @@ int set_cloexec(int fd) {
 }
 
 int ends_with(const char* name, size_t namelen,
-                     const char* suffix) {
-    size_t ls;
+                     const char* suffix, size_t slen) {
     assert(name);
     assert(suffix);
 
-    if ((ls = strlen(suffix)) > namelen)
+    if (slen > namelen)
         return 0;
 
-    return strcasecmp(name + namelen - ls, suffix) == 0;
+    return strcasecmp(name + namelen - slen, suffix) == 0;
 }
 
 use_name_result_t verify_name_allowed_with_soa(const char* name,
@@ -80,8 +79,8 @@ use_name_result_t verify_name_allowed_with_soa(const char* name,
 }
 
 static verify_name_result_t verify_name_minimal(const char *name, size_t namelen) {
-    if ((ends_with(name, namelen, ".local") ||
-         ends_with(name, namelen, ".local.")) &&
+    if ((ends_with(name, namelen, ".local", 6) ||
+         ends_with(name, namelen, ".local.", 7)) &&
         (label_count(name, namelen) == 2))
         return VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA;
     else
@@ -98,11 +97,12 @@ verify_name_result_t verify_name_allowed(const char* name,
 
     if (mdns_allow_file) {
         int valid = 0;
+        size_t slen;
 
         while (!feof(mdns_allow_file)) {
-            char ln[128], ln2[129], *t;
+            char ln[129];
 
-            if (!fgets(ln, sizeof(ln), mdns_allow_file))
+            if (!fgets(ln, sizeof(ln)-1, mdns_allow_file))
                 break;
 
             ln[strcspn(ln, "#\t\n\r ")] = 0;
@@ -131,12 +131,11 @@ verify_name_result_t verify_name_allowed(const char* name,
                 break;
             }
 
+            slen = strlen(ln);
             if (ln[0] != '.')
-                snprintf(t = ln2, sizeof(ln2), ".%s", ln);
-            else
-                t = ln;
+                memmove(ln+1, ln, slen+1);
 
-            if (ends_with(name, namelen, t)) {
+            if (ends_with(name, namelen, ln, slen)) {
                 valid = 1;
                 break;
             }
@@ -363,3 +362,21 @@ void append_address_to_userdata(const query_address_result_t* result,
     memcpy(&(u->result[u->count]), result, sizeof(*result));
     u->count++;
 }
+
+/** Initializes defaults from build-time defines.
+ *
+ * It set minimal from libnss_mdns_minimal plugin etc.
+ */
+void userdata_init(userdata_t *u) {
+    memset(u, 0, sizeof(*u));
+#ifdef NSS_IPV4_ONLY
+    u->ipv4_only = 1;
+#endif
+#if NSS_IPV6_ONLY
+    u->ipv6_only = 1;
+#endif
+#ifdef MDNS_MINIMAL
+    u->minimal = 1;
+#endif
+}
+

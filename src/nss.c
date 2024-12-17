@@ -143,19 +143,6 @@ enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
     }
 }
 
-static void init_userdata(userdata_t *u) {
-    memset(u, 0, sizeof(u));
-#ifdef NSS_IPV4_ONLY
-    u->ipv4_only = 1;
-#endif
-#if NSS_IPV6_ONLY
-    u->ipv6_only = 1;
-#endif
-#ifdef MDNS_MINIMAL
-    u->minimal = 1;
-#endif
-}
-
 #ifndef __FreeBSD__
 enum nss_status _nss_mdns_gethostbyname4_r(const char* name,
                                            struct gaih_addrtuple** pat,
@@ -168,7 +155,7 @@ enum nss_status _nss_mdns_gethostbyname4_r(const char* name,
     userdata_t u;
     buffer_t buf;
 
-    init_userdata(&u);
+    userdata_init(&u);
     enum nss_status status =
         _nss_mdns_gethostbyname_impl(name, AF_UNSPEC, &u, errnop, h_errnop);
     if (status != NSS_STATUS_SUCCESS) {
@@ -191,7 +178,7 @@ enum nss_status _nss_mdns_gethostbyname3_r(const char* name, int af,
     buffer_t buf;
     userdata_t u;
 
-    init_userdata(&u);
+    userdata_init(&u);
     // The interfaces for gethostbyname3_r and below do not actually support
     // returning results for more than one address family
     if (af == AF_UNSPEC && u.ipv6_only) {
@@ -236,7 +223,7 @@ enum nss_status _nss_mdns_gethostbyaddr_r(const void* addr, int len, int af,
     char t[256];
     userdata_t u;
 
-    init_userdata(&u);
+    userdata_init(&u);
 
     /* Check for address types */
     address_length =

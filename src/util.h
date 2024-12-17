@@ -60,7 +60,8 @@ char* buffer_strdup(buffer_t* buf, const char* str);
     }
 
 int set_cloexec(int fd);
-int ends_with(const char* name, size_t namelen, const char* suffix);
+int ends_with(const char* name, size_t namelen,
+              const char* suffix, size_t slen);
 
 typedef enum {
     USE_NAME_RESULT_SKIP,
@@ -137,4 +138,7 @@ enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
 void append_address_to_userdata(const query_address_result_t* result,
                                 userdata_t* u);
 
+// Initialize userdata config from build defines
+// Implemented in nss.c
+void userdata_init(userdata_t *u);
 #endif
