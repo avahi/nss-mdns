@@ -347,33 +347,41 @@ START_TEST(test_verify_name_allowed_com_and_local) {
 }
 END_TEST
 
+static int t_ends_with(const char *h, const char *end) {
+    return ends_with(h, strlen(h), end);
+}
+
 // Tests ends_with.
 START_TEST(test_ends_with) {
-    ck_assert(ends_with("", ""));
-    ck_assert(!ends_with("", " "));
-    ck_assert(!ends_with("", "z"));
-    ck_assert(ends_with("z", ""));
-    ck_assert(ends_with("z", "z"));
-    ck_assert(!ends_with("z", "zz"));
-    ck_assert(ends_with("example.local", ".local"));
-    ck_assert(ends_with("example.local.", ".local."));
-    ck_assert(!ends_with("example.local.", ".local"));
-    ck_assert(!ends_with("example.local.", ".local"));
+    ck_assert(t_ends_with("", ""));
+    ck_assert(!t_ends_with("", " "));
+    ck_assert(!t_ends_with("", "z"));
+    ck_assert(t_ends_with("z", ""));
+    ck_assert(t_ends_with("z", "z"));
+    ck_assert(!t_ends_with("z", "zz"));
+    ck_assert(t_ends_with("example.local", ".local"));
+    ck_assert(t_ends_with("example.local.", ".local."));
+    ck_assert(!t_ends_with("example.local.", ".local"));
+    ck_assert(!t_ends_with("example.local.", ".local"));
 }
 END_TEST
 
+static int t_label_count(const char *h) {
+    return label_count(h, strlen(h));
+}
+
 // Tests label_count.
 START_TEST(test_label_count) {
-    ck_assert_int_eq(label_count(""), 1);
-    ck_assert_int_eq(label_count("."), 1);
-    ck_assert_int_eq(label_count("local"), 1);
-    ck_assert_int_eq(label_count("local."), 1);
-    ck_assert_int_eq(label_count("foo.local"), 2);
-    ck_assert_int_eq(label_count("foo.local."), 2);
-    ck_assert_int_eq(label_count("bar.foo.local"), 3);
-    ck_assert_int_eq(label_count("bar.foo.local."), 3);
-    ck_assert_int_eq(label_count("my-foo.local"), 2);
-    ck_assert_int_eq(label_count("my-foo.local."), 2);
+    ck_assert_int_eq(t_label_count(""), 1);
+    ck_assert_int_eq(t_label_count("."), 1);
+    ck_assert_int_eq(t_label_count("local"), 1);
+    ck_assert_int_eq(t_label_count("local."), 1);
+    ck_assert_int_eq(t_label_count("foo.local"), 2);
+    ck_assert_int_eq(t_label_count("foo.local."), 2);
+    ck_assert_int_eq(t_label_count("bar.foo.local"), 3);
+    ck_assert_int_eq(t_label_count("bar.foo.local."), 3);
+    ck_assert_int_eq(t_label_count("my-foo.local"), 2);
+    ck_assert_int_eq(t_label_count("my-foo.local."), 2);
 }
 END_TEST
 

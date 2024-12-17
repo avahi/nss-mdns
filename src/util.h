@@ -60,7 +60,7 @@ char* buffer_strdup(buffer_t* buf, const char* str);
     }
 
 int set_cloexec(int fd);
-int ends_with(const char* name, const char* suffix);
+int ends_with(const char* name, size_t namelen, const char* suffix);
 
 typedef enum {
     USE_NAME_RESULT_SKIP,
@@ -105,7 +105,7 @@ verify_name_result_t verify_name_allowed(const char* name,
 int local_soa(void);
 
 // Returns the number of labels in a name.
-int label_count(const char* name);
+int label_count(const char* name, size_t len);
 
 // Converts from a name and addr into the hostent format, used by
 // gethostbyaddr_r.

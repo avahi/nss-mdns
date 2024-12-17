@@ -45,15 +45,16 @@ int set_cloexec(int fd) {
     return fcntl(fd, F_SETFD, n | FD_CLOEXEC);
 }
 
-int ends_with(const char* name, const char* suffix) {
-    size_t ln, ls;
+int ends_with(const char* name, size_t namelen,
+                     const char* suffix) {
+    size_t ls;
     assert(name);
     assert(suffix);
 
-    if ((ls = strlen(suffix)) > (ln = strlen(name)))
+    if ((ls = strlen(suffix)) > namelen)
         return 0;
 
-    return strcasecmp(name + ln - ls, suffix) == 0;
+    return strcasecmp(name + namelen - ls, suffix) == 0;
 }
 
 use_name_result_t verify_name_allowed_with_soa(const char* name,
@@ -78,9 +79,10 @@ use_name_result_t verify_name_allowed_with_soa(const char* name,
     }
 }
 
-static verify_name_result_t verify_name_minimal(const char *name) {
-    if ((ends_with(name, ".local") || ends_with(name, ".local.")) &&
-        (label_count(name) == 2))
+static verify_name_result_t verify_name_minimal(const char *name, size_t namelen) {
+    if ((ends_with(name, namelen, ".local") ||
+         ends_with(name, namelen, ".local.")) &&
+        (label_count(name, namelen) == 2))
         return VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA;
     else
         return VERIFY_NAME_RESULT_NOT_ALLOWED;
@@ -89,7 +91,10 @@ static verify_name_result_t verify_name_minimal(const char *name) {
 verify_name_result_t verify_name_allowed(const char* name,
                                          FILE* mdns_allow_file,
                                          userdata_t *u) {
+    size_t namelen;
+
     assert(name);
+    namelen = strlen(name);
 
     if (mdns_allow_file) {
         int valid = 0;
@@ -108,7 +113,7 @@ verify_name_result_t verify_name_allowed(const char* name,
             if (ln[0] == '%') {
                 if (strcmp(ln, "%minimal") == 0) {
                     u->minimal = 1;
-                    return verify_name_minimal(name);
+                    return verify_name_minimal(name, namelen);
                 }
 
                 /* If multiple statements are present, latest wins. */
@@ -131,7 +136,7 @@ verify_name_result_t verify_name_allowed(const char* name,
             else
                 t = ln;
 
-            if (ends_with(name, t)) {
+            if (ends_with(name, namelen, t)) {
                 valid = 1;
                 break;
             }
@@ -141,7 +146,7 @@ verify_name_result_t verify_name_allowed(const char* name,
         else
             return VERIFY_NAME_RESULT_NOT_ALLOWED;
     } else {
-        return verify_name_minimal(name);
+        return verify_name_minimal(name, namelen);
     }
 }
 
@@ -162,16 +167,17 @@ int local_soa(void) {
     return result > 0;
 }
 
-int label_count(const char* name) {
+int label_count(const char* name, size_t len) {
     // Start with single label.
     int count = 1;
-    size_t i, len;
+    size_t i;
     assert(name);
+    if (len > 0)
+        len--;
 
-    len = strlen(name);
     // Count all dots not in the last place.
     for (i = 0; i < len; i++) {
-        if ((name[i] == '.') && (i != (len - 1)))
+        if (name[i] == '.')
             count++;
     }
 
