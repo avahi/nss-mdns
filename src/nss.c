@@ -89,25 +89,17 @@ enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
     FILE* mdns_allow_file = NULL;
     use_name_result_t result;
 
-#ifdef NSS_IPV4_ONLY
-    if (af == AF_UNSPEC) {
+    if (u->ipv4_only && af == AF_UNSPEC) {
         af = AF_INET;
     }
-#endif
 
-#ifdef NSS_IPV6_ONLY
-    if (af == AF_UNSPEC) {
+    if (u->ipv6_only && af == AF_UNSPEC) {
         af = AF_INET6;
     }
-#endif
 
-#ifdef NSS_IPV4_ONLY
-    if (af != AF_INET)
-#elif NSS_IPV6_ONLY
-    if (af != AF_INET6)
-#else
-    if (af != AF_INET && af != AF_INET6 && af != AF_UNSPEC)
-#endif
+    if ((u->ipv4_only && af != AF_INET) ||
+        (u->ipv6_only && af != AF_INET6) ||
+        (af != AF_INET && af != AF_INET6 && af != AF_UNSPEC))
     {
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
@@ -116,15 +108,12 @@ enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
 
     u->count = 0;
 
-#ifndef MDNS_MINIMAL
-    mdns_allow_file = fopen(MDNS_ALLOW_FILE, "r");
-#endif
+    if (!u->minimal)
+        mdns_allow_file = fopen(MDNS_ALLOW_FILE, "r");
     result = verify_name_allowed_with_soa(name, mdns_allow_file,
-                                          TEST_LOCAL_SOA_AUTO);
-#ifndef MDNS_MINIMAL
+                                          u, TEST_LOCAL_SOA_AUTO);
     if (mdns_allow_file)
         fclose(mdns_allow_file);
-#endif
 
     if (result == USE_NAME_RESULT_SKIP) {
         *errnop = EINVAL;
@@ -154,6 +143,19 @@ enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
     }
 }
 
+static void init_userdata(userdata_t *u) {
+    memset(u, 0, sizeof(u));
+#ifdef NSS_IPV4_ONLY
+    u->ipv4_only = 1;
+#endif
+#if NSS_IPV6_ONLY
+    u->ipv6_only = 1;
+#endif
+#ifdef MDNS_MINIMAL
+    u->minimal = 1;
+#endif
+}
+
 #ifndef __FreeBSD__
 enum nss_status _nss_mdns_gethostbyname4_r(const char* name,
                                            struct gaih_addrtuple** pat,
@@ -166,6 +168,7 @@ enum nss_status _nss_mdns_gethostbyname4_r(const char* name,
     userdata_t u;
     buffer_t buf;
 
+    init_userdata(&u);
     enum nss_status status =
         _nss_mdns_gethostbyname_impl(name, AF_UNSPEC, &u, errnop, h_errnop);
     if (status != NSS_STATUS_SUCCESS) {
@@ -188,14 +191,13 @@ enum nss_status _nss_mdns_gethostbyname3_r(const char* name, int af,
     buffer_t buf;
     userdata_t u;
 
+    init_userdata(&u);
     // The interfaces for gethostbyname3_r and below do not actually support
     // returning results for more than one address family
-    if (af == AF_UNSPEC) {
-#ifdef NSS_IPV6_ONLY
+    if (af == AF_UNSPEC && u.ipv6_only) {
         af = AF_INET6;
-#else
+    } else {
         af = AF_INET;
-#endif
     }
 
     enum nss_status status = _nss_mdns_gethostbyname_impl(name, af, &u, errnop, h_errnop);
@@ -232,28 +234,26 @@ enum nss_status _nss_mdns_gethostbyaddr_r(const void* addr, int len, int af,
 
     size_t address_length;
     char t[256];
+    userdata_t u;
+
+    init_userdata(&u);
 
     /* Check for address types */
     address_length =
         af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t);
 
     if (len < (int)address_length ||
-#ifdef NSS_IPV4_ONLY
-        af != AF_INET
-#elif NSS_IPV6_ONLY
-        af != AF_INET6
-#else
+        (u.ipv4_only && af != AF_INET) ||
+        (u.ipv6_only && af != AF_INET6) ||
         (af != AF_INET && af != AF_INET6)
-#endif
     ) {
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_UNAVAIL;
     }
 
-#ifdef MDNS_MINIMAL
     /* Only query for 169.254.0.0/16 IPv4 in minimal mode */
-    if ((af == AF_INET &&
+    if (u.minimal && (af == AF_INET &&
          ((ntohl(*(const uint32_t*)addr) & 0xFFFF0000UL) != 0xA9FE0000UL)) ||
         (af == AF_INET6 && !(((const uint8_t*)addr)[0] == 0xFE &&
                              (((const uint8_t*)addr)[1] >> 6) == 2))) {
@@ -261,7 +261,6 @@ enum nss_status _nss_mdns_gethostbyaddr_r(const void* addr, int len, int af,
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_UNAVAIL;
     }
-#endif
 
     /* Lookup using Avahi */
     buffer_t buf;

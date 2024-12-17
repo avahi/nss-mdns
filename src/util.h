@@ -86,6 +86,7 @@ typedef enum {
 // is not NULL.
 use_name_result_t verify_name_allowed_with_soa(const char* name,
                                                FILE* mdns_allow_file,
+                                               userdata_t *u,
                                                test_local_soa_t test);
 
 typedef enum {
@@ -97,7 +98,8 @@ typedef enum {
 // Tells us if the name is not allowed unconditionally, allowed only
 // if local_soa() returns false, or unconditionally allowed.
 verify_name_result_t verify_name_allowed(const char* name,
-                                         FILE* mdns_allow_file);
+                                         FILE* mdns_allow_file,
+                                         userdata_t *u);
 
 // Returns true if a DNS server claims authority over "local".
 int local_soa(void);

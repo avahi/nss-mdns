@@ -58,8 +58,9 @@ int ends_with(const char* name, const char* suffix) {
 
 use_name_result_t verify_name_allowed_with_soa(const char* name,
                                                FILE* mdns_allow_file,
+                                               userdata_t *u,
                                                test_local_soa_t test) {
-    switch (verify_name_allowed(name, mdns_allow_file)) {
+    switch (verify_name_allowed(name, mdns_allow_file, u)) {
     case VERIFY_NAME_RESULT_NOT_ALLOWED:
         return USE_NAME_RESULT_SKIP;
     case VERIFY_NAME_RESULT_ALLOWED:
@@ -77,8 +78,17 @@ use_name_result_t verify_name_allowed_with_soa(const char* name,
     }
 }
 
+static verify_name_result_t verify_name_minimal(const char *name) {
+    if ((ends_with(name, ".local") || ends_with(name, ".local.")) &&
+        (label_count(name) == 2))
+        return VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA;
+    else
+        return VERIFY_NAME_RESULT_NOT_ALLOWED;
+}
+
 verify_name_result_t verify_name_allowed(const char* name,
-                                         FILE* mdns_allow_file) {
+                                         FILE* mdns_allow_file,
+                                         userdata_t *u) {
     assert(name);
 
     if (mdns_allow_file) {
@@ -94,6 +104,22 @@ verify_name_result_t verify_name_allowed(const char* name,
 
             if (ln[0] == 0)
                 continue;
+
+            if (ln[0] == '%') {
+                if (strcmp(ln, "%minimal") == 0) {
+                    u->minimal = 1;
+                    return verify_name_minimal(name);
+                }
+
+                /* If multiple statements are present, latest wins. */
+                if (strcmp(ln, "%ipv4") == 0)
+                    u->ipv4_only = 1;
+                if (strcmp(ln, "%ipv6") == 0)
+                    u->ipv6_only = 1;
+                if (strcmp(ln, "%any") == 0)
+                    u->ipv4_only = u->ipv6_only = 0;
+                continue;
+            }
 
             if (strcmp(ln, "*") == 0) {
                 valid = 1;
@@ -115,11 +141,7 @@ verify_name_result_t verify_name_allowed(const char* name,
         else
             return VERIFY_NAME_RESULT_NOT_ALLOWED;
     } else {
-        if ((ends_with(name, ".local") || ends_with(name, ".local.")) &&
-            (label_count(name) == 2))
-            return VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA;
-        else
-            return VERIFY_NAME_RESULT_NOT_ALLOWED;
+        return verify_name_minimal(name);
     }
 }
 

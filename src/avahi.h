@@ -46,6 +46,9 @@ typedef struct {
 typedef struct {
     int count;
     query_address_result_t result[MAX_ENTRIES];
+    unsigned char minimal;
+    unsigned char ipv4_only;
+    unsigned char ipv6_only;
 } userdata_t;
 
 typedef enum {
