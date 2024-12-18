@@ -222,6 +222,7 @@ enum nss_status _nss_mdns_gethostbyaddr_r(const void* addr, int len, int af,
     size_t address_length;
     char t[256];
     userdata_t u;
+    FILE* mdns_allow_file = NULL;
 
     userdata_init(&u);
 
@@ -239,11 +240,19 @@ enum nss_status _nss_mdns_gethostbyaddr_r(const void* addr, int len, int af,
         return NSS_STATUS_UNAVAIL;
     }
 
+    if (!u.minimal) {
+        mdns_allow_file = fopen(MDNS_ALLOW_FILE, "r");
+        userdata_config(mdns_allow_file, &u);
+        fclose(mdns_allow_file);
+    }
+
     /* Only query for 169.254.0.0/16 IPv4 in minimal mode */
-    if (u.minimal && (af == AF_INET &&
-         ((ntohl(*(const uint32_t*)addr) & 0xFFFF0000UL) != 0xA9FE0000UL)) ||
-        (af == AF_INET6 && !(((const uint8_t*)addr)[0] == 0xFE &&
-                             (((const uint8_t*)addr)[1] >> 6) == 2))) {
+    if (!u.minimal || (
+        (af == AF_INET && (u.ipv6_only ||
+          ((ntohl(*(const uint32_t*)addr) & 0xFFFF0000UL) != 0xA9FE0000UL))) ||
+        (af == AF_INET6 && (u.ipv4_only ||
+          !(((const uint8_t*)addr)[0] == 0xFE &&
+                             (((const uint8_t*)addr)[1] >> 6) == 2))))) {
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_UNAVAIL;

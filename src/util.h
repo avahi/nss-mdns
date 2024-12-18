@@ -141,4 +141,7 @@ void append_address_to_userdata(const query_address_result_t* result,
 // Initialize userdata config from build defines
 // Implemented in nss.c
 void userdata_init(userdata_t *u);
+
+/** Read only configuration statements. */
+void userdata_config(FILE* mdns_allow_file, userdata_t *u);
 #endif

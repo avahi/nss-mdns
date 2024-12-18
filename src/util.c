@@ -32,6 +32,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 
 #include "util.h"
 
+typedef enum {
+    LR_OK = 0,
+    LR_BREAK,
+    LR_CONTINUE,
+} loop_result_t;
+
 int set_cloexec(int fd) {
     int n;
     assert(fd >= 0);
@@ -87,44 +93,54 @@ static verify_name_result_t verify_name_minimal(const char *name, size_t namelen
         return VERIFY_NAME_RESULT_NOT_ALLOWED;
 }
 
+static loop_result_t _verify_read_line(char *ln, size_t lnlen,
+                         userdata_t *u,
+                         FILE *file) {
+    if (!fgets(ln, lnlen, file))
+        return LR_BREAK;
+
+    ln[strcspn(ln, "#\t\n\r ")] = 0;
+
+    if (ln[0] == 0)
+        return LR_CONTINUE;
+
+    if (ln[0] == '%') {
+        if (strcmp(ln, "%minimal") == 0)
+            u->minimal = 1;
+        /* If multiple statements are present, latest wins. */
+        else if (strcmp(ln, "%ipv4") == 0)
+            u->ipv4_only = 1;
+        else if (strcmp(ln, "%ipv6") == 0)
+            u->ipv6_only = 1;
+        else if (strcmp(ln, "%any") == 0)
+            u->ipv4_only = u->ipv6_only = 0;
+        return LR_CONTINUE;
+    }
+    return LR_OK;
+}
+
 verify_name_result_t verify_name_allowed(const char* name,
                                          FILE* mdns_allow_file,
                                          userdata_t *u) {
     size_t namelen;
 
     assert(name);
+    assert(u);
     namelen = strlen(name);
 
     if (mdns_allow_file) {
         int valid = 0;
         size_t slen;
+        char ln[129];
 
         while (!feof(mdns_allow_file)) {
-            char ln[129];
+            loop_result_t r;
 
-            if (!fgets(ln, sizeof(ln)-1, mdns_allow_file))
-                break;
-
-            ln[strcspn(ln, "#\t\n\r ")] = 0;
-
-            if (ln[0] == 0)
-                continue;
-
-            if (ln[0] == '%') {
-                if (strcmp(ln, "%minimal") == 0) {
-                    u->minimal = 1;
-                    return verify_name_minimal(name, namelen);
-                }
-
-                /* If multiple statements are present, latest wins. */
-                if (strcmp(ln, "%ipv4") == 0)
-                    u->ipv4_only = 1;
-                if (strcmp(ln, "%ipv6") == 0)
-                    u->ipv6_only = 1;
-                if (strcmp(ln, "%any") == 0)
-                    u->ipv4_only = u->ipv6_only = 0;
-                continue;
-            }
+            r = _verify_read_line(ln, sizeof(ln)-1, u, mdns_allow_file);
+            if (r == LR_BREAK)
+                    break;
+            else if (r == LR_CONTINUE)
+                    continue;
 
             if (strcmp(ln, "*") == 0) {
                 valid = 1;
@@ -140,14 +156,28 @@ verify_name_result_t verify_name_allowed(const char* name,
                 break;
             }
         }
+
         if (valid)
             return VERIFY_NAME_RESULT_ALLOWED;
+        else if (u->minimal)
+            return verify_name_minimal(name, namelen);
         else
             return VERIFY_NAME_RESULT_NOT_ALLOWED;
     } else {
         return verify_name_minimal(name, namelen);
     }
 }
+
+void userdata_config(FILE* mdns_allow_file, userdata_t *u) {
+    loop_result_t r;
+    char ln[128];
+    while (!feof(mdns_allow_file)) {
+        r = _verify_read_line(ln, sizeof(ln), u, mdns_allow_file);
+        if (r == LR_BREAK)
+            break;
+    }
+}
+
 
 int local_soa(void) {
     /* FreeBSD requires the state to be zeroed before calling res_ninit() */
