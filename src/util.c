@@ -171,6 +171,10 @@ verify_name_result_t verify_name_allowed(const char* name,
 void userdata_config(FILE* mdns_allow_file, userdata_t *u) {
     loop_result_t r;
     char ln[128];
+    if (!mdns_allow_file) {
+        u->minimal = 1;
+        return;
+    }
     while (!feof(mdns_allow_file)) {
         r = _verify_read_line(ln, sizeof(ln), u, mdns_allow_file);
         if (r == LR_BREAK)

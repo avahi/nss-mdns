@@ -242,8 +242,10 @@ enum nss_status _nss_mdns_gethostbyaddr_r(const void* addr, int len, int af,
 
     if (!u.minimal) {
         mdns_allow_file = fopen(MDNS_ALLOW_FILE, "r");
+        // Missing config means minimal mode too
         userdata_config(mdns_allow_file, &u);
-        fclose(mdns_allow_file);
+        if (mdns_allow_file)
+            fclose(mdns_allow_file);
     }
 
     /* Only query for 169.254.0.0/16 IPv4 in minimal mode */
