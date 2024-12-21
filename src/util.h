@@ -60,7 +60,8 @@ char* buffer_strdup(buffer_t* buf, const char* str);
     }
 
 int set_cloexec(int fd);
-int ends_with(const char* name, const char* suffix);
+int ends_with(const char* name, size_t namelen,
+              const char* suffix, size_t slen);
 
 typedef enum {
     USE_NAME_RESULT_SKIP,
@@ -86,6 +87,7 @@ typedef enum {
 // is not NULL.
 use_name_result_t verify_name_allowed_with_soa(const char* name,
                                                FILE* mdns_allow_file,
+                                               userdata_t *u,
                                                test_local_soa_t test);
 
 typedef enum {
@@ -97,13 +99,14 @@ typedef enum {
 // Tells us if the name is not allowed unconditionally, allowed only
 // if local_soa() returns false, or unconditionally allowed.
 verify_name_result_t verify_name_allowed(const char* name,
-                                         FILE* mdns_allow_file);
+                                         FILE* mdns_allow_file,
+                                         userdata_t *u);
 
 // Returns true if a DNS server claims authority over "local".
 int local_soa(void);
 
 // Returns the number of labels in a name.
-int label_count(const char* name);
+int label_count(const char* name, size_t len);
 
 // Converts from a name and addr into the hostent format, used by
 // gethostbyaddr_r.
@@ -135,4 +138,10 @@ enum nss_status convert_userdata_to_addrtuple(const userdata_t* u,
 void append_address_to_userdata(const query_address_result_t* result,
                                 userdata_t* u);
 
+// Initialize userdata config from build defines
+// Implemented in nss.c
+void userdata_init(userdata_t *u);
+
+/** Read only configuration statements. */
+void userdata_config(FILE* mdns_allow_file, userdata_t *u);
 #endif

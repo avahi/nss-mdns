@@ -66,4 +66,10 @@ enum nss_status _nss_mdns_gethostbyaddr_r(const void*, int, int,
                                           struct hostent*, char*, size_t, int*,
                                           int*);
 
+typedef struct {
+    int minimal;
+    int ipv4_only;
+    int ipv6_only;
+} nss_mdns_config_t;
+
 #endif

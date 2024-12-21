@@ -21,7 +21,9 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 #include <config.h>
 #endif
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <netdb.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -133,14 +135,30 @@ static int gethostbyX(const char* node) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        fprintf(stderr,
-                "Requires 1 argument: either a host or numeric address\n");
-        return 1;
+    char hostname[256] = "";
+    char *h;
+
+    if (argc >= 2) {
+	strncpy(hostname, argv[1], sizeof(hostname)-1);
+    } else {
+        /* Use $HOSTNAME.local by default, if we know the hostname.
+         * Should work on normal Linux system with running avahi-daemon. */
+        h = getenv("HOSTNAME");
+        if (h) {
+            strncpy(hostname, h, sizeof(hostname)-1);
+	    h = strchr(hostname, '.');
+	    if (h)
+                *h = '\0';
+            strncat(hostname, ".local", sizeof(hostname)-1);
+        } else {
+            fprintf(stderr,
+                    "Requires 1 argument: either a host or numeric address\n");
+            return 1;
+        }
     }
-    const char* node = argv[1];
-    gethostbyX(node);
+
+    gethostbyX(hostname);
     fprintf(stderr, "\n\n");
-    gai(node);
+    gai(hostname);
     return 0;
 }

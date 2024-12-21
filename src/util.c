@@ -32,6 +32,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 
 #include "util.h"
 
+typedef enum {
+    LR_OK = 0,
+    LR_BREAK,
+    LR_CONTINUE,
+} loop_result_t;
+
 int set_cloexec(int fd) {
     int n;
     assert(fd >= 0);
@@ -45,21 +51,22 @@ int set_cloexec(int fd) {
     return fcntl(fd, F_SETFD, n | FD_CLOEXEC);
 }
 
-int ends_with(const char* name, const char* suffix) {
-    size_t ln, ls;
+int ends_with(const char* name, size_t namelen,
+                     const char* suffix, size_t slen) {
     assert(name);
     assert(suffix);
 
-    if ((ls = strlen(suffix)) > (ln = strlen(name)))
+    if (slen > namelen)
         return 0;
 
-    return strcasecmp(name + ln - ls, suffix) == 0;
+    return strcasecmp(name + namelen - slen, suffix) == 0;
 }
 
 use_name_result_t verify_name_allowed_with_soa(const char* name,
                                                FILE* mdns_allow_file,
+                                               userdata_t *u,
                                                test_local_soa_t test) {
-    switch (verify_name_allowed(name, mdns_allow_file)) {
+    switch (verify_name_allowed(name, mdns_allow_file, u)) {
     case VERIFY_NAME_RESULT_NOT_ALLOWED:
         return USE_NAME_RESULT_SKIP;
     case VERIFY_NAME_RESULT_ALLOWED:
@@ -77,51 +84,104 @@ use_name_result_t verify_name_allowed_with_soa(const char* name,
     }
 }
 
+static verify_name_result_t verify_name_minimal(const char *name, size_t namelen) {
+    if ((ends_with(name, namelen, ".local", 6) ||
+         ends_with(name, namelen, ".local.", 7)) &&
+        (label_count(name, namelen) == 2))
+        return VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA;
+    else
+        return VERIFY_NAME_RESULT_NOT_ALLOWED;
+}
+
+static loop_result_t _verify_read_line(char *ln, size_t lnlen,
+                         userdata_t *u,
+                         FILE *file) {
+    if (!fgets(ln, lnlen, file))
+        return LR_BREAK;
+
+    ln[strcspn(ln, "#\t\n\r ")] = 0;
+
+    if (ln[0] == 0)
+        return LR_CONTINUE;
+
+    if (ln[0] == '%') {
+        if (strcmp(ln, "%minimal") == 0)
+            u->minimal = 1;
+        /* If multiple statements are present, latest wins. */
+        else if (strcmp(ln, "%ipv4") == 0)
+            u->ipv4_only = 1;
+        else if (strcmp(ln, "%ipv6") == 0)
+            u->ipv6_only = 1;
+        else if (strcmp(ln, "%any") == 0)
+            u->ipv4_only = u->ipv6_only = 0;
+        return LR_CONTINUE;
+    }
+    return LR_OK;
+}
+
 verify_name_result_t verify_name_allowed(const char* name,
-                                         FILE* mdns_allow_file) {
+                                         FILE* mdns_allow_file,
+                                         userdata_t *u) {
+    size_t namelen;
+
     assert(name);
+    assert(u);
+    namelen = strlen(name);
 
     if (mdns_allow_file) {
         int valid = 0;
+        size_t slen;
+        char ln[129];
 
         while (!feof(mdns_allow_file)) {
-            char ln[128], ln2[129], *t;
+            loop_result_t r;
 
-            if (!fgets(ln, sizeof(ln), mdns_allow_file))
-                break;
-
-            ln[strcspn(ln, "#\t\n\r ")] = 0;
-
-            if (ln[0] == 0)
-                continue;
+            r = _verify_read_line(ln, sizeof(ln)-1, u, mdns_allow_file);
+            if (r == LR_BREAK)
+                    break;
+            else if (r == LR_CONTINUE)
+                    continue;
 
             if (strcmp(ln, "*") == 0) {
                 valid = 1;
                 break;
             }
 
+            slen = strlen(ln);
             if (ln[0] != '.')
-                snprintf(t = ln2, sizeof(ln2), ".%s", ln);
-            else
-                t = ln;
+                memmove(ln+1, ln, slen+1);
 
-            if (ends_with(name, t)) {
+            if (ends_with(name, namelen, ln, slen)) {
                 valid = 1;
                 break;
             }
         }
+
         if (valid)
             return VERIFY_NAME_RESULT_ALLOWED;
+        else if (u->minimal)
+            return verify_name_minimal(name, namelen);
         else
             return VERIFY_NAME_RESULT_NOT_ALLOWED;
     } else {
-        if ((ends_with(name, ".local") || ends_with(name, ".local.")) &&
-            (label_count(name) == 2))
-            return VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA;
-        else
-            return VERIFY_NAME_RESULT_NOT_ALLOWED;
+        return verify_name_minimal(name, namelen);
     }
 }
+
+void userdata_config(FILE* mdns_allow_file, userdata_t *u) {
+    loop_result_t r;
+    char ln[128];
+    if (!mdns_allow_file) {
+        u->minimal = 1;
+        return;
+    }
+    while (!feof(mdns_allow_file)) {
+        r = _verify_read_line(ln, sizeof(ln), u, mdns_allow_file);
+        if (r == LR_BREAK)
+            break;
+    }
+}
+
 
 int local_soa(void) {
     /* FreeBSD requires the state to be zeroed before calling res_ninit() */
@@ -140,16 +200,17 @@ int local_soa(void) {
     return result > 0;
 }
 
-int label_count(const char* name) {
+int label_count(const char* name, size_t len) {
     // Start with single label.
     int count = 1;
-    size_t i, len;
+    size_t i;
     assert(name);
+    if (len > 0)
+        len--;
 
-    len = strlen(name);
     // Count all dots not in the last place.
     for (i = 0; i < len; i++) {
-        if ((name[i] == '.') && (i != (len - 1)))
+        if (name[i] == '.')
             count++;
     }
 
@@ -335,3 +396,21 @@ void append_address_to_userdata(const query_address_result_t* result,
     memcpy(&(u->result[u->count]), result, sizeof(*result));
     u->count++;
 }
+
+/** Initializes defaults from build-time defines.
+ *
+ * It set minimal from libnss_mdns_minimal plugin etc.
+ */
+void userdata_init(userdata_t *u) {
+    memset(u, 0, sizeof(*u));
+#ifdef NSS_IPV4_ONLY
+    u->ipv4_only = 1;
+#endif
+#if NSS_IPV6_ONLY
+    u->ipv6_only = 1;
+#endif
+#ifdef MDNS_MINIMAL
+    u->minimal = 1;
+#endif
+}
+

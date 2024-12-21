@@ -31,43 +31,46 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 // Only 2-label names are allowed.
 // SOA check is required.
 START_TEST(test_verify_name_allowed_minimal) {
-    ck_assert_int_eq(verify_name_allowed("example.local", NULL),
+    userdata_t u;
+    userdata_init(&u);
+
+    ck_assert_int_eq(verify_name_allowed("example.local", NULL, &u),
                      VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA);
-    ck_assert_int_eq(verify_name_allowed("example.local.", NULL),
+    ck_assert_int_eq(verify_name_allowed("example.local.", NULL, &u),
                      VERIFY_NAME_RESULT_ALLOWED_IF_NO_LOCAL_SOA);
-    ck_assert_int_eq(verify_name_allowed("com.example.local", NULL),
+    ck_assert_int_eq(verify_name_allowed("com.example.local", NULL, &u),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(verify_name_allowed("com.example.local.", NULL),
+    ck_assert_int_eq(verify_name_allowed("com.example.local.", NULL, &u),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(verify_name_allowed("example.com", NULL),
+    ck_assert_int_eq(verify_name_allowed("example.com", NULL, &u),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(verify_name_allowed("example.com.", NULL),
+    ck_assert_int_eq(verify_name_allowed("example.com.", NULL, &u),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(verify_name_allowed("example.local.com", NULL),
+    ck_assert_int_eq(verify_name_allowed("example.local.com", NULL, &u),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(verify_name_allowed("example.local.com.", NULL),
+    ck_assert_int_eq(verify_name_allowed("example.local.com.", NULL, &u),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(verify_name_allowed("", NULL),
+    ck_assert_int_eq(verify_name_allowed("", NULL, &u),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
-    ck_assert_int_eq(verify_name_allowed(".", NULL),
+    ck_assert_int_eq(verify_name_allowed(".", NULL, &u),
                      VERIFY_NAME_RESULT_NOT_ALLOWED);
 
-    ck_assert_int_eq(verify_name_allowed_with_soa(".", NULL, TEST_LOCAL_SOA_YES),
+    ck_assert_int_eq(verify_name_allowed_with_soa(".", NULL, &u, TEST_LOCAL_SOA_YES),
                      USE_NAME_RESULT_SKIP);
-    ck_assert_int_eq(verify_name_allowed_with_soa(".", NULL, TEST_LOCAL_SOA_NO),
+    ck_assert_int_eq(verify_name_allowed_with_soa(".", NULL, &u, TEST_LOCAL_SOA_NO),
                      USE_NAME_RESULT_SKIP);
-    ck_assert_int_eq(verify_name_allowed_with_soa(".", NULL, TEST_LOCAL_SOA_AUTO),
+    ck_assert_int_eq(verify_name_allowed_with_soa(".", NULL, &u, TEST_LOCAL_SOA_AUTO),
                      USE_NAME_RESULT_SKIP);
     ck_assert_int_eq(verify_name_allowed_with_soa("example3.sub.local",
-                         NULL, TEST_LOCAL_SOA_YES), USE_NAME_RESULT_SKIP);
+                         NULL, &u, TEST_LOCAL_SOA_YES), USE_NAME_RESULT_SKIP);
     ck_assert_int_eq(verify_name_allowed_with_soa("example4.sub.local",
-                         NULL, TEST_LOCAL_SOA_NO), USE_NAME_RESULT_SKIP);
+                         NULL, &u, TEST_LOCAL_SOA_NO), USE_NAME_RESULT_SKIP);
     ck_assert_int_eq(verify_name_allowed_with_soa("example4.sub.local",
-                         NULL, TEST_LOCAL_SOA_AUTO), USE_NAME_RESULT_SKIP);
+                         NULL, &u, TEST_LOCAL_SOA_AUTO), USE_NAME_RESULT_SKIP);
     ck_assert_int_eq(verify_name_allowed_with_soa("example1.local",
-                         NULL, TEST_LOCAL_SOA_YES), USE_NAME_RESULT_OPTIONAL);
+                         NULL, &u, TEST_LOCAL_SOA_YES), USE_NAME_RESULT_OPTIONAL);
     ck_assert_int_eq(verify_name_allowed_with_soa("example2.local",
-                         NULL, TEST_LOCAL_SOA_NO), USE_NAME_RESULT_AUTHORITATIVE);
+                         NULL, &u, TEST_LOCAL_SOA_NO), USE_NAME_RESULT_AUTHORITATIVE);
     /* TEST_LOCAL_SOA_AUTO would test actual DNS on host, skip that. */
 }
 END_TEST
@@ -76,7 +79,11 @@ END_TEST
 static int verify_name_allowed_from_string(const char* name,
                                            const char* file_contents) {
     FILE* f = fmemopen((void*)file_contents, strlen(file_contents), "r");
-    int result = verify_name_allowed(name, f);
+    userdata_t u;
+    int result;
+
+    userdata_init(&u);
+    result = verify_name_allowed(name, f, &u);
     fclose(f);
     return result;
 }
@@ -347,33 +354,41 @@ START_TEST(test_verify_name_allowed_com_and_local) {
 }
 END_TEST
 
+static int t_ends_with(const char *h, const char *suffix) {
+    return ends_with(h, strlen(h), suffix, strlen(suffix));
+}
+
 // Tests ends_with.
 START_TEST(test_ends_with) {
-    ck_assert(ends_with("", ""));
-    ck_assert(!ends_with("", " "));
-    ck_assert(!ends_with("", "z"));
-    ck_assert(ends_with("z", ""));
-    ck_assert(ends_with("z", "z"));
-    ck_assert(!ends_with("z", "zz"));
-    ck_assert(ends_with("example.local", ".local"));
-    ck_assert(ends_with("example.local.", ".local."));
-    ck_assert(!ends_with("example.local.", ".local"));
-    ck_assert(!ends_with("example.local.", ".local"));
+    ck_assert(t_ends_with("", ""));
+    ck_assert(!t_ends_with("", " "));
+    ck_assert(!t_ends_with("", "z"));
+    ck_assert(t_ends_with("z", ""));
+    ck_assert(t_ends_with("z", "z"));
+    ck_assert(!t_ends_with("z", "zz"));
+    ck_assert(t_ends_with("example.local", ".local"));
+    ck_assert(t_ends_with("example.local.", ".local."));
+    ck_assert(!t_ends_with("example.local.", ".local"));
+    ck_assert(!t_ends_with("example.local.", ".local"));
 }
 END_TEST
 
+static int t_label_count(const char *h) {
+    return label_count(h, strlen(h));
+}
+
 // Tests label_count.
 START_TEST(test_label_count) {
-    ck_assert_int_eq(label_count(""), 1);
-    ck_assert_int_eq(label_count("."), 1);
-    ck_assert_int_eq(label_count("local"), 1);
-    ck_assert_int_eq(label_count("local."), 1);
-    ck_assert_int_eq(label_count("foo.local"), 2);
-    ck_assert_int_eq(label_count("foo.local."), 2);
-    ck_assert_int_eq(label_count("bar.foo.local"), 3);
-    ck_assert_int_eq(label_count("bar.foo.local."), 3);
-    ck_assert_int_eq(label_count("my-foo.local"), 2);
-    ck_assert_int_eq(label_count("my-foo.local."), 2);
+    ck_assert_int_eq(t_label_count(""), 1);
+    ck_assert_int_eq(t_label_count("."), 1);
+    ck_assert_int_eq(t_label_count("local"), 1);
+    ck_assert_int_eq(t_label_count("local."), 1);
+    ck_assert_int_eq(t_label_count("foo.local"), 2);
+    ck_assert_int_eq(t_label_count("foo.local."), 2);
+    ck_assert_int_eq(t_label_count("bar.foo.local"), 3);
+    ck_assert_int_eq(t_label_count("bar.foo.local."), 3);
+    ck_assert_int_eq(t_label_count("my-foo.local"), 2);
+    ck_assert_int_eq(t_label_count("my-foo.local."), 2);
 }
 END_TEST
 
