@@ -10,6 +10,9 @@ Source0: %{url}/releases/download/v%{version}/%{name}-%{version}.tar.gz
 BuildRequires: make
 BuildRequires: gcc
 BuildRequires: pkgconfig(check)
+BuildRequires: autoconf
+BuildRequires: automake
+BuildRequires: libtool
 Requires: avahi
 Requires(preun,posttrans): authselect
 
@@ -28,6 +31,7 @@ the local host name via mDNS (e.g. Avahi).
 %autosetup -p1
 
 %build
+autoreconf -fiv
 %configure
 %make_build
 
