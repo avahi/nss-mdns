@@ -1,0 +1,14 @@
+NSSMDNS_0 {
+global:
+
+#include "nss.h"
+
+_nss_mdns_gethostbyaddr_r;
+_nss_mdns_gethostbyname2_r;
+_nss_mdns_gethostbyname3_r;
+_nss_mdns_gethostbyname4_r;
+_nss_mdns_gethostbyname_r;
+
+local:
+*;
+};
