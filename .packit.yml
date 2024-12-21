@@ -1,0 +1,29 @@
+---
+specfile_path: pkg/rpm-fedora/nss-mdns.spec
+files_to_sync:
+  - .packit.yml
+  - src: pkg/rpm-fedora/nss-mdns.spec
+    dest: nss-mdns.spec
+upstream_package_name: nss-mdns
+downstream_package_name: nss-mdns
+upstream_tag_template: "v{version}"
+srpm_build_deps: []
+csmock_args: --cppcheck-add-flag=--enable=style
+
+jobs:
+- job: copr_build
+  trigger: pull_request
+  targets:
+  - fedora-all-aarch64
+  - fedora-all-i386
+  - fedora-all-ppc64le
+  - fedora-all-s390x
+  - fedora-all-x86_64
+- job: copr_build
+  trigger: commit
+  targets:
+  - fedora-all-aarch64
+  - fedora-all-i386
+  - fedora-all-ppc64le
+  - fedora-all-s390x
+  - fedora-all-x86_64
