@@ -78,14 +78,17 @@ addresses via mDNS, most people will want to use
 `libnss_mdns.so.2` or `libnss_mdns6.so.2` in such a
 situation causes long timeouts when resolving hosts since most modern
 Unix/Linux applications check for IPv6 addresses first, followed by a
-lookup for IPv4.
+lookup for IPv4. When these plugins cannot open mdns.allow config file,
+they will behave like minimal version below.
 
 `libnss_mdns{4,6,}_minimal.so` (new in version 0.8) is mostly
 identical to the versions without `_minimal`. However, they differ in
 one way. The minimal versions will always deny to resolve host names
 that don't end in `.local` or addresses that aren't in the range
 `169.254.x.x` (the range used by
-[IPV4LL/APIPA/RFC3927](http://files.zeroconf.org/rfc3927.txt).)
+[IPV4LL/APIPA/RFC3927](https://www.rfc-editor.org/rfc/rfc3927)) or
+`fe80::/10`
+([IPv6 link-local](https://www.rfc-editor.org/rfc/rfc4291#section-2.5.6)).
 Combining the `_minimal` and the normal NSS modules allows us to make
 mDNS authoritative for Zeroconf host names and addresses (and thus
 creating no extra burden on DNS servers with always failing requests)
