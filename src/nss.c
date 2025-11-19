@@ -36,21 +36,6 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 #include "util.h"
 #include "nss.h"
 
-static avahi_resolve_result_t do_avahi_resolve_name(int af, const char* name,
-                                                    userdata_t* userdata) {
-    query_address_result_t address_result;
-    switch (avahi_resolve_name(af, name, &address_result)) {
-    case AVAHI_RESOLVE_RESULT_SUCCESS:
-        append_address_to_userdata(&address_result, userdata);
-        return AVAHI_RESOLVE_RESULT_SUCCESS;
-    case AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND:
-        return AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND;
-    default:
-        // Something went wrong, just fail.
-        return AVAHI_RESOLVE_RESULT_UNAVAIL;
-    }
-}
-
 enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
                                              userdata_t* u, int* errnop,
                                              int* h_errnop) {

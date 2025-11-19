@@ -42,6 +42,18 @@ int main(int argc, char* argv[]) {
     else
         printf("AF_UNSPEC: failed (%i).\n", r);
 
+    userdata_t u;
+    u.count = 0;
+    if ((r = do_avahi_resolve_name(AF_UNSPEC, argc >= 2
+                                   ? argv[1] : "cocaine.local", &u)) == 0) {
+        printf("AF_UNSPEC (count): %d\n", u.count);
+        for (int i = 0; i < u.count; i++) {
+            printf("AF_UNSPEC (list): %s\n", inet_ntop(
+                   u.result[i].af, &u.result[i].address, t, sizeof(t)));
+        }
+    } else
+        printf("AF_UNSPEC (list): failed (%i).\n", r);
+
     if ((r = avahi_resolve_address(AF_INET, &(result.address.ipv4), t,
                                    sizeof(t))) == 0)
         printf("REVERSE: %s\n", t);

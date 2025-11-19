@@ -114,11 +114,12 @@ avahi_resolve_name_with_socket_end(FILE* f, int af,
     return AVAHI_RESOLVE_RESULT_SUCCESS;
 }
 
-avahi_resolve_result_t avahi_resolve_name(int af, const char* name,
-                                          query_address_result_t* result) {
+avahi_resolve_result_t do_avahi_resolve_name(int af, const char* name,
+                                             userdata_t* userdata) {
     FILE* ipv4 = NULL;
     FILE* ipv6 = NULL;
     avahi_resolve_result_t ret = AVAHI_RESOLVE_RESULT_UNAVAIL;
+    query_address_result_t result_buf;
     if (af != AF_INET && af != AF_INET6 && af != AF_UNSPEC) {
         return AVAHI_RESOLVE_RESULT_UNAVAIL;
     }
@@ -138,28 +139,57 @@ avahi_resolve_result_t avahi_resolve_name(int af, const char* name,
         avahi_resolve_name_with_socket_begin(ipv6, AF_INET6, name);
     }
 
-    if (af == AF_UNSPEC) {
-        fd_set readfds;
-        FD_ZERO(&readfds);
-        FD_SET(fileno(ipv4), &readfds);
-        FD_SET(fileno(ipv6), &readfds);
-        select(MAX(fileno(ipv4), fileno(ipv6)) + 1, &readfds, NULL, NULL, NULL);
-        if (FD_ISSET(fileno(ipv6), &readfds)) {
-            fclose(ipv4);
-            ipv4 = NULL;
+    if (ipv4) {
+        ret = avahi_resolve_name_with_socket_end(ipv4, AF_INET, &result_buf);
+        switch (ret) {
+        case AVAHI_RESOLVE_RESULT_SUCCESS:
+            append_address_to_userdata(&result_buf, userdata);
+            break;
+        case AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND:
+            break;
+        default:
+            goto err;
+        }
+    }
+    if (ipv6) {
+        ret = avahi_resolve_name_with_socket_end(ipv6, AF_INET6, &result_buf);
+        switch (ret) {
+        case AVAHI_RESOLVE_RESULT_SUCCESS:
+            append_address_to_userdata(&result_buf, userdata);
+            break;
+        case AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND:
+            break;
+        default:
+            goto err;
         }
     }
 
-    ret = avahi_resolve_name_with_socket_end(
-        ipv4 ? ipv4 : ipv6, ipv4 ? AF_INET : AF_INET6, result);
-
-    if (ipv6) {
-        fclose(ipv6);
-    }
 err:
     if (ipv4) {
         fclose(ipv4);
     }
+    if (ipv6) {
+        fclose(ipv6);
+    }
+    return userdata->count > 0 ? AVAHI_RESOLVE_RESULT_SUCCESS : ret;
+}
+
+avahi_resolve_result_t avahi_resolve_name(int af, const char* name,
+                                          query_address_result_t* result) {
+    userdata_t u;
+    u.count = 0;
+    avahi_resolve_result_t ret = do_avahi_resolve_name(af, name, &u);
+    if (ret != AVAHI_RESOLVE_RESULT_SUCCESS) {
+        if (ret != AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND) {
+        // Something went wrong, just fail.
+            ret = AVAHI_RESOLVE_RESULT_UNAVAIL;
+        }
+        return ret;
+    }
+    if (u.count == 0) {
+        ret = AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND;
+    }
+    memcpy(result, &u.result[0], sizeof(query_address_result_t));
     return ret;
 }
 
