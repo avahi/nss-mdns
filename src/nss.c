@@ -38,47 +38,16 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 
 static avahi_resolve_result_t do_avahi_resolve_name(int af, const char* name,
                                                     userdata_t* userdata) {
-    bool ipv4_found = false;
-    bool ipv6_found = false;
-
-    if (af == AF_INET || af == AF_UNSPEC) {
-        query_address_result_t address_result;
-        switch (avahi_resolve_name(AF_INET, name, &address_result)) {
-        case AVAHI_RESOLVE_RESULT_SUCCESS:
-            append_address_to_userdata(&address_result, userdata);
-            ipv4_found = true;
-            break;
-
-        case AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND:
-            break;
-
-        case AVAHI_RESOLVE_RESULT_UNAVAIL:
-            // Something went wrong, just fail.
-            return AVAHI_RESOLVE_RESULT_UNAVAIL;
-        }
-    }
-
-    if (af == AF_INET6 || af == AF_UNSPEC) {
-        query_address_result_t address_result;
-        switch (avahi_resolve_name(AF_INET6, name, &address_result)) {
-        case AVAHI_RESOLVE_RESULT_SUCCESS:
-            append_address_to_userdata(&address_result, userdata);
-            ipv6_found = true;
-            break;
-
-        case AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND:
-            break;
-
-        case AVAHI_RESOLVE_RESULT_UNAVAIL:
-            // Something went wrong, just fail.
-            return AVAHI_RESOLVE_RESULT_UNAVAIL;
-        }
-    }
-
-    if (ipv4_found || ipv6_found) {
+    query_address_result_t address_result;
+    switch (avahi_resolve_name(af, name, &address_result)) {
+    case AVAHI_RESOLVE_RESULT_SUCCESS:
+        append_address_to_userdata(&address_result, userdata);
         return AVAHI_RESOLVE_RESULT_SUCCESS;
-    } else {
+    case AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND:
         return AVAHI_RESOLVE_RESULT_HOST_NOT_FOUND;
+    default:
+        // Something went wrong, just fail.
+        return AVAHI_RESOLVE_RESULT_UNAVAIL;
     }
 }
 

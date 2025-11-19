@@ -72,7 +72,7 @@ avahi_resolve_name_with_socket(FILE* f, int af, const char* name,
     char* p;
     char ln[256];
 
-    fprintf(f, "RESOLVE-HOSTNAME%s %s\n", af == AF_INET ? "-IPV4" : "-IPV6",
+    fprintf(f, "RESOLVE-HOSTNAME%s %s\n", af == AF_UNSPEC ? "" : af == AF_INET ? "-IPV4" : "-IPV6",
             name);
     fflush(f);
 
@@ -114,7 +114,7 @@ avahi_resolve_name_with_socket(FILE* f, int af, const char* name,
 
 avahi_resolve_result_t avahi_resolve_name(int af, const char* name,
                                           query_address_result_t* result) {
-    if (af != AF_INET && af != AF_INET6) {
+    if (af != AF_INET && af != AF_INET6 && af != AF_UNSPEC) {
         return AVAHI_RESOLVE_RESULT_UNAVAIL;
     }
 
