@@ -66,15 +66,17 @@ fail:
     return NULL;
 }
 
+static void
+avahi_resolve_name_with_socket_begin(FILE* f, int af, const char* name) {
+    fprintf(f, "RESOLVE-HOSTNAME%s %s\n", af == AF_INET ? "-IPV4" : "-IPV6", name);
+    fflush(f);
+}
+
 static avahi_resolve_result_t
-avahi_resolve_name_with_socket(FILE* f, int af, const char* name,
-                               query_address_result_t* result) {
+avahi_resolve_name_with_socket_end(FILE* f, int af,
+                                   query_address_result_t* result) {
     char* p;
     char ln[256];
-
-    fprintf(f, "RESOLVE-HOSTNAME%s %s\n", af == AF_UNSPEC ? "" : af == AF_INET ? "-IPV4" : "-IPV6",
-            name);
-    fflush(f);
 
     if (!(fgets(ln, sizeof(ln), f))) {
         return AVAHI_RESOLVE_RESULT_UNAVAIL;
@@ -114,18 +116,50 @@ avahi_resolve_name_with_socket(FILE* f, int af, const char* name,
 
 avahi_resolve_result_t avahi_resolve_name(int af, const char* name,
                                           query_address_result_t* result) {
+    FILE* ipv4 = NULL;
+    FILE* ipv6 = NULL;
+    avahi_resolve_result_t ret = AVAHI_RESOLVE_RESULT_UNAVAIL;
     if (af != AF_INET && af != AF_INET6 && af != AF_UNSPEC) {
         return AVAHI_RESOLVE_RESULT_UNAVAIL;
     }
 
-    FILE* f = open_socket();
-    if (!f) {
-        return AVAHI_RESOLVE_RESULT_UNAVAIL;
+    if (af != AF_INET6) {
+        ipv4 = open_socket();
+        if (!ipv4) {
+            goto err;
+        }
+        avahi_resolve_name_with_socket_begin(ipv4, AF_INET, name);
+    }
+    if (af != AF_INET) {
+        ipv6 = open_socket();
+        if (!ipv6) {
+            goto err;
+        }
+        avahi_resolve_name_with_socket_begin(ipv6, AF_INET6, name);
     }
 
-    avahi_resolve_result_t ret =
-        avahi_resolve_name_with_socket(f, af, name, result);
-    fclose(f);
+    if (af == AF_UNSPEC) {
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(fileno(ipv4), &readfds);
+        FD_SET(fileno(ipv6), &readfds);
+        select(MAX(fileno(ipv4), fileno(ipv6)) + 1, &readfds, NULL, NULL, NULL);
+        if (FD_ISSET(fileno(ipv6), &readfds)) {
+            fclose(ipv4);
+            ipv4 = NULL;
+        }
+    }
+
+    ret = avahi_resolve_name_with_socket_end(
+        ipv4 ? ipv4 : ipv6, ipv4 ? AF_INET : AF_INET6, result);
+
+    if (ipv6) {
+        fclose(ipv6);
+    }
+err:
+    if (ipv4) {
+        fclose(ipv4);
+    }
     return ret;
 }
 

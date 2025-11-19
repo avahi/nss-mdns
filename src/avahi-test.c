@@ -35,6 +35,13 @@ int main(int argc, char* argv[]) {
     else
         printf("AF_INET: failed (%i).\n", r);
 
+    if ((r = avahi_resolve_name(AF_UNSPEC, argc >= 2 ? argv[1] : "cocaine.local",
+                                &result)) == 0)
+        printf("AF_UNSPEC: %s\n",
+               inet_ntop(result.af, &result.address, t, sizeof(t)));
+    else
+        printf("AF_UNSPEC: failed (%i).\n", r);
+
     if ((r = avahi_resolve_address(AF_INET, &(result.address.ipv4), t,
                                    sizeof(t))) == 0)
         printf("REVERSE: %s\n", t);
