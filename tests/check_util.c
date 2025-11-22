@@ -75,7 +75,11 @@ END_TEST
 // Calls verify_name_allowed by first creating a memfile to read from.
 static int verify_name_allowed_from_string(const char* name,
                                            const char* file_contents) {
-    FILE* f = fmemopen((void*)file_contents, strlen(file_contents), "r");
+    // On some systems it is not allowed to pass an empty string as
+    // fmemopen's backing buffer. Open /dev/null in this case.
+    FILE* f = strlen(file_contents) > 0
+            ? fmemopen((void*)file_contents, strlen(file_contents), "r")
+            : fopen("/dev/null", "r");
     int result = verify_name_allowed(name, f);
     fclose(f);
     return result;
