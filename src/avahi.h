@@ -54,6 +54,9 @@ typedef enum {
     AVAHI_RESOLVE_RESULT_UNAVAIL
 } avahi_resolve_result_t;
 
+avahi_resolve_result_t do_avahi_resolve_name(int af, const char* name,
+                                             userdata_t* userdata);
+
 avahi_resolve_result_t avahi_resolve_name(int af, const char* name,
                                           query_address_result_t* result);
 
