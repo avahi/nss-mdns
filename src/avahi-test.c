@@ -29,17 +29,17 @@ int main(int argc, char* argv[]) {
     int r;
 
     if ((r = avahi_resolve_name(AF_INET, argc >= 2 ? argv[1] : "cocaine.local",
-                                &result)) == 0)
+                                &result)) == 0) {
         printf("AF_INET: %s\n",
                inet_ntop(AF_INET, &(result.address.ipv4), t, sizeof(t)));
-    else
-        printf("AF_INET: failed (%i).\n", r);
 
-    if ((r = avahi_resolve_address(AF_INET, &(result.address.ipv4), t,
-                                   sizeof(t))) == 0)
-        printf("REVERSE: %s\n", t);
-    else
-        printf("REVERSE: failed (%i).\n", r);
+        if ((r = avahi_resolve_address(AF_INET, &(result.address.ipv4), t,
+                                       sizeof(t))) == 0)
+            printf("REVERSE: %s\n", t);
+        else
+            printf("REVERSE: failed (%i).\n", r);
+    } else
+        printf("AF_INET: failed (%i).\n", r);
 
     if ((r = avahi_resolve_name(AF_INET6, argc >= 2 ? argv[1] : "cocaine.local",
                                 &result)) == 0)
