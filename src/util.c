@@ -136,7 +136,11 @@ int local_soa(void) {
         return 0;
     result =
         res_nquery(&state, "local", ns_c_in, ns_t_soa, answer, sizeof answer);
+#ifdef __FreeBSD__
+    res_ndestroy(&state);
+#else
     res_nclose(&state);
+#endif
     return result > 0;
 }
 
