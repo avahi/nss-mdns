@@ -57,9 +57,18 @@ int ends_with(const char* name, const char* suffix) {
 }
 
 use_name_result_t verify_name_allowed_with_soa(const char* name,
-                                               FILE* mdns_allow_file,
+                                               const char* mdns_allow_path,
                                                test_local_soa_t test) {
-    switch (verify_name_allowed(name, mdns_allow_file)) {
+    FILE* mdns_allow_file = NULL;
+    verify_name_result_t result;
+
+    if (mdns_allow_path && test == TEST_LOCAL_SOA_AUTO)
+	    mdns_allow_file = fopen(mdns_allow_path, "r");
+    result = verify_name_allowed(name, mdns_allow_file);
+    if (mdns_allow_file)
+	    fclose(mdns_allow_file);
+
+    switch (result) {
     case VERIFY_NAME_RESULT_NOT_ALLOWED:
         return USE_NAME_RESULT_SKIP;
     case VERIFY_NAME_RESULT_ALLOWED:

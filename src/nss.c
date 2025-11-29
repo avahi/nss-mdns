@@ -36,6 +36,13 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 #include "util.h"
 #include "nss.h"
 
+#ifdef MDNS_MINIMAL
+#ifdef MDNS_ALLOW_FILE
+#  undef MDNS_ALLOW_FILE
+#endif
+#define MDNS_ALLOW_FILE NULL
+#endif
+
 static avahi_resolve_result_t do_avahi_resolve_name(int af, const char* name,
                                                     userdata_t* userdata) {
     bool ipv4_found = false;
@@ -85,8 +92,6 @@ static avahi_resolve_result_t do_avahi_resolve_name(int af, const char* name,
 enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
                                              userdata_t* u, int* errnop,
                                              int* h_errnop) {
-
-    FILE* mdns_allow_file = NULL;
     use_name_result_t result;
 
 #ifdef NSS_IPV4_ONLY
@@ -116,16 +121,8 @@ enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
 
     u->count = 0;
 
-#ifndef MDNS_MINIMAL
-    mdns_allow_file = fopen(MDNS_ALLOW_FILE, "r");
-#endif
-    result = verify_name_allowed_with_soa(name, mdns_allow_file,
+    result = verify_name_allowed_with_soa(name, MDNS_ALLOW_FILE,
                                           TEST_LOCAL_SOA_AUTO);
-#ifndef MDNS_MINIMAL
-    if (mdns_allow_file)
-        fclose(mdns_allow_file);
-#endif
-
     if (result == USE_NAME_RESULT_SKIP) {
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
@@ -225,6 +222,23 @@ enum nss_status _nss_mdns_gethostbyname_r(const char* name,
                                       errnop, h_errnop);
 }
 
+/* Reverse addresses are not supported in config file.
+ * They just check if config is missing to enable minimal mode
+ * from non-minimal plugins. */
+static int avahi_is_file_present(const char *path) {
+    if (!path)
+	return 0;
+    return (access(path, R_OK) == 0);
+}
+
+static int avahi_is_not_link_local(const void *addr, int af) {
+    return
+	((af == AF_INET &&
+         ((ntohl(*(const uint32_t*)addr) & 0xFFFF0000UL) != 0xA9FE0000UL)) ||
+        (af == AF_INET6 && !(((const uint8_t*)addr)[0] == 0xFE &&
+                             (((const uint8_t*)addr)[1] >> 6) == 2)));
+}
+
 enum nss_status _nss_mdns_gethostbyaddr_r(const void* addr, int len, int af,
                                           struct hostent* result, char* buffer,
                                           size_t buflen, int* errnop,
@@ -251,17 +265,14 @@ enum nss_status _nss_mdns_gethostbyaddr_r(const void* addr, int len, int af,
         return NSS_STATUS_UNAVAIL;
     }
 
-#ifdef MDNS_MINIMAL
-    /* Only query for 169.254.0.0/16 IPv4 in minimal mode */
-    if ((af == AF_INET &&
-         ((ntohl(*(const uint32_t*)addr) & 0xFFFF0000UL) != 0xA9FE0000UL)) ||
-        (af == AF_INET6 && !(((const uint8_t*)addr)[0] == 0xFE &&
-                             (((const uint8_t*)addr)[1] >> 6) == 2))) {
+    /* Only query for 169.254.0.0/16 IPv4 in minimal mode.
+     * Assume minimal mode if the config file is missing. */
+    if (!avahi_is_file_present(MDNS_ALLOW_FILE) &&
+	    avahi_is_not_link_local(addr, af)) {
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_UNAVAIL;
     }
-#endif
 
     /* Lookup using Avahi */
     buffer_t buf;
