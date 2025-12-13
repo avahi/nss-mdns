@@ -1,0 +1,20 @@
+NAME MIDIOX16
+
+DESCRIPTION 'MIDIOX16 -- MIDI OX Utility'
+
+STUB 'WINSTUB.EXE'
+EXETYPE WINDOWS
+
+CODE MOVEABLE PRELOAD DISCARDABLE
+DATA MOVEABLE PRELOAD MULTIPLE
+
+HEAPSIZE  2000
+STACKSIZE 5000
+
+EXPORTS
+    WndProc           @1  
+    AboutDlgProc      @2
+    MDevDlgProc       @3
+    CtlPnl            @4
+    KeyboardDlgProc   @5
+    KeyboardHookProc  @6

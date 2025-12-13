@@ -1,0 +1,21 @@
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CLASSNAME           "MMMScroll"
+    IDS_FULLNAME            "MMMScroll Custom Control"
+    IDS_CREDITS             "Jamie's Version"
+    IDS_VERTICAL            "Vertical"
+    IDS_HORIZONTAL          "Horizontal"
+    IDS_MSS_VERTICAL        "MSS_VERTICAL | "
+    IDS_MSS_HORIZONTAL      "MSS_HORIZONTAL | "
+    IDS_MSS_TEXTHASRANGE    "MSS_TEXTHASRANGE | "
+    IDS_MSS_NOPEGSCROLL     "MSS_NOPEGSCROLL | "
+    IDS_MSS_INVERTRANGE     "MSS_INVERTRANGE | "
+    IDS_RANGEERROR          "Specified position is out of the range."
+END

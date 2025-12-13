@@ -1,0 +1,133 @@
+MIDI-OX 16
+Version 3.00
+DRAFT 07-JUN-96
+
+MIDI-OX 16 is a Windows 3.1+ program.  It displays incoming MIDI streams,
+and passes the data to a MIDI output driver or the MIDI Mapper.  The 
+program was originally included in the MS Windows 3.1 SDK (as MIDI Monitor), 
+but has been extensively modified.
+
+This ZIP file contains the source code for the current version of
+MIDIOX16, plus the executables.  It was built using MSVC 1.5, but
+other versions of MS compilers should work as well.  The code can
+also be compiled under WIN32 (using MSVC 4.x), by using conditional
+compilation.  The enclosed MAKEFILE builds the 16 bit version,
+MIDIOX32.MAK builds a 32 bit version.  We need to point out, however;
+the 32 bit version is not thunked, and can exhibit the full range
+of timing problems that non-thunked WIN32 MIDI programs will under
+Windows 95.  The binaries for the fully thunked 32 bit MIDI-OX 32
+will be released shortly, but probably not the source code.
+
+This document is a very brief overview of MIDIMON and how to install it.
+If you require more extensive information or have any questions you may
+contact the authors.  Bear in mind that we have somewhat limited resources 
+for support of freeware products though:
+
+----------------------------------------------------------------------------
+Jamie O'Connell 
+    Compuserve: 72662,1433 
+    msn: 	JamieOConnell@msn.com	
+    internet:	jamieo@user1.channel1.com
+
+Jerry Jorgenrud
+    Compuserve:	75060,1040
+----------------------------------------------------------------------------
+
+INSTALLATION
+
+In addition to the source code, this zip file contains:
+
+ MIDIOX16.EXE       The program
+ MIDIMCBK.DLL       Callback DLL
+ MOX16SRC.TXT       This file
+
+INSTALLATION
+
+To install the program, unzip the files to a directory.  The DLL file 
+must either be in the same directory as MIDIMON.EXE, the Windows System 
+directory, or in a directory named in the PATH environment variable. 
+
+Next, start Windows (unless it's already running), and click on the group 
+you want to put MIDIOX16 in.  Pull down File/New... (Main menu item: File, 
+submenu: New) and choose "Program Item".  A dialog box is displayed 
+containing 4 items.  The only essential one to fill in is "Command Line".
+You can type in the whole pathname (ex: C:\PATH\MIDIOX16.EXE where PATH is
+where you put the program), or you can choose "Browse" and graphically 
+find the program.  After you have entered the command line, click on OK, 
+and the icon will be added to the group.  You can then double click on the
+program icon to start it.  See the Windows 3.1 _User's Guide_, Chapter 3,
+"Creating a Program Item" if any of this is unclear.
+
+MIDI Drivers
+
+You can choose which MIDI drivers to monitor, by opening 
+Options/MIDI Devices... all installed MIDI drivers will be displayed 
+in 2 list boxes.  You may select any number of input devices, but
+only one output device (you can change the output device at any time).
+You can also choose the MIDI Mapper for the output device. 
+
+Control Panel
+
+The Control Panel is opened by choosing Options/Control Panel... It
+allows you to send MIDI events to both the display, and MIDI output.
+By using it you can send Patch changes, volume, pan etc. in real 
+time.  It is a non-modal dialog box, which means you can keep it open
+all the time the program is running.  If the "Auto Send Value" box
+is checked, the events are sent as soon as the value changes.  You can
+use the up and down arrow keys (as well as page-up and page-down) to 
+change the "Spin" controls (in addition to clicking on the up or down
+arrowheads).  The "Panic" button will send 128 note-offs on each MIDI
+channel, as well as _all notes off_ and _reset controllers_ on each
+channel -- this may take a few seconds to complete.
+
+Filters
+
+The filtering functions only affect the display unless the "Filter Actual
+Data" menu option is checked.  All input is passed to output.  Passing
+System Exclusive is now supported if the "Pass SysEx" option is checked.
+If an item on the menu is checked, it is filtered.  Active  sensing (FE) 
+and Realtime messages (F8) are filtered by default -- you can turn them 
+on by unchecking the menu.
+
+Display
+
+The Monitor Display shows a TimeStamp -- A value of "MIDIOX16" is used
+for events sent from the Control Panel; Port number -- the number 
+corresponds to the order of the MIDI Input devices; Status, Value1,
+and Value2 contain the actual hexadecimal MIDI values; Channel is 
+numbered between 1 and 16; Event shows a textual description of the
+MIDI Event.  For Note Events, the Note and Octave are displayed.  Which
+octave is displayed can be controlled by the Options/Middle C Octave 
+menu switch.
+
+Notes
+
+When the program is minimized to an icon, the icon will animate when
+MIDI data is received.  
+
+You can  temporarily release, and later re-attach,  MIDI devices from 
+the system menu, if you wish to use other programs which require MIDI 
+devices, without closing MIDIOX16.  
+
+There is a 'Stay on top' option in the system menu.  If selected, it will
+keep MIDIOX16 on top of other running programs.
+
+The current configuration is saved to MIDIOX16.INI in the application directory.  
+
+Any number of MIDIOX16 instances may be opened. All after the first do not
+connect MIDI devices, but open the MIDI Devices dialog box to allow you
+to connect different devices.
+
+We'll attempt to address any problems people run into.
+
+DISCLAIMER
+
+In the source code for MIDIMON, Microsoft corporation gives permission to 
+distribute the program or modified versions of the program as long as no 
+liability is incurred by Microsoft.  I extend that permission so you may 
+use and distribute this version of the program freely, as long as you 
+agree that Microsoft and Jamie O'Connell have no warranty obligations or 
+liability resulting from the use or misuse of MIDIOX16.
+
+-------------------------------------------------------------------------
+

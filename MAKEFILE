@@ -1,0 +1,149 @@
+##### Module Macro #####
+APPNAME    = midiox16
+APPSRCS    = $(APPNAME).c about.c circbuf.c display.c instdata.c syxbuf.c \
+             prefer.c ctlpnl.c spinedit.c filtdlg.c mstatus.c logfile.c \
+             debug.c piano.c file.c
+
+APPOBJS    =
+
+DLLNAME   = midimcbk
+DLLSRCS   = $(DLLNAME).c filter.c mscroll.c msinit.c ctldlg.c paint.c msapi.c debug.c
+
+DLLOBJS   = libentry.obj
+
+##### C7 Macro #####
+C7         = 1
+
+##### Library Macro #####
+APPLIBS    = libw mlibcew midimcbk mmsystem ctl3ds commdlg
+APPMOD     = -AM
+
+DLLLIBS    = libw mdllcew mmsystem
+DLLMOD     = -AMu
+
+##### Include Macro #####
+APPINCLS   = midimon.h circbuf.h display.h filter.h instdata.h syxbuf.h \
+              prefer.h spinedit.h $(DLLNAME).h logfile.h debug.h piano.h file.h
+DLLINCLS  = midimon.h $(DLLNAME).h instdata.h syxbuf.h circbuf.h filter.h \
+        mscroll.h mscrdll.h debug.h
+
+##### Resource Macro #####
+APPRCFILES = $(APPNAME).rc 
+DLLRCFILES = $(DLLNAME).rc
+
+##### DEBUG Defined #####
+#DEBUG   = 1
+!ifndef DEBUG
+DEBUG  = 0   
+!endif
+
+##### Build Option Macros #####
+!if $(DEBUG)
+DDEF    = -DDEBUG -D_DEBUG
+CLOPT   = -Zid -Od 
+MOPT    = -Zi
+LOPT    = /CO /LI /MAP
+!else
+DDEF    = -DNDEBUG
+CLOPT   = -Os 
+LOPT    =
+!endif
+
+##### General Macros #####
+DEF     = -DSTRICT
+
+##### Tool Macros #####
+ASM     = masm -Mx $(MOPT) $(DDEF) $(DEF)
+CC      = cl -nologo -c $(APPMOD) -G2s -Zp -W3 -WX $(CLOPT) $(DDEF) $(DEF) -Tp
+CC2     = cl -nologo -c $(DLLMOD) -G2s -Zp -W3 -WX $(CLOPT) $(DDEF) $(DEF) -Tp
+LINK    = link /NOD /NOE $(LOPT)
+RC      = rc $(DDEF) $(DEF)
+HC      = hc
+
+##### Inference Rules #####
+.c.obj:
+    $(CC) $*.c
+
+.asm.obj:
+    $(ASM) $*.asm;
+
+.rc.res:
+    $(RC) -r $*.rc
+
+##### Main (default) Target #####
+goal:  $(DLLNAME).lib $(APPNAME).exe
+
+##### Dependents For Goal and Command Line #####
+$(APPNAME).exe: $(APPSRCS:.c=.obj) $(APPNAME).def $(APPNAME).res $(DLLNAME).lib
+    $(LINK) @<<
+    $(APPSRCS:.c=.obj) $(APPOBJS),
+    $(APPNAME).exe,
+    $(APPNAME).map,
+    $(APPLIBS),
+    $(APPNAME).def
+<<
+    $(RC) -T $(APPNAME).res
+!if $(DEBUG)
+!if !$(C7)
+    cvpack -p $(APPNAME).exe
+!endif
+    mapsym $(APPNAME).map
+!endif
+
+
+$(DLLNAME).obj: $(DLLSRCS) $(DLLINCLS)
+    $(CC2) $*.c 
+    
+filter.obj : filter.c 
+    $(CC2) $*.c 
+    
+mscroll.obj : mscroll.c 
+    $(CC2) $*.c 
+
+msinit.obj : msinit.c 
+    $(CC2) $*.c 
+
+ctldlg.obj : ctldlg.c
+    $(CC2) $*.c 
+
+paint.obj : paint.c 
+    $(CC2) $*.c 
+
+msapi.obj : msapi.c  
+    $(CC2) $*.c 
+
+$(DLLNAME).dll: $(DLLSRCS:.c=.obj) $(DLLNAME).res $(DLLNAME).def
+    $(LINK) @<<
+    $(DLLSRCS:.c=.obj) $(DLLOBJS2),
+    $(DLLNAME).dll,
+    $(DLLNAME).map,
+    $(DLLLIBS),
+    $(DLLNAME).def
+<<
+    $(RC) -T $(DLLNAME).res $(DLLNAME).dll
+!if $(DEBUG)
+!if !$(C7)
+    cvpack -p $(DLLNAME).dll
+!endif
+    mapsym $(DLLNAME).map
+!endif
+
+$(DLLNAME).lib: $(DLLNAME).dll
+    implib $(DLLNAME).lib $(DLLNAME).def
+
+##### Dependents #####
+$(APPSRCS:.c=.obj): $(APPINCLS)
+$(APPNAME).res: $(APPINCLS) $(APPRCFILES)
+
+$(DLLSRCS:.c=.obj): $(DLLINCLS)
+$(DLLNAME).res: $(DLLINCLS) $(DLLRCFILES)
+
+##### Clean Directory #####
+clean:
+    -del *.obj
+    -del *.res
+    -del *.exe
+    -del *.map
+    -del *.sym
+    -del *.dll
+    -del *.lib
