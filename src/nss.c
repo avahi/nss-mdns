@@ -36,6 +36,12 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 #include "util.h"
 #include "nss.h"
 
+#ifdef NSS_IPV4_ONLY
+#define WANT_AF AF_INET
+#elif NSS_IPV6_ONLY
+#define WANT_AF AF_INET6
+#endif
+
 static avahi_resolve_result_t do_avahi_resolve_name(int af, const char* name,
                                                     userdata_t* userdata) {
     bool ipv4_found = false;
@@ -89,30 +95,25 @@ enum nss_status _nss_mdns_gethostbyname_impl(const char* name, int af,
     FILE* mdns_allow_file = NULL;
     use_name_result_t result;
 
-#ifdef NSS_IPV4_ONLY
+#ifdef WANT_AF
     if (af == AF_UNSPEC) {
-        af = AF_INET;
+        af = WANT_AF;
     }
-#endif
 
-#ifdef NSS_IPV6_ONLY
-    if (af == AF_UNSPEC) {
-        af = AF_INET6;
+    if (af != WANT_AF)
+    {
+        *errnop = EINVAL;
+        *h_errnop = NO_RECOVERY;
+        return NSS_STATUS_NOTFOUND;
     }
-#endif
-
-#ifdef NSS_IPV4_ONLY
-    if (af != AF_INET)
-#elif NSS_IPV6_ONLY
-    if (af != AF_INET6)
 #else
     if (af != AF_INET && af != AF_INET6 && af != AF_UNSPEC)
-#endif
     {
         *errnop = EINVAL;
         *h_errnop = NO_RECOVERY;
         return NSS_STATUS_UNAVAIL;
     }
+#endif
 
     u->count = 0;
 
@@ -191,8 +192,8 @@ enum nss_status _nss_mdns_gethostbyname3_r(const char* name, int af,
     // The interfaces for gethostbyname3_r and below do not actually support
     // returning results for more than one address family
     if (af == AF_UNSPEC) {
-#ifdef NSS_IPV6_ONLY
-        af = AF_INET6;
+#ifdef WANT_AF
+        af = WANT_AF;
 #else
         af = AF_INET;
 #endif
@@ -238,10 +239,8 @@ enum nss_status _nss_mdns_gethostbyaddr_r(const void* addr, int len, int af,
         af == AF_INET ? sizeof(ipv4_address_t) : sizeof(ipv6_address_t);
 
     if (len < (int)address_length ||
-#ifdef NSS_IPV4_ONLY
-        af != AF_INET
-#elif NSS_IPV6_ONLY
-        af != AF_INET6
+#ifdef WANT_AF
+        af != WANT_AF
 #else
         (af != AF_INET && af != AF_INET6)
 #endif
