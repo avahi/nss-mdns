@@ -136,6 +136,7 @@ avahi_resolve_address_with_socket(FILE* f, int af, const void* data, char* name,
     char a[256], ln[256];
 
     fprintf(f, "RESOLVE-ADDRESS %s\n", inet_ntop(af, data, a, sizeof(a)));
+    fflush(f);
 
     if (!(fgets(ln, sizeof(ln), f))) {
         return AVAHI_RESOLVE_RESULT_UNAVAIL;
