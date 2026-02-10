@@ -76,7 +76,7 @@ typedef enum {
 
 // Returns true if we should try to resolve the name with mDNS.
 //
-// If mdns_allow_file is NULL, then this implements the "local" SOA
+// If mdns_allow_path is NULL, then this implements the "local" SOA
 // check and two-label name checks similarly to the algorithm
 // described at https://support.apple.com/en-us/HT201275. This means
 // that if a unicast DNS server claims authority on "local", or if the
@@ -85,7 +85,7 @@ typedef enum {
 // The two heuristics described above are disabled if mdns_allow_file
 // is not NULL.
 use_name_result_t verify_name_allowed_with_soa(const char* name,
-                                               FILE* mdns_allow_file,
+                                               const char* mdns_allow_path,
                                                test_local_soa_t test);
 
 typedef enum {
