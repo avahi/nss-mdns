@@ -1,0 +1,635 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#include "ver.h"
+#include "midimon.h"
+#include "ctl3d.h"
+#include "mscrdll.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Log...",                     IDM_LOGFILE
+        MENUITEM "Send Syse&x",                 IDM_SYSEXFILE
+        MENUITEM "A&bout...",                   IDM_ABOUT
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Control Panel...",           IDM_CTLDLG
+        MENUITEM "MIDI Status...",              IDM_MSTATUS
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "MIDI &Filter...",             IDM_FILTERDLG
+        MENUITEM "&MIDI Devices...",            IDM_MDEVDLG
+        MENUITEM SEPARATOR
+        POPUP "Middle C Octave"
+        BEGIN
+            MENUITEM "3",                           IDM_OCT3
+            MENUITEM "4",                           IDM_OCT4
+            MENUITEM "5",                           IDM_OCT5
+            MENUITEM "6",                           IDM_OCT6
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Pass SysEx",                 IDM_PASSX
+        MENUITEM "&Keyboard",                   IDM_KYBD
+    END
+    MENUITEM "&Device!",                    IDM_DSDEVICE
+    MENUITEM "&Stop!",                      IDM_STARTSTOP
+    MENUITEM "&Clear!",                     IDM_CLEAR
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+ABOUT DIALOG DISCARDABLE  30, 50, 154, 53
+STYLE DS_LOCALEDIT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "About MIDI-OX"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "MIDI OX Utility",IDC_APPTITLE,34,9,50,8,NOT WS_GROUP
+    ICON            "MM1",1007,8,10,18,20
+    LTEXT           "Jamie O'Connell ",IDC_STATIC,34,27,55,8
+    LTEXT           "Version 3.00.01 Beta",ID_VERSTR,34,18,70,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDFRAME,5,4,103,44
+    PUSHBUTTON      "OK",IDOK,113,4,37,14
+    LTEXT           "Jerry Jorgenrud",IDC_STATIC,34,36,51,8
+END
+
+CTLPNL DIALOG DISCARDABLE  115, 65469, 173, 78
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Control Panel"
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        ID_EVENTBOX,12,20,83,92,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_GROUP | WS_TABSTOP
+    LTEXT           "C&hannel",IDC_STATIC,101,21,29,8,NOT WS_GROUP
+    EDITTEXT        ID_CHANNEL,133,19,19,12,ES_RIGHT
+    CONTROL         "1,16,1",ID_CHANSPIN,"MMMScroll",0x19,152,19,8,12
+    CONTROL         "&Auto Send Value",ID_AUTOSEND,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,36,76,12
+    LTEXT           "&Value",IDC_STATIC,101,38,24,8,NOT WS_GROUP
+    EDITTEXT        ID_VALUE,133,36,19,12,ES_RIGHT
+    CONTROL         "0,127,1",ID_VALSPIN,"MMMScroll",0x19,152,36,8,12
+    DEFPUSHBUTTON   "&Send",ID_SEND,121,60,38,14
+    PUSHBUTTON      "&Panic",ID_PANIC,67,60,39,14
+    PUSHBUTTON      "&Close",IDCANCEL,12,60,38,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDFRAME,8,6,156,48
+    LTEXT           "Controller Event",IDC_STATIC,12,11,82,8
+END
+
+MDEVDLG DIALOG DISCARDABLE  28, 24, 197, 153
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "MIDI Devices"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           "MIDI &Input(s)",IDC_STATIC,77,4,44,8
+    LISTBOX         ID_INLBOX,9,14,181,53,LBS_MULTIPLESEL | WS_VSCROLL | 
+                    WS_TABSTOP
+    CTEXT           "MIDI &Output",IDC_STATIC,77,67,41,8
+    LISTBOX         ID_OUTLBOX,10,78,180,53,WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "O&K",IDOK,10,135,38,14
+    DEFPUSHBUTTON   "&Cancel",IDCANCEL,77,135,41,14
+END
+
+FILTER DIALOG DISCARDABLE  0, 0, 158, 167
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Filter"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Place a checkmark to\nfilter an item:",IDC_STATIC,7,8,
+                    79,15
+    CONTROL         "&Note On",IDC_NOTEON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,31,43,10
+    CONTROL         "Note &Off",IDC_NOTEOFF,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,42,43,10
+    CONTROL         "&Key Aftertouch",IDC_POLYAFTERTOUCH,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,53,63,10
+    CONTROL         "&Control Change",IDC_CONTROLCHANGE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,64,65,10
+    CONTROL         "&Program Change",IDC_PROGRAMCHANGE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,75,69,10
+    CONTROL         "Channel &Aftertouch",IDC_CHANNELAFTERTOUCH,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,86,75,10
+    CONTROL         "Pitch &Bend",IDC_PITCHBEND,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,97,51,10
+    CONTROL         "&System Common",IDC_SYSTEMCOMMON,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,108,68,10
+    CONTROL         "System &Realtime",IDC_SYSTEMREALTIME,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,119,68,10
+    CONTROL         "&Active Sensing",IDC_ACTIVESENSE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,130,63,10
+    CONTROL         "&Filter Actual Data",IDC_FILTERDATA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,149,70,10
+    GROUPBOX        "Channels",IDC_STATIC,94,44,58,103
+    CONTROL         "1",IDC_FILTCHAN0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    98,56,20,10
+    CONTROL         "2",IDC_FILTCHAN1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    98,67,20,10
+    CONTROL         "3",IDC_FILTCHAN2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    98,78,20,10
+    CONTROL         "4",IDC_FILTCHAN3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    98,89,20,10
+    CONTROL         "5",IDC_FILTCHAN4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    98,100,20,10
+    CONTROL         "6",IDC_FILTCHAN5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    98,111,20,10
+    CONTROL         "7",IDC_FILTCHAN6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    98,122,20,10
+    CONTROL         "8",IDC_FILTCHAN7,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    98,133,20,10
+    CONTROL         "9",IDC_FILTCHAN8,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    121,56,20,10
+    CONTROL         "10",IDC_FILTCHAN9,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    121,67,24,10
+    CONTROL         "11",IDC_FILTCHAN10,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,121,79,24,10
+    CONTROL         "12",IDC_FILTCHAN11,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,121,90,24,10
+    CONTROL         "13",IDC_FILTCHAN12,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,121,101,24,10
+    CONTROL         "14",IDC_FILTCHAN13,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,121,112,24,10
+    CONTROL         "15",IDC_FILTCHAN14,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,121,123,24,10
+    CONTROL         "16",IDC_FILTCHAN15,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,121,134,24,10
+    DEFPUSHBUTTON   "OK",IDOK,100,8,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,100,23,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDFRAME,8,27,84,120
+END
+
+MSTATUS DIALOG DISCARDABLE  0, 0, 258, 231
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "MIDI Status"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_PATCH1,23,14,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "1",IDC_STATIC,8,15,10,8
+    LTEXT           "Chan",IDC_STATIC,5,1,18,8
+    LTEXT           "Patch",IDC_STATIC,26,1,20,8
+    EDITTEXT        IDC_PATCH2,23,27,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "2",IDC_STATIC,8,28,10,8
+    EDITTEXT        IDC_VOLUME1,48,14,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    LTEXT           "Vol",IDC_STATIC,54,1,11,8
+    EDITTEXT        IDC_VOLUME2,48,27,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN1,73,14,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN2,73,27,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND1,98,14,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND2,98,27,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    LTEXT           "Pan",IDC_STATIC,78,1,14,8
+    LTEXT           "Bend",IDC_STATIC,101,1,18,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDFRAME | WS_TABSTOP,6,10,
+                    246,216
+    EDITTEXT        IDC_RANGE1,123,14,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    LTEXT           "Range",IDC_STATIC,125,1,23,8
+    EDITTEXT        IDC_RANGE2,123,27,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD1,148,14,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    LTEXT           "Modn",IDC_STATIC,152,1,19,8
+    EDITTEXT        IDC_MOD2,148,27,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB1,173,14,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB2,173,27,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS1,198,14,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS2,198,27,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    LTEXT           "Reverb",IDC_STATIC,174,1,25,8
+    LTEXT           "Chorus",IDC_STATIC,200,1,24,8
+    EDITTEXT        IDC_PEDAL1,223,14,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL2,223,27,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    LTEXT           "Pedal",IDC_STATIC,227,1,20,8
+    EDITTEXT        IDC_PATCH3,23,40,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "3",IDC_STATIC,8,41,10,8
+    EDITTEXT        IDC_PATCH4,23,53,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "4",IDC_STATIC,8,54,10,8
+    EDITTEXT        IDC_VOLUME3,48,40,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_VOLUME4,48,53,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN3,73,40,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN4,73,53,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND3,98,40,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND4,98,53,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE3,123,40,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE4,123,53,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD3,148,40,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD4,148,53,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB3,173,40,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB4,173,53,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS3,198,40,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS4,198,53,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL3,223,40,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL4,223,53,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PATCH5,23,66,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "5",IDC_STATIC,8,67,10,8
+    EDITTEXT        IDC_PATCH6,23,79,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "6",IDC_STATIC,8,80,10,8
+    EDITTEXT        IDC_VOLUME5,48,66,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_VOLUME6,48,79,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN5,73,66,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN6,73,79,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND5,98,66,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND6,98,79,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE5,123,66,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE6,123,79,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD5,148,66,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD6,148,79,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB5,173,66,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB6,173,79,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS5,198,66,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS6,198,79,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL5,223,66,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL6,223,79,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PATCH7,23,92,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "7",IDC_STATIC,8,93,10,8
+    EDITTEXT        IDC_PATCH8,23,105,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "8",IDC_STATIC,8,106,10,8
+    EDITTEXT        IDC_VOLUME7,48,92,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_VOLUME8,48,105,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN7,73,92,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN8,73,105,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND7,98,92,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND8,98,105,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE7,123,92,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE8,123,105,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD7,148,92,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD8,148,105,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB7,173,92,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB8,173,105,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS7,198,92,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS8,198,105,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL7,223,92,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL8,223,105,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PATCH9,23,118,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "9",IDC_STATIC,8,119,10,8
+    EDITTEXT        IDC_PATCH10,23,131,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "10",IDC_STATIC,8,132,10,8
+    EDITTEXT        IDC_VOLUME9,48,118,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_VOLUME10,48,131,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN9,73,118,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN10,73,131,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND9,98,118,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND10,98,131,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE9,123,118,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE10,123,131,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD9,148,118,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD10,148,131,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB9,173,118,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB10,173,131,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS9,198,118,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS10,198,131,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL9,223,118,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL10,223,131,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PATCH11,23,144,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "11",IDC_STATIC,8,145,10,8
+    EDITTEXT        IDC_PATCH12,23,157,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "12",IDC_STATIC,8,158,10,8
+    EDITTEXT        IDC_VOLUME11,48,144,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_VOLUME12,48,157,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN11,73,144,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN12,73,157,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND11,98,144,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND12,98,157,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE11,123,144,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE12,123,157,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD11,148,144,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD12,148,157,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB11,173,144,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB12,173,157,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS11,198,144,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS12,198,157,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL11,223,144,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL12,223,157,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PATCH13,23,170,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "13",IDC_STATIC,8,171,10,8
+    EDITTEXT        IDC_PATCH14,23,183,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "14",IDC_STATIC,8,184,10,8
+    EDITTEXT        IDC_VOLUME13,48,170,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_VOLUME14,48,183,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN13,73,170,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN14,73,183,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND13,98,170,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND14,98,183,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE13,123,170,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE14,123,183,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD13,148,170,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD14,148,183,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB13,173,170,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB14,173,183,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS13,198,170,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS14,198,183,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL13,223,170,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL14,223,183,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PATCH15,23,196,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "15",IDC_STATIC,8,197,10,8
+    EDITTEXT        IDC_PATCH16,23,209,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    RTEXT           "16",IDC_STATIC,8,210,10,8
+    EDITTEXT        IDC_VOLUME15,48,196,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_VOLUME16,48,209,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN15,73,196,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PAN16,73,209,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND15,98,196,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_BEND16,98,209,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE15,123,196,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_RANGE16,123,209,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD15,148,196,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_MOD16,148,209,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB15,173,196,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_REVERB16,173,209,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS15,198,196,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CHORUS16,198,209,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL15,223,196,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+    EDITTEXT        IDC_PEDAL16,223,209,24,12,ES_RIGHT | ES_READONLY | NOT 
+                    WS_TABSTOP
+END
+
+LOG DIALOG DISCARDABLE  0, 0, 186, 79
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Log File"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Log &Enabled",IDC_LOGENABLED,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,11,11,68,9
+    CONTROL         "&Append to Log File",IDC_LOGAPPEND,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,25,75,10
+    LTEXT           "Log File:",IDC_STATIC,9,48,28,8
+    EDITTEXT        IDC_LOGFILE,7,59,172,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BROWSE,129,42,50,14
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
+END
+
+KEYBOARD DIALOG DISCARDABLE  0, 65476, 102, 21
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Keyboard"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Off",IDOK,70,3,24,14
+    ICON            IDI_ON,IDC_KYBD_LITE,1,1,18,20
+    EDITTEXT        IDC_KYBD_CHANNEL,52,4,12,12
+    CTEXT           "Channel",IDC_STATIC,21,7,27,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+MM1                     ICON    DISCARDABLE     "MM1.ICO"
+MM2                     ICON    DISCARDABLE     "MM2.ICO"
+MM3                     ICON    DISCARDABLE     "MM3.ICO"
+MM4                     ICON    DISCARDABLE     "MM4.ICO"
+IDI_ON                  ICON    DISCARDABLE     "ON.ICO"
+IDI_OFF                 ICON    DISCARDABLE     "OFF.ICO"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""ver.h""\r\n"
+    "#include ""midimon.h""\r\n"
+    "#include ""ctl3d.h""\r\n"
+    "#include ""mscrdll.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#ifndef _WIN32\r\n"
+    "STRINGTABLE DISCARDABLE \r\n"
+    "BEGIN\r\n"
+    "    IDS_APPNAME             ""MIDI-OX 16 Utility""\r\n"
+    "    IDS_ININAME             ""MIDIOX16.INI""\r\n"
+    "END\r\n"
+    "#endif\t  // WIN32\r\n"
+    "\r\n"
+    "/////////////////////////////////////////////////////////////////////////////\r\n"
+    "//\r\n"
+    "// Bitmap\r\n"
+    "//\r\n"
+    "\r\n"
+    "#ifndef _WIN32\r\n"
+    "26567                   BITMAP  MOVEABLE PURE   ""3DCHECK.BMP""\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#ifndef _WIN32
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APPNAME             "MIDI-OX 16 Utility"
+    IDS_ININAME             "MIDIOX16.INI"
+END
+#endif	  // WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+#ifndef _WIN32
+26567                   BITMAP  MOVEABLE PURE   "3DCHECK.BMP"
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

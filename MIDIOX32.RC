@@ -1,0 +1,121 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "mmres.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "mmres.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""midiox16.rc""\r\n"
+    "STRINGTABLE DISCARDABLE \r\n"
+    "BEGIN\r\n"
+    "    IDS_APPNAME             ""MIDI-OX 32 Utility""\r\n"
+    "    IDS_ININAME             ""MIDIOX32.INI""\r\n"
+    "END\r\n"
+    "\r\n"
+    "\r\n"
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+1 VERSIONINFO
+ FILEVERSION 3,0,256,1
+ PRODUCTVERSION 3,0,256,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x10001L
+ FILETYPE 0x3L
+ FILESUBTYPE 0x8L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "Comments", "Jamie O'Connell & Jerry Jorgenrud\0"
+            VALUE "CompanyName", "Jamie O'Connell\0"
+            VALUE "FileDescription", "MIDI-OX 32 Utility\0"
+            VALUE "FileVersion", "3.00.001\0"
+            VALUE "InternalName", "MIDIOX32.EXE\0"
+            VALUE "OriginalFilename", "MIDIOX32.EXE\0"
+            VALUE "ProductName", "MIDI-OX 32 Utility\0"
+            VALUE "ProductVersion", "3.00.001\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+#endif    // !_MAC
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "midiox16.rc"
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APPNAME             "MIDI-OX 32 Utility"
+    IDS_ININAME             "MIDIOX32.INI"
+END
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

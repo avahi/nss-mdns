@@ -1,0 +1,52 @@
+LIBRARY     MIDIMCBK
+
+DESCRIPTION 'Low-level callback for MIDI Input'
+                       
+EXETYPE     WINDOWS
+
+STUB        'WINSTUB.EXE'
+
+	    CODE 	   PRELOAD  FIXED       NONDISCARDABLE
+	    DATA 	   PRELOAD  FIXED       SINGLE
+
+SEGMENTS    _WEP     FIXED    PRELOAD
+       INIT_TEXT  	FIXED    NONDISCARDABLE PRELOAD
+       _TEXT         FIXED    NONDISCARDABLE PRELOAD
+       _MSCROLL      FIXED    NONDISCARDABLE PRELOAD
+       _MSAPI        FIXED    NONDISCARDABLE
+       _PAINT        FIXED    NONDISCARDABLE
+       _CTLDLG       FIXED    NONDISCARDABLE
+       _DATA         FIXED    PRELOAD
+
+HEAPSIZE    4096
+
+EXPORTS     
+            WEP                @1    RESIDENTNAME
+            HCtlInfo           @2     ;Do Not Change
+            FShowCtlStyleDlg   @3     ;Do Not Change
+            WTranslateCtlFlags @4     ;Do Not Change
+            MMMScrollWndProc   @5     ;Do Not Change
+            FCtlStyleDlgProc   @6     ;Do Not Change
+
+            MSHwndAssociateSet @7
+            MSHwndAssociateGet @8
+            MSDwRangeSet       @9
+            MSDwRangeGet       @10
+            MSWCurrentPosSet   @11
+            MSWCurrentPosGet   @12
+            MSFNoPegScrollSet  @13
+            MSFNoPegScrollGet  @14
+            MSFInvertRangeSet  @15
+            MSFInvertRangeGet  @16
+            MSCrColorSet       @17
+            MSCrColorGet       @18
+    
+            midiInputHandler   @19
+            PutEvent           @20
+            midiMonEvent       @21
+            FilteredEvent      @22
+            getInstCount       @23
+            FindOutBuffer      @24
+            MMRegisterControl  @25
+
+
