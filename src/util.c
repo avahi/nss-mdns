@@ -29,6 +29,7 @@ SPDX-License-Identifier: LGPL-2.1-or-later
 #include <stdio.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <netinet/in.h>
 
 #include "util.h"
 
@@ -336,6 +337,20 @@ void append_address_to_userdata(const query_address_result_t* result,
     if (u->count >= MAX_ENTRIES)
         return;
 
-    memcpy(&(u->result[u->count]), result, sizeof(*result));
+    query_address_result_t* dst = &u->result[u->count];
+    memcpy(dst, result, sizeof(*dst));
+
+    // The scope id holds the interface index the record was seen on. That is
+    // only meaningful for link-local IPv6 addresses (fe80::/10), which cannot
+    // be used without it. RFC 4007 section 11.1 requires the scope id to be
+    // zero for global-scope addresses; a non-zero scope on a global address is
+    // malformed and breaks consumers such as mount.nfs. Normalize it here, at
+    // the single point where resolved addresses enter userdata, so every
+    // backend (Linux gethostbyname4 and the BSD path) sees a correct value.
+    if (!(dst->af == AF_INET6 &&
+          IN6_IS_ADDR_LINKLOCAL(
+              (const struct in6_addr*)dst->address.ipv6.address)))
+        dst->scopeid = 0;
+
     u->count++;
 }
