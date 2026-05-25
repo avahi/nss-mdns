@@ -552,8 +552,8 @@ static query_address_result_t create_address_result(int offset, int af) {
     if (af == AF_UNSPEC) {
         // Alternate between IPv4 and IPv6.
         af = offset % 2 ? AF_INET : AF_INET6;
-        result.af = af;
     }
+    result.af = af;
 
     switch (af) {
     case AF_INET:
@@ -588,7 +588,11 @@ static void validate_addrtuples(struct gaih_addrtuple* pat,
             break;
         case AF_INET6:
             ck_assert_mem_eq(pat->addr, expected_ipv6, sizeof expected_ipv6);
-            ck_assert_int_eq(pat->scopeid, (i / 2) % 3);
+            // These are global-scope addresses (documentation prefix), so the
+            // scope id must be cleared regardless of the value Avahi reported.
+            // Link-local scoping is covered by
+            // test_append_address_normalizes_scopeid.
+            ck_assert_int_eq(pat->scopeid, 0);
             break;
         }
 
@@ -610,6 +614,39 @@ static userdata_t create_address_userdata(int num_addresses, int af) {
     }
     return u;
 }
+
+// The scope id (interface index) is only meaningful for link-local IPv6
+// addresses. append_address_to_userdata must preserve it for fe80::/10 and
+// clear it to zero for global-scope addresses, per RFC 4007 section 11.1.
+START_TEST(test_append_address_normalizes_scopeid) {
+    static const uint8_t linklocal[16] = {0xfe, 0x80, 0, 0, 0, 0, 0, 0,
+                                          0,    0,    0, 0, 0, 0, 0, 0x01};
+    static const uint8_t global[16] = {0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0,
+                                       0,    0,    0,    0,    0, 0, 0, 0x01};
+
+    userdata_t u;
+    u.count = 0;
+
+    query_address_result_t ll = {.af = AF_INET6, .scopeid = 3};
+    memcpy(ll.address.ipv6.address, linklocal, sizeof linklocal);
+    append_address_to_userdata(&ll, &u);
+
+    query_address_result_t gl = {.af = AF_INET6, .scopeid = 3};
+    memcpy(gl.address.ipv6.address, global, sizeof global);
+    append_address_to_userdata(&gl, &u);
+
+    ck_assert_int_eq(u.count, 2);
+
+    // Link-local address: scope id preserved.
+    ck_assert_int_eq(u.result[0].scopeid, 3);
+    ck_assert_mem_eq(u.result[0].address.ipv6.address, linklocal,
+                     sizeof linklocal);
+
+    // Global address: scope id cleared.
+    ck_assert_int_eq(u.result[1].scopeid, 0);
+    ck_assert_mem_eq(u.result[1].address.ipv6.address, global, sizeof global);
+}
+END_TEST
 
 static void poison(char* buf, size_t buflen) { memset(buf, 0x55, buflen); }
 
@@ -1012,6 +1049,10 @@ static Suite* util_suite(void) {
                    test_userdata_to_addrtuple_nonnull_pat_is_used);
     suite_add_tcase(s, tc_userdata_to_addrtuple);
 #endif
+
+    TCase* tc_append_address = tcase_create("append_address");
+    tcase_add_test(tc_append_address, test_append_address_normalizes_scopeid);
+    suite_add_tcase(s, tc_append_address);
 
     TCase* tc_userdata_for_name_to_hostent =
         tcase_create("userdata_for_name_to_hostent");
